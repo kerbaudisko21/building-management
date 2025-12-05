@@ -43,7 +43,7 @@ export default function RootLayout({
             <meta name="theme-color" content="#6366f1" />
 
             {/* PWA Manifest */}
-            <link rel="manifest" href="/manifest.ts" />
+            <link rel="manifest" href="/app/manifest.ts" />
 
             {/* Favicons */}
             <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-32x32.png" />
