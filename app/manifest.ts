@@ -5,7 +5,7 @@ export default function manifest(): MetadataRoute.Manifest {
         name: 'Gatau - Building Management System',
         short_name: 'Gatau',
         description: 'Building Management System for properties, rooms, tenants, and utilities',
-        start_url: '/dashboard',
+        start_url: '/',
         display: 'standalone',
         background_color: '#0f172a',
         theme_color: '#6366f1',
