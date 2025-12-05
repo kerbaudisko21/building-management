@@ -58,7 +58,6 @@ export default function Sidebar({ onCollapseChange }: SidebarProps = {}) {
 
     return (
         <>
-            {/* Mobile Menu Button - Fixed position to avoid logo collision */}
             <button
                 onClick={() => setIsMobileOpen(!isMobileOpen)}
                 className={`
@@ -75,7 +74,6 @@ export default function Sidebar({ onCollapseChange }: SidebarProps = {}) {
                 )}
             </button>
 
-            {/* Mobile Overlay */}
             {isMobileOpen && (
                 <div
                     className="lg:hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-40 animate-fade-in"
@@ -83,7 +81,6 @@ export default function Sidebar({ onCollapseChange }: SidebarProps = {}) {
                 />
             )}
 
-            {/* Sidebar */}
             <aside
                 className={`
                     fixed top-0 left-0 h-screen
@@ -96,11 +93,8 @@ export default function Sidebar({ onCollapseChange }: SidebarProps = {}) {
                     ${isMobileOpen ? 'pt-16' : ''}
                 `}
             >
-                {/* Content Container */}
                 <div className="relative h-full flex flex-col">
-                    {/* Logo / Brand - With top padding di mobile saat open */}
                     <div className={`h-20 flex items-center justify-center px-5 border-b border-slate-200 dark:border-slate-800 ${isMobileOpen ? '' : ''}`}>
-                        {/* Expanded Logo - Desktop & Mobile */}
                         <div className={`flex items-center gap-3 transition-all duration-500 ${isCollapsed ? 'lg:opacity-0 lg:invisible lg:absolute' : 'opacity-100'}`}>
                             <div className="relative group">
                                 <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 via-purple-600 to-pink-600 flex items-center justify-center shadow-xl hover:scale-105 hover:rotate-3 transition-all duration-300">
@@ -115,7 +109,6 @@ export default function Sidebar({ onCollapseChange }: SidebarProps = {}) {
                             </div>
                         </div>
 
-                        {/* Collapsed Logo - Desktop Only */}
                         <div className={`relative group transition-all duration-500 ${isCollapsed ? 'lg:opacity-100 lg:visible' : 'opacity-0 invisible absolute'}`}>
                             <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 via-purple-600 to-pink-600 flex items-center justify-center shadow-xl hover:scale-105 hover:rotate-3 transition-all duration-300">
                                 <span className="text-white font-bold text-xl">M</span>
@@ -123,7 +116,6 @@ export default function Sidebar({ onCollapseChange }: SidebarProps = {}) {
                         </div>
                     </div>
 
-                    {/* Search Bar */}
                     <div className={`px-4 py-4 border-b border-slate-200 dark:border-slate-800 transition-all duration-500 ${isCollapsed ? 'lg:opacity-0 lg:invisible lg:h-0 lg:py-0' : 'opacity-100'}`}>
                         <div className="relative flex items-center gap-2 px-3 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-all">
                             <Search className="w-4 h-4 text-slate-500 dark:text-slate-400" strokeWidth={2} />
@@ -135,7 +127,6 @@ export default function Sidebar({ onCollapseChange }: SidebarProps = {}) {
                         </div>
                     </div>
 
-                    {/* User Info */}
                     <div className={`px-4 py-4 border-b border-slate-200 dark:border-slate-800 transition-all duration-500 ${isCollapsed ? 'lg:opacity-0 lg:invisible lg:h-0 lg:py-0' : 'opacity-100'}`}>
                         <div className="relative">
                             <div className="relative flex items-center gap-3 p-3 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:bg-slate-200 dark:hover:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-700 cursor-pointer transition-all">
@@ -152,7 +143,6 @@ export default function Sidebar({ onCollapseChange }: SidebarProps = {}) {
                         </div>
                     </div>
 
-                    {/* Navigation */}
                     <nav className="flex-1 overflow-y-auto py-4 px-3 scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-700 scrollbar-track-transparent">
                         <div className="space-y-1.5">
                             {menuItems.map((item) => {
@@ -174,7 +164,6 @@ export default function Sidebar({ onCollapseChange }: SidebarProps = {}) {
                                         `}
                                         onClick={() => setIsMobileOpen(false)}
                                     >
-                                        {/* Active State */}
                                         {isActive && (
                                             <>
                                                 <div className={`absolute inset-0 bg-gradient-to-r ${item.color} rounded-xl shadow-lg`} />
@@ -182,7 +171,6 @@ export default function Sidebar({ onCollapseChange }: SidebarProps = {}) {
                                             </>
                                         )}
 
-                                        {/* Hover State */}
                                         {!isActive && (
                                             <>
                                                 <div className="absolute inset-0 bg-slate-100 dark:bg-slate-800 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -191,7 +179,6 @@ export default function Sidebar({ onCollapseChange }: SidebarProps = {}) {
                                             </>
                                         )}
 
-                                        {/* Icon Container */}
                                         <div className={`
                                             relative flex items-center justify-center flex-shrink-0
                                             w-10 h-10 rounded-lg transition-all
@@ -206,7 +193,6 @@ export default function Sidebar({ onCollapseChange }: SidebarProps = {}) {
                                             />
                                         </div>
 
-                                        {/* Label */}
                                         <span className={`
                                             relative text-sm font-semibold ml-3 
                                             transition-all duration-500
@@ -215,7 +201,6 @@ export default function Sidebar({ onCollapseChange }: SidebarProps = {}) {
                                             {item.label}
                                         </span>
 
-                                        {/* Active Indicator Dot */}
                                         {isActive && (
                                             <div className={`
                                                 relative ml-auto w-2 h-2 rounded-full bg-white 
@@ -225,14 +210,12 @@ export default function Sidebar({ onCollapseChange }: SidebarProps = {}) {
                                             `} />
                                         )}
 
-                                        {/* Badge */}
                                         {item.href === '/notices' && !isCollapsed && (
                                             <div className="relative ml-auto px-2 py-0.5 bg-gradient-to-r from-red-500 to-rose-500 text-white text-[10px] font-bold rounded-full shadow-lg">
                                                 3
                                             </div>
                                         )}
 
-                                        {/* Tooltip */}
                                         <div className={`
                                             absolute left-full ml-4 px-4 py-2.5
                                             bg-slate-900 dark:bg-slate-950 text-white text-sm font-medium rounded-xl
@@ -251,7 +234,6 @@ export default function Sidebar({ onCollapseChange }: SidebarProps = {}) {
                             })}
                         </div>
 
-                        {/* Logout Button */}
                         <div className="mt-6 pt-4 border-t border-slate-200 dark:border-slate-800">
                             <button className={`
                                 relative w-full flex items-center px-4 py-3 rounded-xl
@@ -274,7 +256,6 @@ export default function Sidebar({ onCollapseChange }: SidebarProps = {}) {
                                     Logout
                                 </span>
 
-                                {/* Tooltip */}
                                 <div className={`
                                     absolute left-full ml-4 px-4 py-2.5
                                     bg-slate-900 dark:bg-slate-950 text-white text-sm font-medium rounded-xl
@@ -292,7 +273,6 @@ export default function Sidebar({ onCollapseChange }: SidebarProps = {}) {
                         </div>
                     </nav>
 
-                    {/* Collapse Toggle - Desktop Only */}
                     <button
                         onClick={() => setIsCollapsed(!isCollapsed)}
                         className="relative hidden lg:flex items-center justify-center h-14 border-t border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all group"

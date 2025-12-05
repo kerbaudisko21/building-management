@@ -75,11 +75,9 @@ export default function DashboardPage() {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-purple-50/30 dark:from-slate-950 dark:via-indigo-950/20 dark:to-purple-950/10">
-            {/* Header - Clean & Simple */}
             <header className="sticky top-0 z-20 backdrop-blur-xl bg-white/80 dark:bg-slate-950/80 border-b border-slate-200 dark:border-white/5 shadow-sm">
                 <div className="px-4 sm:px-8 py-4 sm:py-5 lg:ml-0 ml-16">
                     <div className="flex items-center justify-between">
-                        {/* Title */}
                         <div>
                             <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
                                 Dashboard
@@ -90,7 +88,6 @@ export default function DashboardPage() {
                         </div>
 
                         <div className="flex items-center gap-3">
-                            {/* Theme Toggle Only - Clean & Minimal */}
                             <button
                                 onClick={toggleTheme}
                                 className="relative p-2.5 sm:p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 hover:scale-105 active:scale-95 transition-all duration-300 shadow-lg group flex items-center justify-center"
@@ -107,9 +104,7 @@ export default function DashboardPage() {
                 </div>
             </header>
 
-            {/* Main Content */}
             <div className="p-4 sm:p-8 space-y-6 sm:space-y-8">
-                {/* Stats Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
                     {stats.map((stat, index) => {
                         const Icon = stat.icon;
@@ -120,10 +115,8 @@ export default function DashboardPage() {
                                 key={index}
                                 className="group relative overflow-hidden rounded-2xl bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-white/5 hover:border-slate-300 dark:hover:border-white/10 transition-all duration-300 hover:shadow-2xl hover:shadow-indigo-500/10 hover:-translate-y-1"
                             >
-                                {/* Background Gradient */}
                                 <div className={`absolute inset-0 bg-gradient-to-br ${stat.bgColor} opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
 
-                                {/* Content */}
                                 <div className="relative p-6">
                                     <div className="flex items-start justify-between mb-4">
                                         <div className={`p-3 rounded-xl bg-gradient-to-br ${stat.color} shadow-lg group-hover:scale-110 transition-transform duration-300`}>
@@ -144,16 +137,13 @@ export default function DashboardPage() {
                                     </div>
                                 </div>
 
-                                {/* Glow effect */}
                                 <div className={`absolute inset-0 bg-gradient-to-br ${stat.color} opacity-0 group-hover:opacity-5 blur-2xl transition-opacity duration-300 pointer-events-none`} />
                             </div>
                         );
                     })}
                 </div>
 
-                {/* Two Column Layout */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
-                    {/* Recent Activities */}
                     <div className="lg:col-span-2">
                         <div className="rounded-2xl bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-white/5 shadow-xl overflow-hidden">
                             <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-slate-200 dark:border-white/5">
@@ -200,7 +190,6 @@ export default function DashboardPage() {
                         </div>
                     </div>
 
-                    {/* Properties Overview */}
                     <div className="lg:col-span-1">
                         <div className="rounded-2xl bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-white/5 shadow-xl overflow-hidden">
                             <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-slate-200 dark:border-white/5">
