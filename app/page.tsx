@@ -79,7 +79,7 @@ export default function DashboardPage() {
                 <div className="px-4 sm:px-8 py-4 sm:py-5 lg:ml-0 ml-16">
                     <div className="flex items-center justify-between">
                         <div>
-                            <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+                            <h1 className="flex text-2xl sm:text-3xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
                                 Dashboard
                             </h1>
                             <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-1 hidden sm:block">

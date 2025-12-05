@@ -15,10 +15,9 @@ import {
     Settings,
     ChevronLeft,
     ChevronRight,
-    Menu,
-    X,
     LogOut,
-    Search
+    Search,
+    X
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -44,248 +43,279 @@ interface SidebarProps {
 export default function Sidebar({ onCollapseChange }: SidebarProps = {}) {
     const [isCollapsed, setIsCollapsed] = useState(false);
     const [isMobileOpen, setIsMobileOpen] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
     const pathname = usePathname();
 
     useEffect(() => {
         setIsMobileOpen(false);
     }, [pathname]);
 
-    useEffect(() => {
-        if (onCollapseChange) {
-            onCollapseChange(isCollapsed);
-        }
-    }, [isCollapsed, onCollapseChange]);
+    const handleCollapse = () => {
+        const newState = !isCollapsed;
+        setIsCollapsed(newState);
+        onCollapseChange?.(newState);
+    };
+
+    const filteredMenuItems = menuItems.filter(item =>
+        item.label.toLowerCase().includes(searchQuery.toLowerCase())
+    );
 
     return (
         <>
+            {/* ==================== FLOATING BURGER BUTTON ==================== */}
             <button
                 onClick={() => setIsMobileOpen(!isMobileOpen)}
-                className={`
-                    lg:hidden fixed z-[60] 
-                    p-2.5 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-xl 
-                    shadow-xl hover:scale-105 active:scale-95 transition-all duration-300
-                    ${isMobileOpen ? 'top-4 left-4' : 'top-4 left-4'}
-                `}
+                className="
+                    lg:hidden fixed bottom-6 right-6 z-[60]
+                    w-14 h-14 rounded-full
+                    bg-gradient-to-br from-indigo-600 to-purple-600
+                    shadow-2xl shadow-indigo-500/30
+                    flex items-center justify-center
+                    transition-all duration-300 ease-out
+                    hover:scale-110 hover:shadow-indigo-500/50
+                    active:scale-95
+                "
+                aria-label={isMobileOpen ? "Close menu" : "Open menu"}
             >
                 {isMobileOpen ? (
-                    <X className="w-5 h-5 text-white" strokeWidth={2.5} />
+                    <X className="w-6 h-6 text-white" strokeWidth={2.5} />
                 ) : (
-                    <Menu className="w-5 h-5 text-white" strokeWidth={2.5} />
+                    <div className="w-6 h-6 flex flex-col justify-center gap-1.5">
+                        <span className="w-6 h-0.5 bg-white rounded-full" />
+                        <span className="w-6 h-0.5 bg-white rounded-full" />
+                        <span className="w-6 h-0.5 bg-white rounded-full" />
+                    </div>
                 )}
             </button>
 
-            {isMobileOpen && (
-                <div
-                    className="lg:hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-40 animate-fade-in"
-                    onClick={() => setIsMobileOpen(false)}
-                />
-            )}
+            {/* ==================== OVERLAY ==================== */}
+            <div
+                className={`
+                    lg:hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-40
+                    transition-opacity duration-300
+                    ${isMobileOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}
+                `}
+                onClick={() => setIsMobileOpen(false)}
+            />
 
+            {/* ==================== SIDEBAR ==================== */}
             <aside
                 className={`
-                    fixed top-0 left-0 h-screen
-                    transition-all duration-500 ease-in-out
-                    ${isCollapsed ? 'lg:w-24 w-72' : 'lg:w-72 w-72'}
-                    ${isMobileOpen ? 'translate-x-0 z-50' : '-translate-x-full lg:translate-x-0 z-40'}
-                    bg-white dark:bg-slate-950
-                    border-r border-slate-200 dark:border-slate-900
-                    shadow-2xl
-                    ${isMobileOpen ? 'pt-16' : ''}
+                    fixed top-0 left-0 h-screen z-50
+                    bg-slate-900 border-r border-slate-800/50
+                    transition-transform duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]
+                    ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'}
+                    lg:translate-x-0
+                    w-72
+                    lg:transition-[width] lg:duration-500 lg:ease-in-out
+                    ${isCollapsed ? 'lg:w-20' : 'lg:w-72'}
                 `}
             >
-                <div className="relative h-full flex flex-col">
-                    <div className={`h-20 flex items-center justify-center px-5 border-b border-slate-200 dark:border-slate-800 ${isMobileOpen ? '' : ''}`}>
-                        <div className={`flex items-center gap-3 transition-all duration-500 ${isCollapsed ? 'lg:opacity-0 lg:invisible lg:absolute' : 'opacity-100'}`}>
-                            <div className="relative group">
-                                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 via-purple-600 to-pink-600 flex items-center justify-center shadow-xl hover:scale-105 hover:rotate-3 transition-all duration-300">
-                                    <span className="text-white font-bold text-xl">M</span>
-                                </div>
+                <div className="h-full flex flex-col">
+
+                    {/* ==================== LOGO SECTION ==================== */}
+                    <div className="h-20 flex items-center justify-center px-6 border-b border-slate-800/50">
+                        {/* Expanded */}
+                        <div className={`
+                            flex items-center gap-3
+                            transition-all duration-300
+                            ${isCollapsed ? 'lg:hidden' : ''}
+                        `}>
+                            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/30">
+                                <span className="text-white font-bold text-lg">G</span>
                             </div>
                             <div>
-                                <h1 className="font-bold text-xl bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
-                                    Gatau
-                                </h1>
-                                <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">Management System</p>
+                                <h1 className="text-lg font-bold text-white">Gatau</h1>
+                                <p className="text-[10px] text-slate-400">Building Management</p>
                             </div>
                         </div>
 
-                        <div className={`relative group transition-all duration-500 ${isCollapsed ? 'lg:opacity-100 lg:visible' : 'opacity-0 invisible absolute'}`}>
-                            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 via-purple-600 to-pink-600 flex items-center justify-center shadow-xl hover:scale-105 hover:rotate-3 transition-all duration-300">
-                                <span className="text-white font-bold text-xl">M</span>
+                        {/* Collapsed */}
+                        <div className={`
+                            transition-all duration-300
+                            ${isCollapsed ? 'lg:block' : 'lg:hidden'}
+                            hidden
+                        `}>
+                            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/30">
+                                <span className="text-white font-bold text-lg">G</span>
                             </div>
                         </div>
                     </div>
 
-                    <div className={`px-4 py-4 border-b border-slate-200 dark:border-slate-800 transition-all duration-500 ${isCollapsed ? 'lg:opacity-0 lg:invisible lg:h-0 lg:py-0' : 'opacity-100'}`}>
-                        <div className="relative flex items-center gap-2 px-3 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-all">
-                            <Search className="w-4 h-4 text-slate-500 dark:text-slate-400" strokeWidth={2} />
+                    {/* ==================== USER SECTION ==================== */}
+                    <div className="px-4 py-4 border-b border-slate-800/50">
+                        <div className={`
+                            flex items-center gap-3 p-3 rounded-xl
+                            bg-slate-800/50 border border-slate-700/50
+                            transition-all duration-300
+                            ${isCollapsed ? 'lg:flex-col lg:p-2 lg:gap-2' : ''}
+                        `}>
+                            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center shadow-md flex-shrink-0">
+                                <span className="text-white font-semibold text-sm">AK</span>
+                            </div>
+                            <div className={`
+                                flex-1 min-w-0
+                                transition-all duration-300
+                                ${isCollapsed ? 'lg:hidden' : ''}
+                            `}>
+                                <p className="text-sm font-semibold text-white truncate">Admin Kerbaudisko</p>
+                                <p className="text-xs text-slate-400 truncate">Administrator</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* ==================== SEARCH SECTION ==================== */}
+                    <div className="px-4 py-3 border-b border-slate-800/50">
+                        {/* Expanded */}
+                        <div className={`
+                            relative
+                            transition-all duration-300
+                            ${isCollapsed ? 'lg:hidden' : ''}
+                        `}>
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                             <input
                                 type="text"
                                 placeholder="Search menu..."
-                                className="bg-transparent border-none outline-none text-sm text-slate-900 dark:text-white placeholder:text-slate-500 dark:placeholder:text-slate-400 flex-1"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="
+                                    w-full pl-9 pr-3 py-2.5
+                                    bg-slate-800/50 border border-slate-700/50
+                                    rounded-lg text-sm text-white
+                                    placeholder:text-slate-500
+                                    focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500/40
+                                    transition-all
+                                "
                             />
                         </div>
-                    </div>
 
-                    <div className={`px-4 py-4 border-b border-slate-200 dark:border-slate-800 transition-all duration-500 ${isCollapsed ? 'lg:opacity-0 lg:invisible lg:h-0 lg:py-0' : 'opacity-100'}`}>
-                        <div className="relative">
-                            <div className="relative flex items-center gap-3 p-3 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:bg-slate-200 dark:hover:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-700 cursor-pointer transition-all">
-                                <div className="relative flex-shrink-0">
-                                    <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-indigo-500 via-purple-600 to-pink-600 flex items-center justify-center shadow-xl hover:scale-105 transition-transform">
-                                        <span className="text-white font-bold text-sm">AK</span>
-                                    </div>
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <p className="font-semibold text-sm text-slate-900 dark:text-white truncate">Admin Kerbaudisko</p>
-                                    <p className="text-xs text-slate-500 dark:text-slate-400 truncate">Super Administrator</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <nav className="flex-1 overflow-y-auto py-4 px-3 scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-700 scrollbar-track-transparent">
-                        <div className="space-y-1.5">
-                            {menuItems.map((item) => {
-                                const Icon = item.icon;
-                                const isActive = pathname === item.href;
-
-                                return (
-                                    <Link
-                                        key={item.href}
-                                        href={item.href}
-                                        className={`
-                                            relative flex items-center px-4 py-3 rounded-xl
-                                            transition-all duration-300 group overflow-hidden
-                                            ${isActive
-                                            ? 'text-white'
-                                            : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
-                                        }
-                                            ${isCollapsed ? 'lg:justify-center lg:px-0' : ''}
-                                        `}
-                                        onClick={() => setIsMobileOpen(false)}
-                                    >
-                                        {isActive && (
-                                            <>
-                                                <div className={`absolute inset-0 bg-gradient-to-r ${item.color} rounded-xl shadow-lg`} />
-                                                <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-transparent rounded-xl" />
-                                            </>
-                                        )}
-
-                                        {!isActive && (
-                                            <>
-                                                <div className="absolute inset-0 bg-slate-100 dark:bg-slate-800 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity" />
-                                                <div className={`absolute inset-0 bg-gradient-to-r ${item.color} opacity-0 group-hover:opacity-10 rounded-xl transition-opacity`} />
-                                                <div className="absolute inset-0 border border-slate-200 dark:border-slate-700 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity" />
-                                            </>
-                                        )}
-
-                                        <div className={`
-                                            relative flex items-center justify-center flex-shrink-0
-                                            w-10 h-10 rounded-lg transition-all
-                                            ${isActive
-                                            ? 'bg-white/20 shadow-lg'
-                                            : 'bg-transparent group-hover:bg-white/50 dark:group-hover:bg-white/10'
-                                        }
-                                        `}>
-                                            <Icon
-                                                className={`w-5 h-5 transition-all ${isActive ? 'scale-110' : 'group-hover:scale-110'}`}
-                                                strokeWidth={2.5}
-                                            />
-                                        </div>
-
-                                        <span className={`
-                                            relative text-sm font-semibold ml-3 
-                                            transition-all duration-500
-                                            ${isCollapsed ? 'lg:opacity-0 lg:invisible lg:w-0 lg:ml-0' : 'opacity-100'}
-                                        `}>
-                                            {item.label}
-                                        </span>
-
-                                        {isActive && (
-                                            <div className={`
-                                                relative ml-auto w-2 h-2 rounded-full bg-white 
-                                                shadow-lg animate-pulse
-                                                transition-all duration-500
-                                                ${isCollapsed ? 'lg:opacity-0 lg:invisible lg:w-0' : 'opacity-100'}
-                                            `} />
-                                        )}
-
-                                        {item.href === '/notices' && !isCollapsed && (
-                                            <div className="relative ml-auto px-2 py-0.5 bg-gradient-to-r from-red-500 to-rose-500 text-white text-[10px] font-bold rounded-full shadow-lg">
-                                                3
-                                            </div>
-                                        )}
-
-                                        <div className={`
-                                            absolute left-full ml-4 px-4 py-2.5
-                                            bg-slate-900 dark:bg-slate-950 text-white text-sm font-medium rounded-xl
-                                            opacity-0 invisible group-hover:opacity-100 group-hover:visible
-                                            pointer-events-none whitespace-nowrap z-50
-                                            shadow-2xl border border-slate-700 dark:border-slate-800
-                                            transition-all duration-300
-                                            ${isCollapsed ? 'hidden lg:block' : 'hidden'}
-                                        `}>
-                                            <div className={`absolute inset-0 bg-gradient-to-r ${item.color} opacity-20 rounded-xl`} />
-                                            <span className="relative">{item.label}</span>
-                                            <div className="absolute top-1/2 -left-1.5 -translate-y-1/2 w-3 h-3 bg-slate-900 dark:bg-slate-950 border-l border-t border-slate-700 dark:border-slate-800 rotate-45" />
-                                        </div>
-                                    </Link>
-                                );
-                            })}
-                        </div>
-
-                        <div className="mt-6 pt-4 border-t border-slate-200 dark:border-slate-800">
-                            <button className={`
-                                relative w-full flex items-center px-4 py-3 rounded-xl
-                                text-slate-700 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400
-                                transition-all duration-300 group
-                                ${isCollapsed ? 'lg:justify-center lg:px-0' : ''}
-                            `}>
-                                <div className="absolute inset-0 bg-red-50 dark:bg-red-500/10 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity" />
-                                <div className="absolute inset-0 border border-red-200 dark:border-red-500/20 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity" />
-
-                                <div className="relative flex items-center justify-center flex-shrink-0 w-10 h-10 rounded-lg group-hover:bg-red-100 dark:group-hover:bg-red-500/20 transition-all">
-                                    <LogOut className="w-5 h-5 group-hover:scale-110 transition-transform" strokeWidth={2.5} />
-                                </div>
-
-                                <span className={`
-                                    relative text-sm font-semibold ml-3
-                                    transition-all duration-500
-                                    ${isCollapsed ? 'lg:opacity-0 lg:invisible lg:w-0 lg:ml-0' : 'opacity-100'}
-                                `}>
-                                    Logout
-                                </span>
-
-                                <div className={`
-                                    absolute left-full ml-4 px-4 py-2.5
-                                    bg-slate-900 dark:bg-slate-950 text-white text-sm font-medium rounded-xl
-                                    opacity-0 invisible group-hover:opacity-100 group-hover:visible
-                                    pointer-events-none whitespace-nowrap z-50
-                                    shadow-2xl border border-slate-700 dark:border-slate-800
-                                    transition-all duration-300
-                                    ${isCollapsed ? 'hidden lg:block' : 'hidden'}
-                                `}>
-                                    <div className="absolute inset-0 bg-gradient-to-r from-red-500/20 to-rose-500/20 rounded-xl" />
-                                    <span className="relative">Logout</span>
-                                    <div className="absolute top-1/2 -left-1.5 -translate-y-1/2 w-3 h-3 bg-slate-900 dark:bg-slate-950 border-l border-t border-slate-700 dark:border-slate-800 rotate-45" />
-                                </div>
+                        {/* Collapsed */}
+                        <div className={`
+                            transition-all duration-300
+                            ${isCollapsed ? 'lg:flex' : 'lg:hidden'}
+                            hidden justify-center
+                        `}>
+                            <button className="w-11 h-11 rounded-lg bg-slate-800/50 border border-slate-700/50 hover:bg-slate-800 flex items-center justify-center transition-colors">
+                                <Search className="w-5 h-5 text-slate-400" />
                             </button>
                         </div>
-                    </nav>
+                    </div>
 
-                    <button
-                        onClick={() => setIsCollapsed(!isCollapsed)}
-                        className="relative hidden lg:flex items-center justify-center h-14 border-t border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all group"
-                    >
-                        {isCollapsed ? (
-                            <ChevronRight className="w-5 h-5 text-slate-500 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white transition-colors" strokeWidth={2.5} />
-                        ) : (
-                            <div className="flex items-center gap-2">
-                                <ChevronLeft className="w-4 h-4 text-slate-500 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white transition-colors" strokeWidth={2.5} />
-                                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white transition-colors">Collapse Menu</span>
+                    {/* ==================== MENU SECTION ==================== */}
+                    <nav className="flex-1 overflow-y-auto p-3">
+                        {searchQuery && filteredMenuItems.length === 0 && (
+                            <div className="text-center py-8">
+                                <Search className="w-8 h-8 text-slate-700 mx-auto mb-2" />
+                                <p className="text-sm text-slate-500">No menu found</p>
                             </div>
                         )}
-                    </button>
+
+                        <ul className="space-y-1">
+                            {filteredMenuItems.map((item) => {
+                                const isActive = pathname === item.href;
+                                const Icon = item.icon;
+
+                                return (
+                                    <li key={item.href}>
+                                        <Link
+                                            href={item.href}
+                                            className={`
+                                                group relative
+                                                flex items-center gap-3 px-3 py-3 rounded-lg
+                                                transition-all duration-200
+                                                ${isActive
+                                                ? `bg-gradient-to-r ${item.color} text-white shadow-lg`
+                                                : 'text-slate-300 hover:bg-slate-800/50'
+                                            }
+                                            `}
+                                        >
+                                            {/* Icon */}
+                                            <div className={`
+                                                w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0
+                                                transition-all duration-200
+                                                ${isActive
+                                                ? 'bg-white/20'
+                                                : 'bg-slate-800/50'
+                                            }
+                                            `}>
+                                                <Icon className="w-5 h-5" strokeWidth={2} />
+                                            </div>
+
+                                            {/* Label */}
+                                            <span className={`
+                                                font-medium text-sm
+                                                transition-all duration-300
+                                                ${isCollapsed ? 'lg:hidden' : ''}
+                                            `}>
+                                                {item.label}
+                                            </span>
+
+                                            {/* Tooltip */}
+                                            {isCollapsed && (
+                                                <div className="
+                                                    hidden lg:block
+                                                    absolute left-full ml-2 px-3 py-2
+                                                    bg-slate-800 border border-slate-700/50 text-white text-sm rounded-lg
+                                                    whitespace-nowrap
+                                                    opacity-0 invisible group-hover:opacity-100 group-hover:visible
+                                                    transition-all duration-200
+                                                    z-50 shadow-xl
+                                                ">
+                                                    {item.label}
+                                                </div>
+                                            )}
+                                        </Link>
+                                    </li>
+                                );
+                            })}
+                        </ul>
+                    </nav>
+
+                    {/* ==================== BOTTOM SECTION ==================== */}
+                    <div className="p-4 border-t border-slate-800/50 space-y-2">
+                        {/* Collapse Button - Desktop Only */}
+                        <button
+                            onClick={handleCollapse}
+                            className={`
+                                hidden lg:flex
+                                items-center gap-2 w-full px-3 py-2.5
+                                bg-slate-800/50 hover:bg-slate-800
+                                border border-slate-700/50
+                                rounded-lg text-slate-300
+                                transition-all duration-200
+                                ${isCollapsed ? 'justify-center' : 'justify-start'}
+                            `}
+                        >
+                            {isCollapsed ? (
+                                <ChevronRight className="w-5 h-5" strokeWidth={2} />
+                            ) : (
+                                <>
+                                    <ChevronLeft className="w-5 h-5" strokeWidth={2} />
+                                    <span className="font-medium text-sm">Collapse</span>
+                                </>
+                            )}
+                        </button>
+
+                        {/* Logout Button */}
+                        <button className={`
+                            flex items-center gap-2 w-full px-3 py-2.5
+                            bg-red-500/10 hover:bg-red-500/20
+                            border border-red-500/20
+                            rounded-lg text-red-400
+                            transition-all duration-200
+                            ${isCollapsed ? 'lg:justify-center' : 'justify-start'}
+                        `}>
+                            <LogOut className="w-5 h-5" strokeWidth={2} />
+                            <span className={`
+                                font-medium text-sm
+                                transition-all duration-300
+                                ${isCollapsed ? 'lg:hidden' : ''}
+                            `}>
+                                Logout
+                            </span>
+                        </button>
+                    </div>
+
                 </div>
             </aside>
         </>
