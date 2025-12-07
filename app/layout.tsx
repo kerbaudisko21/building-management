@@ -2,8 +2,8 @@
 
 import { Plus_Jakarta_Sans, JetBrains_Mono } from 'next/font/google';
 import '@/app/globals.css';
-import { ThemeProvider } from '@/components/ThemeContext';
-import Sidebar from '@/components/Sidebar';
+import { ThemeProvider } from '@/components/providers/ThemeProvider';
+import Sidebar from '@/components/layout/Sidebar';
 import PWAInstallPrompt from '@/components/ui/pwa-install-prompt';
 import { useState } from 'react';
 

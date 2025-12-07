@@ -23,7 +23,6 @@ export default function PWAInstallPrompt() {
         // Check if already installed (standalone mode)
         const standalone = window.matchMedia('(display-mode: standalone)').matches;
         setIsStandalone(standalone);
-
         // Listen for install prompt
         const handleBeforeInstall = (e: Event) => {
             e.preventDefault();

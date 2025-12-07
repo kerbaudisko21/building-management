@@ -15,7 +15,7 @@ import {
     Moon,
     Sun
 } from 'lucide-react';
-import { useTheme } from '@/components/ThemeContext';
+import { useTheme } from '@/components/providers/ThemeProvider';
 
 const stats = [
     {
