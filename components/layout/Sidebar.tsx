@@ -19,7 +19,8 @@ import {
     X
 } from 'lucide-react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import {redirect, usePathname, useRouter} from 'next/navigation';
+import {router} from "next/client";
 
 const menuItems = [
     { icon: LayoutDashboard, label: 'Dashboard', href: '/dashboard', color: 'from-blue-500 to-cyan-500' },
@@ -44,6 +45,7 @@ export default function Sidebar({ onCollapseChange }: SidebarProps = {}) {
     const [isMobileOpen, setIsMobileOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const pathname = usePathname();
+    const router = useRouter();
 
     useEffect(() => {
         setIsMobileOpen(false);
@@ -54,6 +56,10 @@ export default function Sidebar({ onCollapseChange }: SidebarProps = {}) {
         setIsCollapsed(newState);
         onCollapseChange?.(newState);
     };
+
+    async function logout() {
+        router.push('/login');
+    }
 
     const filteredMenuItems = menuItems.filter(item =>
         item.label.toLowerCase().includes(searchQuery.toLowerCase())
@@ -234,7 +240,7 @@ export default function Sidebar({ onCollapseChange }: SidebarProps = {}) {
                         </button>
 
                         {/* Logout Button - Always full on mobile */}
-                        <button className={`group/logout relative flex items-center w-full bg-red-50 dark:bg-red-500/10 hover:bg-red-100 dark:hover:bg-red-500/20 border border-red-200 dark:border-red-500/20 rounded-lg text-red-600 dark:text-red-400 transition-all duration-500 ease-in-out gap-3 px-3 py-2.5 ${isCollapsed ? 'lg:justify-center lg:p-2.5 lg:gap-0' : ''}`}>
+                            <button onClick={logout} className={`group/logout relative flex items-center w-full bg-red-50 dark:bg-red-500/10 hover:bg-red-100 dark:hover:bg-red-500/20 border border-red-200 dark:border-red-500/20 rounded-lg text-red-600 dark:text-red-400 transition-all duration-500 ease-in-out gap-3 px-3 py-2.5 ${isCollapsed ? 'lg:justify-center lg:p-2.5 lg:gap-0' : ''}`}>
                             <LogOut className="w-5 h-5 flex-shrink-0" strokeWidth={2} />
 
                             {/* Text - Always visible on mobile, conditionally hidden on desktop when collapsed */}

@@ -3,9 +3,7 @@
 import { Plus_Jakarta_Sans, JetBrains_Mono } from 'next/font/google';
 import '@/app/globals.css';
 import { ThemeProvider } from '@/components/providers/ThemeProvider';
-import Sidebar from '@/components/layout/Sidebar';
 import PWAInstallPrompt from '@/components/ui/pwa-install-prompt';
-import { useState } from 'react';
 
 const jakarta = Plus_Jakarta_Sans({
     subsets: ['latin'],
@@ -24,8 +22,6 @@ export default function RootLayout({
                                    }: {
     children: React.ReactNode;
 }) {
-    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-
     return (
         <html lang="en" suppressHydrationWarning>
         <head>
@@ -71,22 +67,8 @@ export default function RootLayout({
         </head>
         <body className={`${jakarta.variable} ${mono.variable} font-sans antialiased`}>
         <ThemeProvider>
-            <div className="flex h-screen overflow-hidden bg-background text-foreground">
-                <Sidebar onCollapseChange={setIsSidebarCollapsed} />
-
-                {/* Dynamic margin with smooth transition */}
-                <main
-                    className={`
-                        flex-1 overflow-y-auto 
-                        transition-all duration-500 ease-in-out
-                        ${isSidebarCollapsed ? 'lg:ml-24' : 'lg:ml-72'}
-                    `}
-                >
-                    <div className="min-h-full w-full">
-                        {children}
-                    </div>
-                </main>
-            </div>
+            {/* No Sidebar here - just render children */}
+            {children}
             <PWAInstallPrompt />
         </ThemeProvider>
         </body>
