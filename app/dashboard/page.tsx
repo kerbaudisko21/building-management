@@ -1,246 +1,315 @@
 'use client';
 
-import { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import Badge from '@/components/ui/Badge';
+import Button from '@/components/ui/Button';
 import {
     Building2,
     Users,
     DollarSign,
     TrendingUp,
     Home,
-    Bed,
-    Zap,
     AlertCircle,
-    ArrowUpRight,
-    ArrowDownRight,
-    Moon,
-    Sun
+    CheckCircle,
+    Clock,
+    ArrowRight,
+    Plus,
+    FileText,
+    Wrench,
+    ChevronRight,
 } from 'lucide-react';
-import { useTheme } from '@/components/providers/ThemeProvider';
 
-const stats = [
-    {
-        title: 'Total Properties',
-        value: '24',
-        change: '+12%',
-        trend: 'up',
-        icon: Building2,
-        color: 'from-emerald-500 to-teal-500',
-        bgColor: 'from-emerald-500/10 to-teal-500/10'
-    },
-    {
-        title: 'Active Tenants',
-        value: '156',
-        change: '+8%',
-        trend: 'up',
-        icon: Users,
-        color: 'from-blue-500 to-cyan-500',
-        bgColor: 'from-blue-500/10 to-cyan-500/10'
-    },
-    {
-        title: 'Monthly Revenue',
-        value: '$45,280',
-        change: '+15%',
-        trend: 'up',
-        icon: DollarSign,
-        color: 'from-purple-500 to-pink-500',
-        bgColor: 'from-purple-500/10 to-pink-500/10'
-    },
-    {
-        title: 'Occupancy Rate',
-        value: '94.2%',
-        change: '-2%',
-        trend: 'down',
-        icon: TrendingUp,
-        color: 'from-amber-500 to-orange-500',
-        bgColor: 'from-amber-500/10 to-orange-500/10'
-    }
-];
+export default function Dashboard() {
+    const stats = [
+        {
+            title: 'Properties',
+            value: '24',
+            change: '+12%',
+            icon: Building2,
+            color: 'indigo',
+        },
+        {
+            title: 'Tenants',
+            value: '156',
+            change: '+8%',
+            icon: Users,
+            color: 'purple',
+        },
+        {
+            title: 'Revenue',
+            value: 'Rp 45.2M',
+            change: '+15%',
+            icon: DollarSign,
+            color: 'emerald',
+        },
+        {
+            title: 'Occupancy',
+            value: '94.2%',
+            change: '+2.5%',
+            icon: TrendingUp,
+            color: 'amber',
+        },
+    ];
 
-const recentActivities = [
-    { id: 1, type: 'payment', tenant: 'John Doe', property: 'Sunset Villa', amount: '$1,250', time: '2 hours ago', status: 'completed' },
-    { id: 2, type: 'complaint', tenant: 'Jane Smith', property: 'Ocean View', issue: 'Water leak', time: '4 hours ago', status: 'pending' },
-    { id: 3, type: 'checkout', tenant: 'Mike Johnson', property: 'Garden House', time: '1 day ago', status: 'completed' },
-    { id: 4, type: 'checkin', tenant: 'Sarah Wilson', property: 'Mountain Lodge', time: '2 days ago', status: 'completed' },
-];
+    const recentActivities = [
+        {
+            id: 1,
+            title: 'New tenant checked in',
+            description: 'Room 305, Building A',
+            time: '2h ago',
+            icon: CheckCircle,
+            color: 'emerald',
+        },
+        {
+            id: 2,
+            title: 'Invoice generated',
+            description: 'INV-2024-001 • Rp 3.5M',
+            time: '4h ago',
+            icon: FileText,
+            color: 'blue',
+        },
+        {
+            id: 3,
+            title: 'Maintenance request',
+            description: 'Room 201 • AC issue',
+            time: '6h ago',
+            icon: AlertCircle,
+            color: 'amber',
+        },
+    ];
 
-const properties = [
-    { name: 'Sunset Villa', rooms: 12, occupied: 10, revenue: '$8,500', status: 'excellent' },
-    { name: 'Ocean View', rooms: 8, occupied: 8, revenue: '$6,200', status: 'excellent' },
-    { name: 'Garden House', rooms: 15, occupied: 13, revenue: '$10,800', status: 'good' },
-    { name: 'Mountain Lodge', rooms: 10, occupied: 7, revenue: '$5,400', status: 'moderate' },
-];
+    const topProperties = [
+        {
+            id: 1,
+            name: 'Building A',
+            occupancy: 96,
+            occupied: 48,
+            total: 50,
+        },
+        {
+            id: 2,
+            name: 'Building B',
+            occupancy: 92,
+            occupied: 46,
+            total: 50,
+        },
+    ];
 
-export default function DashboardPage() {
-    const { theme, toggleTheme } = useTheme();
+    const quickActions = [
+        { label: 'Add Property', icon: Building2 },
+        { label: 'New Tenant', icon: Users },
+        { label: 'Invoice', icon: FileText },
+        { label: 'Maintenance', icon: Wrench },
+    ];
+
+    const upcomingTasks = [
+        { id: 1, task: 'Monthly cleaning - Building A', due: 'Today', priority: 'high' },
+        { id: 2, task: 'AC maintenance - Room 305', due: 'Tomorrow', priority: 'medium' },
+        { id: 3, task: 'Contract renewal - Room 102', due: 'In 7 days', priority: 'high' },
+    ];
+
+    const getIconColor = (color: string) => {
+        const colors: Record<string, string> = {
+            indigo: 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400',
+            purple: 'bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400',
+            emerald: 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400',
+            amber: 'bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400',
+            blue: 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400',
+        };
+        return colors[color] || colors.indigo;
+    };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-purple-50/30 dark:from-slate-950 dark:via-indigo-950/20 dark:to-purple-950/10">
-            <header className="sticky top-0 z-20 backdrop-blur-xl bg-white/80 dark:bg-slate-950/80 border-b border-slate-200 dark:border-white/5 shadow-sm">
-                <div className="px-4 sm:px-8 py-4 sm:py-5 lg:ml-0 ml-16">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <h1 className="flex text-2xl sm:text-3xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
-                                Dashboard
-                            </h1>
-                            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-1 hidden sm:block">
-                                Welcome back! Here's what's happening today.
-                            </p>
-                        </div>
-
-                        <div className="flex items-center gap-3">
-                            <button
-                                onClick={toggleTheme}
-                                className="relative p-2.5 sm:p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 hover:scale-105 active:scale-95 transition-all duration-300 shadow-lg group flex items-center justify-center"
-                            >
-                                <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 to-purple-500/10 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity" />
-                                {theme === 'dark' ? (
-                                    <Sun className="w-5 h-5 text-amber-500 relative z-10" strokeWidth={2.5} />
-                                ) : (
-                                    <Moon className="w-5 h-5 text-indigo-600 relative z-10" strokeWidth={2.5} />
-                                )}
-                            </button>
-                        </div>
-                    </div>
+        <div className="p-4 md:p-6 space-y-4 md:space-y-6 pb-24 md:pb-6">
+            {/* Header */}
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                    <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white">
+                        Dashboard
+                    </h1>
+                    <p className="text-sm md:text-base text-slate-600 dark:text-slate-400 mt-1">
+                        Welcome back! Here's what's happening today.
+                    </p>
                 </div>
-            </header>
+                <Button className="w-full sm:w-auto">
+                    <Plus className="w-5 h-5" />
+                    Quick Add
+                </Button>
+            </div>
 
-            <div className="p-4 sm:p-8 space-y-6 sm:space-y-8">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-                    {stats.map((stat, index) => {
-                        const Icon = stat.icon;
-                        const TrendIcon = stat.trend === 'up' ? ArrowUpRight : ArrowDownRight;
-
-                        return (
-                            <div
-                                key={index}
-                                className="group relative overflow-hidden rounded-2xl bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-white/5 hover:border-slate-300 dark:hover:border-white/10 transition-all duration-300 hover:shadow-2xl hover:shadow-indigo-500/10 hover:-translate-y-1"
-                            >
-                                <div className={`absolute inset-0 bg-gradient-to-br ${stat.bgColor} opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
-
-                                <div className="relative p-6">
-                                    <div className="flex items-start justify-between mb-4">
-                                        <div className={`p-3 rounded-xl bg-gradient-to-br ${stat.color} shadow-lg group-hover:scale-110 transition-transform duration-300`}>
-                                            <Icon className="w-6 h-6 text-white" strokeWidth={2.5} />
-                                        </div>
-                                        <div className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold ${
-                                            stat.trend === 'up'
-                                                ? 'bg-emerald-100 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'
-                                                : 'bg-red-100 dark:bg-red-500/10 text-red-700 dark:text-red-400'
-                                        }`}>
-                                            <TrendIcon className="w-3 h-3" strokeWidth={3} />
-                                            {stat.change}
-                                        </div>
+            {/* Stats Grid */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+                {stats.map((stat, index) => {
+                    const Icon = stat.icon;
+                    return (
+                        <Card key={index} hover>
+                            <CardContent className="p-4 md:p-6">
+                                <div className="flex flex-col gap-3">
+                                    <div className={`w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center ${getIconColor(stat.color)}`}>
+                                        <Icon className="w-5 h-5 md:w-6 md:h-6" />
                                     </div>
                                     <div>
-                                        <p className="text-sm text-slate-600 dark:text-slate-400 mb-1">{stat.title}</p>
-                                        <p className="text-3xl font-bold text-slate-900 dark:text-white">{stat.value}</p>
+                                        <p className="text-xs md:text-sm font-medium text-slate-600 dark:text-slate-400">
+                                            {stat.title}
+                                        </p>
+                                        <p className="text-xl md:text-3xl font-bold text-slate-900 dark:text-white mt-1">
+                                            {stat.value}
+                                        </p>
+                                        <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                      {stat.change}
+                    </span>
                                     </div>
                                 </div>
-
-                                <div className={`absolute inset-0 bg-gradient-to-br ${stat.color} opacity-0 group-hover:opacity-5 blur-2xl transition-opacity duration-300 pointer-events-none`} />
-                            </div>
-                        );
-                    })}
-                </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
-                    <div className="lg:col-span-2">
-                        <div className="rounded-2xl bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-white/5 shadow-xl overflow-hidden">
-                            <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-slate-200 dark:border-white/5">
-                                <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">Recent Activities</h2>
-                                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-1">Latest updates from your properties</p>
-                            </div>
-                            <div className="p-4 sm:p-6">
-                                <div className="space-y-3 sm:space-y-4">
-                                    {recentActivities.map((activity) => (
-                                        <div
-                                            key={activity.id}
-                                            className="group flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 border border-transparent hover:border-slate-200 dark:hover:border-white/10 transition-all duration-300 cursor-pointer"
-                                        >
-                                            <div className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center ${
-                                                activity.status === 'completed'
-                                                    ? 'bg-gradient-to-br from-emerald-500 to-teal-500'
-                                                    : 'bg-gradient-to-br from-amber-500 to-orange-500'
-                                            }`}>
-                                                {activity.type === 'payment' && <DollarSign className="w-5 h-5 text-white" strokeWidth={2.5} />}
-                                                {activity.type === 'complaint' && <AlertCircle className="w-5 h-5 text-white" strokeWidth={2.5} />}
-                                                {activity.type === 'checkout' && <Bed className="w-5 h-5 text-white" strokeWidth={2.5} />}
-                                                {activity.type === 'checkin' && <Home className="w-5 h-5 text-white" strokeWidth={2.5} />}
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <p className="font-semibold text-sm sm:text-base text-slate-900 dark:text-white truncate">{activity.tenant}</p>
-                                                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 truncate">
-                                                    {activity.property} {activity.amount && `• ${activity.amount}`} {activity.issue && `• ${activity.issue}`}
-                                                </p>
-                                            </div>
-                                            <div className="flex-shrink-0 text-right">
-                                                <p className="text-xs text-slate-500 dark:text-slate-500 hidden sm:block">{activity.time}</p>
-                                                <span className={`inline-block mt-1 px-2 py-0.5 text-xs font-medium rounded-md ${
-                                                    activity.status === 'completed'
-                                                        ? 'bg-emerald-100 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'
-                                                        : 'bg-amber-100 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400'
-                                                }`}>
-                                                    {activity.status}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="lg:col-span-1">
-                        <div className="rounded-2xl bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-white/5 shadow-xl overflow-hidden">
-                            <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-slate-200 dark:border-white/5">
-                                <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">Properties</h2>
-                                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-1">Performance overview</p>
-                            </div>
-                            <div className="p-4 sm:p-6">
-                                <div className="space-y-4">
-                                    {properties.map((property, index) => (
-                                        <div
-                                            key={index}
-                                            className="group p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 border border-transparent hover:border-slate-200 dark:hover:border-white/10 transition-all duration-300 cursor-pointer"
-                                        >
-                                            <div className="flex items-center justify-between mb-3">
-                                                <h3 className="font-semibold text-slate-900 dark:text-white">{property.name}</h3>
-                                                <span className={`px-2 py-1 text-xs font-medium rounded-md ${
-                                                    property.status === 'excellent'
-                                                        ? 'bg-emerald-100 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'
-                                                        : property.status === 'good'
-                                                            ? 'bg-blue-100 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400'
-                                                            : 'bg-amber-100 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400'
-                                                }`}>
-                                                    {property.status}
-                                                </span>
-                                            </div>
-                                            <div className="space-y-2">
-                                                <div className="flex justify-between text-sm">
-                                                    <span className="text-slate-600 dark:text-slate-400">Occupancy</span>
-                                                    <span className="font-semibold text-slate-900 dark:text-white">
-                                                        {property.occupied}/{property.rooms}
-                                                    </span>
-                                                </div>
-                                                <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2 overflow-hidden">
-                                                    <div
-                                                        className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full transition-all duration-500"
-                                                        style={{ width: `${(property.occupied / property.rooms) * 100}%` }}
-                                                    />
-                                                </div>
-                                                <div className="flex justify-between text-sm pt-1">
-                                                    <span className="text-slate-600 dark:text-slate-400">Revenue</span>
-                                                    <span className="font-bold text-indigo-600 dark:text-indigo-400">{property.revenue}</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                            </CardContent>
+                        </Card>
+                    );
+                })}
             </div>
+
+            {/* Quick Actions */}
+            <Card>
+                <CardHeader>
+                    <CardTitle className="text-base md:text-lg">Quick Actions</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        {quickActions.map((action, index) => {
+                            const Icon = action.icon;
+                            return (
+                                <Button
+                                    key={index}
+                                    variant="outline"
+                                    className="h-auto py-4 flex-col gap-2"
+                                >
+                                    <Icon className="w-5 h-5 md:w-6 md:h-6" />
+                                    <span className="text-xs md:text-sm">{action.label}</span>
+                                </Button>
+                            );
+                        })}
+                    </div>
+                </CardContent>
+            </Card>
+
+            {/* Recent Activities & Tasks */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
+                {/* Recent Activities */}
+                <Card className="lg:col-span-2">
+                    <CardHeader className="flex flex-row items-center justify-between">
+                        <CardTitle className="text-base md:text-lg">Recent Activities</CardTitle>
+                        <Button variant="ghost" size="sm" className="text-xs md:text-sm">
+                            View All
+                            <ArrowRight className="w-4 h-4" />
+                        </Button>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="space-y-3">
+                            {recentActivities.map((activity) => {
+                                const Icon = activity.icon;
+                                return (
+                                    <div
+                                        key={activity.id}
+                                        className="flex items-start gap-3 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
+                                    >
+                                        <div className={`w-9 h-9 md:w-10 md:h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${getIconColor(activity.color)}`}>
+                                            <Icon className="w-4 h-4 md:w-5 md:h-5" />
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-sm font-semibold text-slate-900 dark:text-white">
+                                                {activity.title}
+                                            </p>
+                                            <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5 truncate">
+                                                {activity.description}
+                                            </p>
+                                            <p className="text-xs text-slate-500 dark:text-slate-500 mt-1">
+                                                {activity.time}
+                                            </p>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {/* Upcoming Tasks */}
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="text-base md:text-lg">Upcoming Tasks</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="space-y-3">
+                            {upcomingTasks.map((task) => (
+                                <div
+                                    key={task.id}
+                                    className="p-3 rounded-lg border border-slate-200 dark:border-slate-800 hover:border-indigo-300 dark:hover:border-indigo-700 transition-colors"
+                                >
+                                    <div className="flex items-start justify-between gap-2 mb-2">
+                                        <p className="text-sm font-medium text-slate-900 dark:text-white flex-1">
+                                            {task.task}
+                                        </p>
+                                        <Badge
+                                            variant={task.priority === 'high' ? 'danger' : 'warning'}
+                                            size="sm"
+                                        >
+                                            {task.priority}
+                                        </Badge>
+                                    </div>
+                                    <div className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400">
+                                        <Clock className="w-3.5 h-3.5" />
+                                        {task.due}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+
+            {/* Top Properties */}
+            <Card>
+                <CardHeader className="flex flex-row items-center justify-between">
+                    <CardTitle className="text-base md:text-lg">Top Properties</CardTitle>
+                    <Button variant="ghost" size="sm" className="text-xs md:text-sm">
+                        View All
+                        <ChevronRight className="w-4 h-4" />
+                    </Button>
+                </CardHeader>
+                <CardContent>
+                    <div className="space-y-4">
+                        {topProperties.map((property) => (
+                            <div
+                                key={property.id}
+                                className="p-4 rounded-lg border border-slate-200 dark:border-slate-800"
+                            >
+                                <div className="flex items-center justify-between mb-3">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center">
+                                            <Home className="w-5 h-5 text-white" />
+                                        </div>
+                                        <div>
+                                            <h3 className="font-semibold text-slate-900 dark:text-white">
+                                                {property.name}
+                                            </h3>
+                                            <p className="text-xs text-slate-600 dark:text-slate-400">
+                                                {property.occupied}/{property.total} rooms
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <Badge variant="success" size="sm">
+                                        {property.occupancy}%
+                                    </Badge>
+                                </div>
+                                <div className="w-full bg-slate-200 dark:bg-slate-800 rounded-full h-2">
+                                    <div
+                                        className="bg-gradient-to-r from-indigo-600 to-purple-600 h-2 rounded-full transition-all"
+                                        style={{ width: `${property.occupancy}%` }}
+                                    />
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </CardContent>
+            </Card>
         </div>
     );
 }
