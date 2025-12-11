@@ -190,7 +190,7 @@ export default function LoginPage() {
                 {/* Footer */}
                 <div className="mt-6 text-center animate-fade-in">
                     <p className="text-sm text-slate-600 dark:text-slate-400">
-                        © 2024 Gatau Building Management System
+                        © 2025 Gatau Building Management System
                     </p>
                     <p className="text-xs text-slate-500 dark:text-slate-500 mt-1">
                         Secure • Reliable • Professional
