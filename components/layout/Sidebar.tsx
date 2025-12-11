@@ -300,7 +300,7 @@ export default function Sidebar({ onCollapseChange }: SidebarProps) {
                         </button>
 
                         {/* Settings */}
-                        <a
+                        <Link
                             href="/dashboard/settings"
                             className={`
                 w-full flex items-center rounded-lg
@@ -319,7 +319,7 @@ export default function Sidebar({ onCollapseChange }: SidebarProps) {
                             <span className="lg:hidden font-medium text-sm whitespace-nowrap">
                 Settings
               </span>
-                        </a>
+                        </Link>
 
                         {/* Logout */}
                         <button
