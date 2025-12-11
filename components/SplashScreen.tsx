@@ -12,13 +12,18 @@ export default function SplashScreen() {
         const isTablet = /iPad|Android/i.test(navigator.userAgent) &&
             window.innerWidth >= 768 && window.innerWidth <= 1024;
 
-        // Only show splash on mobile or tablet
-        if (isMobile || isTablet) {
+        // Check if splash already shown in this session
+        const hasSeenSplash = sessionStorage.getItem('hasSeenSplash');
+
+        // Only show splash on mobile/tablet AND if not seen in this session
+        if ((isMobile || isTablet) && !hasSeenSplash) {
             setIsVisible(true);
 
             // Hide splash after 2.5 seconds
             const timer = setTimeout(() => {
                 setIsVisible(false);
+                // Mark as seen for this session
+                sessionStorage.setItem('hasSeenSplash', 'true');
             }, 2500);
 
             return () => clearTimeout(timer);
