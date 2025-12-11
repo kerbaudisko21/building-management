@@ -4,6 +4,7 @@ import { Plus_Jakarta_Sans, JetBrains_Mono } from 'next/font/google';
 import '@/app/globals.css';
 import { ThemeProvider } from '@/components/providers/ThemeProvider';
 import PWAInstallPrompt from '@/components/ui/pwa-install-prompt';
+import SplashScreen from '@/components/SplashScreen'; // ← ADD THIS LINE
 
 const jakarta = Plus_Jakarta_Sans({
     subsets: ['latin'],
@@ -67,7 +68,7 @@ export default function RootLayout({
         </head>
         <body className={`${jakarta.variable} ${mono.variable} font-sans antialiased`}>
         <ThemeProvider>
-            {/* No Sidebar here - just render children */}
+            <SplashScreen />
             {children}
             <PWAInstallPrompt />
         </ThemeProvider>
