@@ -28,6 +28,7 @@ import {
     LogOut,
     User,
 } from 'lucide-react';
+import Link from "next/link";
 
 interface SidebarProps {
     onCollapseChange?: (collapsed: boolean) => void;
@@ -207,7 +208,7 @@ export default function Sidebar({ onCollapseChange }: SidebarProps) {
                                 const active = isActive(item.href);
 
                                 return (
-                                    <a
+                                    <Link
                                         key={item.href}
                                         href={item.href}
                                         className={`
@@ -241,7 +242,7 @@ export default function Sidebar({ onCollapseChange }: SidebarProps) {
                                                 {item.label}
                                             </div>
                                         )}
-                                    </a>
+                                    </Link>
                                 );
                             })}
                         </div>
