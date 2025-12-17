@@ -36,7 +36,21 @@ export default function MaintenancePage() {
         { id: '5', name: 'Common Area - Building A' },
     ];
 
-    const [requests, setRequests] = useState([
+    type MaintenanceType = {
+        id: number;
+        ticketNumber: string;
+        room: string;
+        tenant: string;
+        issue: string;
+        category: string;
+        priority: string;
+        status: string;
+        reportedDate: string;
+        assignedTo: string | null;
+        estimatedCompletion: string | null;
+    };
+
+    const [requests, setRequests] = useState<MaintenanceType[]>([
         {
             id: 1,
             ticketNumber: 'MNT-2024-001',
@@ -106,7 +120,7 @@ export default function MaintenancePage() {
 
     const handleFormSubmit = (data: MaintenanceFormData) => {
         const room = rooms.find(r => r.id === data.roomId);
-        const newRequest = {
+        const newRequest: MaintenanceType = {
             id: Date.now(),
             ticketNumber: `MNT-2024-${String(requests.length + 1).padStart(3, '0')}`,
             room: room?.name || 'Unknown',
