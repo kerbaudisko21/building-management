@@ -8,7 +8,7 @@ import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
 import Table from '@/components/ui/Table';
 import AddAssetForm, { AssetFormData } from '@/components/forms/AddAssetForm';
-import { Package, Plus, Search, Filter, Calendar, MapPin, DollarSign, Edit, Trash2 } from 'lucide-react';
+import { Package, Plus, Search, Filter, Calendar, MapPin, DollarSign, Edit, Trash2, CheckCircle, AlertCircle } from 'lucide-react';
 
 export default function AssetPage() {
     const [isFormOpen, setIsFormOpen] = useState(false);
@@ -257,34 +257,62 @@ export default function AssetPage() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
                 <Card>
                     <CardContent className="p-3 md:p-4">
-                        <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400">Total Assets</p>
-                        <p className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white mt-1">
-                            {assets.length}
-                        </p>
+                        <div className="flex items-center justify-between">
+                            <div className="min-w-0 flex-1">
+                                <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 truncate">Total Assets</p>
+                                <p className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white mt-1 truncate">
+                                    {assets.length}
+                                </p>
+                            </div>
+                            <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center flex-shrink-0 ml-2">
+                                <Package className="w-5 h-5 md:w-6 md:h-6 text-amber-600 dark:text-amber-400" />
+                            </div>
+                        </div>
                     </CardContent>
                 </Card>
                 <Card>
                     <CardContent className="p-3 md:p-4">
-                        <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400">Current Value</p>
-                        <p className="text-xl md:text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">
-                            {formatCurrency(totalValue)}
-                        </p>
+                        <div className="flex items-center justify-between">
+                            <div className="min-w-0 flex-1">
+                                <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 truncate">Current Value</p>
+                                <p className="text-base md:text-xl font-bold text-emerald-600 dark:text-emerald-400 mt-1 truncate">
+                                    {formatCurrency(totalValue).substring(0, 12)}
+                                </p>
+                            </div>
+                            <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center flex-shrink-0 ml-2">
+                                <DollarSign className="w-5 h-5 md:w-6 md:h-6 text-emerald-600 dark:text-emerald-400" />
+                            </div>
+                        </div>
                     </CardContent>
                 </Card>
                 <Card>
                     <CardContent className="p-3 md:p-4">
-                        <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400">Good Condition</p>
-                        <p className="text-xl md:text-2xl font-bold text-blue-600 dark:text-blue-400 mt-1">
-                            {assets.filter(a => a.condition === 'Good' || a.condition === 'Excellent').length}
-                        </p>
+                        <div className="flex items-center justify-between">
+                            <div className="min-w-0 flex-1">
+                                <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 truncate">Good Condition</p>
+                                <p className="text-xl md:text-2xl font-bold text-blue-600 dark:text-blue-400 mt-1 truncate">
+                                    {assets.filter(a => a.condition === 'Good' || a.condition === 'Excellent').length}
+                                </p>
+                            </div>
+                            <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0 ml-2">
+                                <CheckCircle className="w-5 h-5 md:w-6 md:h-6 text-blue-600 dark:text-blue-400" />
+                            </div>
+                        </div>
                     </CardContent>
                 </Card>
                 <Card>
                     <CardContent className="p-3 md:p-4">
-                        <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400">Needs Repair</p>
-                        <p className="text-xl md:text-2xl font-bold text-red-600 dark:text-red-400 mt-1">
-                            {assets.filter(a => a.condition === 'Needs Repair' || a.condition === 'Poor').length}
-                        </p>
+                        <div className="flex items-center justify-between">
+                            <div className="min-w-0 flex-1">
+                                <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 truncate">Needs Repair</p>
+                                <p className="text-xl md:text-2xl font-bold text-red-600 dark:text-red-400 mt-1 truncate">
+                                    {assets.filter(a => a.condition === 'Needs Repair' || a.condition === 'Poor').length}
+                                </p>
+                            </div>
+                            <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-red-100 dark:bg-red-900/30 flex items-center justify-center flex-shrink-0 ml-2">
+                                <AlertCircle className="w-5 h-5 md:w-6 md:h-6 text-red-600 dark:text-red-400" />
+                            </div>
+                        </div>
                     </CardContent>
                 </Card>
             </div>

@@ -8,7 +8,7 @@ import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
 import Table from '@/components/ui/Table';
 import AddWaitingListForm, { WaitingListFormData } from '@/components/forms/AddWaitingListForm';
-import { Users, Plus, Search, Filter, Calendar, User, Mail, Phone, Edit, Trash2 } from 'lucide-react';
+import { Users, Plus, Search, Filter, Calendar, User, Mail, Phone, Edit, Trash2, Clock, CheckCircle } from 'lucide-react';
 
 export default function WaitingListPage() {
     const [isFormOpen, setIsFormOpen] = useState(false);
@@ -238,34 +238,62 @@ export default function WaitingListPage() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
                 <Card>
                     <CardContent className="p-3 md:p-4">
-                        <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400">Total</p>
-                        <p className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white mt-1">
-                            {waitingList.length}
-                        </p>
+                        <div className="flex items-center justify-between">
+                            <div className="min-w-0 flex-1">
+                                <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 truncate">Total</p>
+                                <p className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white mt-1 truncate">
+                                    {waitingList.length}
+                                </p>
+                            </div>
+                            <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center flex-shrink-0 ml-2">
+                                <Users className="w-5 h-5 md:w-6 md:h-6 text-purple-600 dark:text-purple-400" />
+                            </div>
+                        </div>
                     </CardContent>
                 </Card>
                 <Card>
                     <CardContent className="p-3 md:p-4">
-                        <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400">Waiting</p>
-                        <p className="text-xl md:text-2xl font-bold text-amber-600 dark:text-amber-400 mt-1">
-                            {waitingList.filter(w => w.status === 'waiting').length}
-                        </p>
+                        <div className="flex items-center justify-between">
+                            <div className="min-w-0 flex-1">
+                                <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 truncate">Waiting</p>
+                                <p className="text-xl md:text-2xl font-bold text-amber-600 dark:text-amber-400 mt-1 truncate">
+                                    {waitingList.filter(w => w.status === 'waiting').length}
+                                </p>
+                            </div>
+                            <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center flex-shrink-0 ml-2">
+                                <Clock className="w-5 h-5 md:w-6 md:h-6 text-amber-600 dark:text-amber-400" />
+                            </div>
+                        </div>
                     </CardContent>
                 </Card>
                 <Card>
                     <CardContent className="p-3 md:p-4">
-                        <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400">Contacted</p>
-                        <p className="text-xl md:text-2xl font-bold text-blue-600 dark:text-blue-400 mt-1">
-                            {waitingList.filter(w => w.status === 'contacted').length}
-                        </p>
+                        <div className="flex items-center justify-between">
+                            <div className="min-w-0 flex-1">
+                                <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 truncate">Contacted</p>
+                                <p className="text-xl md:text-2xl font-bold text-blue-600 dark:text-blue-400 mt-1 truncate">
+                                    {waitingList.filter(w => w.status === 'contacted').length}
+                                </p>
+                            </div>
+                            <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0 ml-2">
+                                <Phone className="w-5 h-5 md:w-6 md:h-6 text-blue-600 dark:text-blue-400" />
+                            </div>
+                        </div>
                     </CardContent>
                 </Card>
                 <Card>
                     <CardContent className="p-3 md:p-4">
-                        <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400">Interested</p>
-                        <p className="text-xl md:text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">
-                            {waitingList.filter(w => w.status === 'interested').length}
-                        </p>
+                        <div className="flex items-center justify-between">
+                            <div className="min-w-0 flex-1">
+                                <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 truncate">Interested</p>
+                                <p className="text-xl md:text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1 truncate">
+                                    {waitingList.filter(w => w.status === 'interested').length}
+                                </p>
+                            </div>
+                            <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center flex-shrink-0 ml-2">
+                                <CheckCircle className="w-5 h-5 md:w-6 md:h-6 text-emerald-600 dark:text-emerald-400" />
+                            </div>
+                        </div>
                     </CardContent>
                 </Card>
             </div>

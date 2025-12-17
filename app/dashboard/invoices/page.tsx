@@ -122,7 +122,7 @@ export default function InvoicesPage() {
             status: 'Cancelled',
             paidDate: null,
             paymentMethod: null,
-        }
+        },
     ]);
 
     const statusOptions = [
@@ -288,34 +288,62 @@ export default function InvoicesPage() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
                 <Card>
                     <CardContent className="p-3 md:p-4">
-                        <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400">Total</p>
-                        <p className="text-lg md:text-2xl font-bold text-slate-900 dark:text-white mt-1 truncate">
-                            {formatCurrency(totalAmount)}
-                        </p>
+                        <div className="flex items-center justify-between">
+                            <div className="min-w-0 flex-1">
+                                <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 truncate">Total</p>
+                                <p className="text-base md:text-xl font-bold text-slate-900 dark:text-white mt-1 truncate">
+                                    {formatCurrency(totalAmount).substring(0, 12)}
+                                </p>
+                            </div>
+                            <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center flex-shrink-0 ml-2">
+                                <Receipt className="w-5 h-5 md:w-6 md:h-6 text-slate-600 dark:text-slate-400" />
+                            </div>
+                        </div>
                     </CardContent>
                 </Card>
                 <Card>
                     <CardContent className="p-3 md:p-4">
-                        <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400">Paid</p>
-                        <p className="text-lg md:text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1 truncate">
-                            {formatCurrency(paidAmount)}
-                        </p>
+                        <div className="flex items-center justify-between">
+                            <div className="min-w-0 flex-1">
+                                <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 truncate">Paid</p>
+                                <p className="text-base md:text-xl font-bold text-emerald-600 dark:text-emerald-400 mt-1 truncate">
+                                    {formatCurrency(paidAmount).substring(0, 12)}
+                                </p>
+                            </div>
+                            <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center flex-shrink-0 ml-2">
+                                <CheckCircle className="w-5 h-5 md:w-6 md:h-6 text-emerald-600 dark:text-emerald-400" />
+                            </div>
+                        </div>
                     </CardContent>
                 </Card>
                 <Card>
                     <CardContent className="p-3 md:p-4">
-                        <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400">Pending</p>
-                        <p className="text-lg md:text-2xl font-bold text-amber-600 dark:text-amber-400 mt-1 truncate">
-                            {formatCurrency(pendingAmount)}
-                        </p>
+                        <div className="flex items-center justify-between">
+                            <div className="min-w-0 flex-1">
+                                <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 truncate">Pending</p>
+                                <p className="text-base md:text-xl font-bold text-amber-600 dark:text-amber-400 mt-1 truncate">
+                                    {formatCurrency(pendingAmount).substring(0, 12)}
+                                </p>
+                            </div>
+                            <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center flex-shrink-0 ml-2">
+                                <Clock className="w-5 h-5 md:w-6 md:h-6 text-amber-600 dark:text-amber-400" />
+                            </div>
+                        </div>
                     </CardContent>
                 </Card>
                 <Card>
                     <CardContent className="p-3 md:p-4">
-                        <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400">Overdue</p>
-                        <p className="text-xl md:text-2xl font-bold text-red-600 dark:text-red-400 mt-1">
-                            {invoices.filter(i => i.status === 'Overdue').length}
-                        </p>
+                        <div className="flex items-center justify-between">
+                            <div className="min-w-0 flex-1">
+                                <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 truncate">Overdue</p>
+                                <p className="text-xl md:text-2xl font-bold text-red-600 dark:text-red-400 mt-1 truncate">
+                                    {invoices.filter(i => i.status === 'Overdue').length}
+                                </p>
+                            </div>
+                            <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-red-100 dark:bg-red-900/30 flex items-center justify-center flex-shrink-0 ml-2">
+                                <AlertCircle className="w-5 h-5 md:w-6 md:h-6 text-red-600 dark:text-red-400" />
+                            </div>
+                        </div>
                     </CardContent>
                 </Card>
             </div>

@@ -224,61 +224,61 @@ export default function ContactsPage() {
             </div>
 
             {/* Stats Cards */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
                 <Card>
-                    <CardContent className="p-4">
+                    <CardContent className="p-3 md:p-4">
                         <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-sm text-slate-600 dark:text-slate-400">Total Contacts</p>
-                                <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1">{contacts.length}</p>
+                            <div className="min-w-0 flex-1">
+                                <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 truncate">Total Contacts</p>
+                                <p className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white mt-1 truncate">{contacts.length}</p>
                             </div>
-                            <div className="w-12 h-12 rounded-lg bg-pink-100 dark:bg-pink-900/30 flex items-center justify-center">
-                                <User className="w-6 h-6 text-pink-600 dark:text-pink-400" />
+                            <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-pink-100 dark:bg-pink-900/30 flex items-center justify-center flex-shrink-0 ml-2">
+                                <User className="w-5 h-5 md:w-6 md:h-6 text-pink-600 dark:text-pink-400" />
                             </div>
                         </div>
                     </CardContent>
                 </Card>
                 <Card>
-                    <CardContent className="p-4">
+                    <CardContent className="p-3 md:p-4">
                         <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-sm text-slate-600 dark:text-slate-400">Active</p>
-                                <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">
+                            <div className="min-w-0 flex-1">
+                                <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 truncate">Active</p>
+                                <p className="text-xl md:text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1 truncate">
                                     {contacts.filter(c => c.status === 'Active').length}
                                 </p>
                             </div>
-                            <div className="w-12 h-12 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
-                                <User className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+                            <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center flex-shrink-0 ml-2">
+                                <User className="w-5 h-5 md:w-6 md:h-6 text-emerald-600 dark:text-emerald-400" />
                             </div>
                         </div>
                     </CardContent>
                 </Card>
                 <Card>
-                    <CardContent className="p-4">
+                    <CardContent className="p-3 md:p-4">
                         <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-sm text-slate-600 dark:text-slate-400">Pending</p>
-                                <p className="text-2xl font-bold text-amber-600 dark:text-amber-400 mt-1">
+                            <div className="min-w-0 flex-1">
+                                <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 truncate">Pending</p>
+                                <p className="text-xl md:text-2xl font-bold text-amber-600 dark:text-amber-400 mt-1 truncate">
                                     {contacts.filter(c => c.status === 'Pending').length}
                                 </p>
                             </div>
-                            <div className="w-12 h-12 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
-                                <User className="w-6 h-6 text-amber-600 dark:text-amber-400" />
+                            <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center flex-shrink-0 ml-2">
+                                <User className="w-5 h-5 md:w-6 md:h-6 text-amber-600 dark:text-amber-400" />
                             </div>
                         </div>
                     </CardContent>
                 </Card>
                 <Card>
-                    <CardContent className="p-4">
+                    <CardContent className="p-3 md:p-4">
                         <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-sm text-slate-600 dark:text-slate-400">Prospects</p>
-                                <p className="text-2xl font-bold text-blue-600 dark:text-blue-400 mt-1">
+                            <div className="min-w-0 flex-1">
+                                <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 truncate">Prospects</p>
+                                <p className="text-xl md:text-2xl font-bold text-blue-600 dark:text-blue-400 mt-1 truncate">
                                     {contacts.filter(c => c.status === 'Prospect').length}
                                 </p>
                             </div>
-                            <div className="w-12 h-12 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                                <User className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                            <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0 ml-2">
+                                <User className="w-5 h-5 md:w-6 md:h-6 text-blue-600 dark:text-blue-400" />
                             </div>
                         </div>
                     </CardContent>

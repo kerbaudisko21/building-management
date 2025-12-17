@@ -12,6 +12,10 @@ import {
     Search,
     Calendar,
     User,
+    ListTodo,
+    Clock,
+    Loader,
+    CheckCircle,
 } from 'lucide-react';
 
 export default function TodoListPage() {
@@ -148,34 +152,62 @@ export default function TodoListPage() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
                 <Card>
                     <CardContent className="p-3 md:p-4">
-                        <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400">Total</p>
-                        <p className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white mt-1">
-                            {tasks.length}
-                        </p>
+                        <div className="flex items-center justify-between">
+                            <div className="min-w-0 flex-1">
+                                <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 truncate">Total</p>
+                                <p className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white mt-1 truncate">
+                                    {tasks.length}
+                                </p>
+                            </div>
+                            <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center flex-shrink-0 ml-2">
+                                <ListTodo className="w-5 h-5 md:w-6 md:h-6 text-slate-600 dark:text-slate-400" />
+                            </div>
+                        </div>
                     </CardContent>
                 </Card>
                 <Card>
                     <CardContent className="p-3 md:p-4">
-                        <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400">Todo</p>
-                        <p className="text-xl md:text-2xl font-bold text-amber-600 dark:text-amber-400 mt-1">
-                            {tasks.filter(t => t.status === 'Todo').length}
-                        </p>
+                        <div className="flex items-center justify-between">
+                            <div className="min-w-0 flex-1">
+                                <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 truncate">Todo</p>
+                                <p className="text-xl md:text-2xl font-bold text-amber-600 dark:text-amber-400 mt-1 truncate">
+                                    {tasks.filter(t => t.status === 'Todo').length}
+                                </p>
+                            </div>
+                            <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center flex-shrink-0 ml-2">
+                                <Clock className="w-5 h-5 md:w-6 md:h-6 text-amber-600 dark:text-amber-400" />
+                            </div>
+                        </div>
                     </CardContent>
                 </Card>
                 <Card>
                     <CardContent className="p-3 md:p-4">
-                        <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 truncate">In Progress</p>
-                        <p className="text-xl md:text-2xl font-bold text-blue-600 dark:text-blue-400 mt-1">
-                            {tasks.filter(t => t.status === 'In Progress').length}
-                        </p>
+                        <div className="flex items-center justify-between">
+                            <div className="min-w-0 flex-1">
+                                <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 truncate">In Progress</p>
+                                <p className="text-xl md:text-2xl font-bold text-blue-600 dark:text-blue-400 mt-1 truncate">
+                                    {tasks.filter(t => t.status === 'In Progress').length}
+                                </p>
+                            </div>
+                            <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0 ml-2">
+                                <Loader className="w-5 h-5 md:w-6 md:h-6 text-blue-600 dark:text-blue-400" />
+                            </div>
+                        </div>
                     </CardContent>
                 </Card>
                 <Card>
                     <CardContent className="p-3 md:p-4">
-                        <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400">Done</p>
-                        <p className="text-xl md:text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">
-                            {tasks.filter(t => t.status === 'Done').length}
-                        </p>
+                        <div className="flex items-center justify-between">
+                            <div className="min-w-0 flex-1">
+                                <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 truncate">Done</p>
+                                <p className="text-xl md:text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1 truncate">
+                                    {tasks.filter(t => t.status === 'Done').length}
+                                </p>
+                            </div>
+                            <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center flex-shrink-0 ml-2">
+                                <CheckCircle className="w-5 h-5 md:w-6 md:h-6 text-emerald-600 dark:text-emerald-400" />
+                            </div>
+                        </div>
                     </CardContent>
                 </Card>
             </div>

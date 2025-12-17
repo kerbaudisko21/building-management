@@ -242,61 +242,61 @@ export default function RoomsPage() {
             </div>
 
             {/* Stats Cards */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
                 <Card>
-                    <CardContent className="p-4">
+                    <CardContent className="p-3 md:p-4">
                         <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-sm text-slate-600 dark:text-slate-400">Total Rooms</p>
-                                <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1">{rooms.length}</p>
+                            <div className="min-w-0 flex-1">
+                                <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 truncate">Total Rooms</p>
+                                <p className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white mt-1 truncate">{rooms.length}</p>
                             </div>
-                            <div className="w-12 h-12 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                                <Home className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                            <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0 ml-2">
+                                <Home className="w-5 h-5 md:w-6 md:h-6 text-blue-600 dark:text-blue-400" />
                             </div>
                         </div>
                     </CardContent>
                 </Card>
                 <Card>
-                    <CardContent className="p-4">
+                    <CardContent className="p-3 md:p-4">
                         <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-sm text-slate-600 dark:text-slate-400">Available</p>
-                                <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">
+                            <div className="min-w-0 flex-1">
+                                <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 truncate">Available</p>
+                                <p className="text-xl md:text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1 truncate">
                                     {rooms.filter(r => r.status === 'Available').length}
                                 </p>
                             </div>
-                            <div className="w-12 h-12 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
-                                <Home className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+                            <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center flex-shrink-0 ml-2">
+                                <Home className="w-5 h-5 md:w-6 md:h-6 text-emerald-600 dark:text-emerald-400" />
                             </div>
                         </div>
                     </CardContent>
                 </Card>
                 <Card>
-                    <CardContent className="p-4">
+                    <CardContent className="p-3 md:p-4">
                         <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-sm text-slate-600 dark:text-slate-400">Occupied</p>
-                                <p className="text-2xl font-bold text-blue-600 dark:text-blue-400 mt-1">
+                            <div className="min-w-0 flex-1">
+                                <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 truncate">Occupied</p>
+                                <p className="text-xl md:text-2xl font-bold text-blue-600 dark:text-blue-400 mt-1 truncate">
                                     {rooms.filter(r => r.status === 'Occupied').length}
                                 </p>
                             </div>
-                            <div className="w-12 h-12 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                                <Bed className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                            <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0 ml-2">
+                                <Bed className="w-5 h-5 md:w-6 md:h-6 text-blue-600 dark:text-blue-400" />
                             </div>
                         </div>
                     </CardContent>
                 </Card>
                 <Card>
-                    <CardContent className="p-4">
+                    <CardContent className="p-3 md:p-4">
                         <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-sm text-slate-600 dark:text-slate-400">Revenue</p>
-                                <p className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white mt-1">
-                                    {formatCurrency(rooms.filter(r => r.status === 'Occupied').reduce((sum, r) => sum + r.price, 0))}
+                            <div className="min-w-0 flex-1">
+                                <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 truncate">Revenue</p>
+                                <p className="text-base md:text-xl font-bold text-slate-900 dark:text-white mt-1 truncate">
+                                    {formatCurrency(rooms.filter(r => r.status === 'Occupied').reduce((sum, r) => sum + r.price, 0)).replace('Rp', '').trim().substring(0, 10)}
                                 </p>
                             </div>
-                            <div className="w-12 h-12 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
-                                <DollarSign className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+                            <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center flex-shrink-0 ml-2">
+                                <DollarSign className="w-5 h-5 md:w-6 md:h-6 text-purple-600 dark:text-purple-400" />
                             </div>
                         </div>
                     </CardContent>

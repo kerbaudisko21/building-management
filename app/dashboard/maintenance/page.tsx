@@ -275,34 +275,62 @@ export default function MaintenancePage() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
                 <Card>
                     <CardContent className="p-3 md:p-4">
-                        <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400">Total</p>
-                        <p className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white mt-1">
-                            {requests.length}
-                        </p>
+                        <div className="flex items-center justify-between">
+                            <div className="min-w-0 flex-1">
+                                <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 truncate">Total</p>
+                                <p className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white mt-1 truncate">
+                                    {requests.length}
+                                </p>
+                            </div>
+                            <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center flex-shrink-0 ml-2">
+                                <Wrench className="w-5 h-5 md:w-6 md:h-6 text-indigo-600 dark:text-indigo-400" />
+                            </div>
+                        </div>
                     </CardContent>
                 </Card>
                 <Card>
                     <CardContent className="p-3 md:p-4">
-                        <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400">Pending</p>
-                        <p className="text-xl md:text-2xl font-bold text-amber-600 dark:text-amber-400 mt-1">
-                            {requests.filter(r => r.status === 'Pending').length}
-                        </p>
+                        <div className="flex items-center justify-between">
+                            <div className="min-w-0 flex-1">
+                                <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 truncate">Pending</p>
+                                <p className="text-xl md:text-2xl font-bold text-amber-600 dark:text-amber-400 mt-1 truncate">
+                                    {requests.filter(r => r.status === 'Pending').length}
+                                </p>
+                            </div>
+                            <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center flex-shrink-0 ml-2">
+                                <Clock className="w-5 h-5 md:w-6 md:h-6 text-amber-600 dark:text-amber-400" />
+                            </div>
+                        </div>
                     </CardContent>
                 </Card>
                 <Card>
                     <CardContent className="p-3 md:p-4">
-                        <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 truncate">In Progress</p>
-                        <p className="text-xl md:text-2xl font-bold text-blue-600 dark:text-blue-400 mt-1">
-                            {requests.filter(r => r.status === 'In Progress').length}
-                        </p>
+                        <div className="flex items-center justify-between">
+                            <div className="min-w-0 flex-1">
+                                <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 truncate">In Progress</p>
+                                <p className="text-xl md:text-2xl font-bold text-blue-600 dark:text-blue-400 mt-1 truncate">
+                                    {requests.filter(r => r.status === 'In Progress').length}
+                                </p>
+                            </div>
+                            <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0 ml-2">
+                                <AlertCircle className="w-5 h-5 md:w-6 md:h-6 text-blue-600 dark:text-blue-400" />
+                            </div>
+                        </div>
                     </CardContent>
                 </Card>
                 <Card>
                     <CardContent className="p-3 md:p-4">
-                        <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400">Completed</p>
-                        <p className="text-xl md:text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">
-                            {requests.filter(r => r.status === 'Completed').length}
-                        </p>
+                        <div className="flex items-center justify-between">
+                            <div className="min-w-0 flex-1">
+                                <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 truncate">Completed</p>
+                                <p className="text-xl md:text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1 truncate">
+                                    {requests.filter(r => r.status === 'Completed').length}
+                                </p>
+                            </div>
+                            <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center flex-shrink-0 ml-2">
+                                <CheckCircle className="w-5 h-5 md:w-6 md:h-6 text-emerald-600 dark:text-emerald-400" />
+                            </div>
+                        </div>
                     </CardContent>
                 </Card>
             </div>
