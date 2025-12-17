@@ -265,7 +265,7 @@ export default function EnhancedDashboard() {
                                         <h3 className="font-semibold text-slate-900 dark:text-white">
                                             {alert.title}
                                         </h3>
-                                        <Badge variant={alert.severity === 'urgent' ? 'error' : 'warning'} size="sm">
+                                        <Badge variant={alert.severity === 'urgent' ? 'danger' : 'warning'} size="sm">
                                             {alert.severity}
                                         </Badge>
                                     </div>
@@ -360,7 +360,7 @@ export default function EnhancedDashboard() {
                                                             </div>
                                                         </div>
                                                         <Badge
-                                                            variant={item.priority === 'high' ? 'error' : item.priority === 'medium' ? 'warning' : 'default'}
+                                                            variant={item.priority === 'high' ? 'danger' : item.priority === 'medium' ? 'warning' : 'default'}
                                                             size="sm"
                                                         >
                                                             {item.priority}
