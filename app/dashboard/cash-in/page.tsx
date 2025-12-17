@@ -7,6 +7,7 @@ import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
 import Table from '@/components/ui/Table';
+import AddCashInForm, { CashInFormData } from '@/components/forms/AddCashInForm';
 import {
     TrendingUp,
     Plus,
@@ -22,8 +23,9 @@ import {
 export default function CashInPage() {
     const [searchQuery, setSearchQuery] = useState('');
     const [showFilters, setShowFilters] = useState(false);
+    const [isFormOpen, setIsFormOpen] = useState(false);
 
-    const transactions = [
+    const [transactions, setTransactions] = useState([
         {
             id: 1,
             date: '2024-12-08',
@@ -74,7 +76,21 @@ export default function CashInPage() {
             reference: 'TRF-20241210-005',
             status: 'Pending',
         },
-    ];
+    ]);
+
+    const handleFormSubmit = (data: CashInFormData) => {
+        const newTransaction = {
+            id: transactions.length + 1,
+            date: data.date,
+            category: data.category,
+            source: data.source,
+            amount: data.amount,
+            paymentMethod: data.paymentMethod,
+            reference: data.reference,
+            status: 'Completed',
+        };
+        setTransactions([newTransaction, ...transactions]);
+    };
 
     const categoryOptions = [
         { value: 'all', label: 'All Categories' },
@@ -194,7 +210,7 @@ export default function CashInPage() {
                         Track income and payments received
                     </p>
                 </div>
-                <Button className="w-full sm:w-auto">
+                <Button className="w-full sm:w-auto" onClick={() => setIsFormOpen(true)}>
                     <Plus className="w-5 h-5" />
                     Add Income
                 </Button>
@@ -252,8 +268,8 @@ export default function CashInPage() {
                             {showFilters ? 'Hide' : 'Show'} Filters
                         </Button>
                         <div className={`grid grid-cols-1 gap-3 md:grid-cols-3 ${showFilters ? 'block' : 'hidden md:grid'}`}>
-                            <Select options={categoryOptions} placeholder="Category" />
-                            <Select options={methodOptions} placeholder="Method" />
+                            <Select options={categoryOptions} />
+                            <Select options={methodOptions} />
                             <Input type="date" placeholder="Date" />
                         </div>
                     </div>
@@ -300,6 +316,12 @@ export default function CashInPage() {
             <div className="hidden md:block">
                 <Table data={transactions} columns={columns} />
             </div>
+
+            <AddCashInForm
+                isOpen={isFormOpen}
+                onClose={() => setIsFormOpen(false)}
+                onSubmit={handleFormSubmit}
+            />
         </div>
     );
 }

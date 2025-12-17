@@ -1,157 +1,117 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/Card';
-import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
+import Badge from '@/components/ui/Badge';
 import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
 import Table from '@/components/ui/Table';
-import {
-    Users,
-    Plus,
-    Search,
-    Phone,
-    Mail,
-    MapPin,
-    Eye,
-    Edit,
-    Trash2,
-    User,
-    UserCheck,
-    MessageSquare,
-    IdCard,
-    Filter,
-} from 'lucide-react';
+import AddTenantForm, { TenantFormData } from '@/components/forms/AddTenantForm';
+import { User, Plus, Edit, Trash2, Search, Filter, Grid3x3, List, Mail, Phone, MapPin } from 'lucide-react';
 
 export default function ContactsPage() {
+    const [isFormOpen, setIsFormOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
-    const [filterType, setFilterType] = useState('all');
     const [showFilters, setShowFilters] = useState(false);
+    const [filterStatus, setFilterStatus] = useState('all');
+    const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+    const [isMobile, setIsMobile] = useState(false);
 
-    // Mock data
-    const contacts = [
+    // Detect mobile and force grid view
+    useEffect(() => {
+        const checkMobile = () => {
+            setIsMobile(window.innerWidth < 768);
+        };
+
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+
+        return () => window.removeEventListener('resize', checkMobile);
+    }, []);
+
+    const effectiveViewMode = isMobile ? 'grid' : viewMode;
+
+    const [contacts, setContacts] = useState([
         {
-            id: 1,
+            id: '1',
             name: 'John Doe',
-            type: 'Guest',
-            ktpNumber: '3171234567890123',
-            phone: '+62 812-3456-7890',
-            whatsapp: '+62 812-3456-7890',
             email: 'john.doe@email.com',
-            gender: 'Male',
-            totalPeople: 1,
+            phone: '+62 812 3456 7890',
+            idNumber: '3201234567890123',
+            occupation: 'Software Engineer',
+            room: 'Room 305',
             status: 'Active',
-            property: 'Building A - Room 305',
-            joinDate: '2024-01-15',
+            moveInDate: '2024-01-15',
         },
         {
-            id: 2,
+            id: '2',
             name: 'Jane Smith',
-            type: 'Guest',
-            ktpNumber: '3171234567890124',
-            phone: '+62 813-4567-8901',
-            whatsapp: '+62 813-4567-8901',
             email: 'jane.smith@email.com',
-            gender: 'Female',
-            totalPeople: 2,
-            coupleId: 3,
+            phone: '+62 813 9876 5432',
+            idNumber: '3301987654321098',
+            occupation: 'Marketing Manager',
+            room: 'Room 201',
             status: 'Active',
-            property: 'Building B - Room 201',
-            joinDate: '2024-02-20',
+            moveInDate: '2024-03-01',
         },
         {
-            id: 3,
+            id: '3',
             name: 'Bob Johnson',
-            type: 'Guest',
-            ktpNumber: '3171234567890125',
-            phone: '+62 814-5678-9012',
-            whatsapp: '+62 814-5678-9012',
             email: 'bob.johnson@email.com',
-            gender: 'Male',
-            totalPeople: 2,
-            coupleId: 2,
-            status: 'Active',
-            property: 'Building B - Room 201',
-            joinDate: '2024-02-20',
+            phone: '+62 821 5555 4444',
+            idNumber: '3401122334455667',
+            occupation: 'Teacher',
+            room: null,
+            status: 'Prospect',
+            moveInDate: null,
         },
         {
-            id: 4,
+            id: '4',
             name: 'Alice Williams',
-            type: 'Owner',
-            ktpNumber: '3171234567890126',
-            phone: '+62 815-6789-0123',
-            whatsapp: '+62 815-6789-0123',
-            email: 'alice.williams@email.com',
-            gender: 'Female',
-            totalPeople: 1,
-            status: 'Active',
-            property: 'Building A (Owner)',
-            joinDate: '2023-01-10',
+            email: 'alice.w@email.com',
+            phone: '+62 856 7777 8888',
+            idNumber: '3501998877665544',
+            occupation: 'Graphic Designer',
+            room: 'Room 405',
+            status: 'Pending',
+            moveInDate: '2024-12-20',
         },
-        {
-            id: 5,
-            name: 'Charlie Brown',
-            type: 'Guest',
-            ktpNumber: '3171234567890127',
-            phone: '+62 816-7890-1234',
-            whatsapp: '+62 816-7890-1234',
-            email: 'charlie.brown@email.com',
-            gender: 'Male',
-            totalPeople: 1,
-            status: 'Inactive',
-            property: 'Building C - Room 102 (Moved Out)',
-            joinDate: '2023-11-05',
-        },
-        {
-            id: 6,
-            name: 'Diana Prince',
-            type: 'Guest',
-            ktpNumber: '3171234567890128',
-            phone: '+62 817-8901-2345',
-            whatsapp: '+62 817-8901-2345',
-            email: 'diana.prince@email.com',
-            gender: 'Female',
-            totalPeople: 1,
-            status: 'Active',
-            property: 'Building A - Room 405',
-            joinDate: '2024-03-10',
-        },
-    ];
-
-    const typeOptions = [
-        { value: 'all', label: 'All Types' },
-        { value: 'owner', label: 'Owner' },
-        { value: 'guest', label: 'Guest' },
-    ];
+    ]);
 
     const statusOptions = [
         { value: 'all', label: 'All Status' },
         { value: 'active', label: 'Active' },
+        { value: 'pending', label: 'Pending' },
+        { value: 'prospect', label: 'Prospect' },
         { value: 'inactive', label: 'Inactive' },
     ];
 
-    const genderOptions = [
-        { value: 'all', label: 'All Gender' },
-        { value: 'male', label: 'Male' },
-        { value: 'female', label: 'Female' },
-    ];
+    const handleSubmit = (data: TenantFormData) => {
+        const newContact = {
+            id: Date.now().toString(),
+            name: data.name,
+            email: data.email,
+            phone: data.phone,
+            idNumber: data.idNumber,
+            occupation: data.occupation || '-',
+            room: null,
+            status: 'Prospect',
+            moveInDate: null,
+        };
+        // setContacts([...contacts, newContact]);
+    };
 
-    // Filter contacts
-    const filteredContacts = contacts.filter((contact) => {
-        const matchesSearch =
-            contact.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            contact.phone.includes(searchQuery) ||
-            contact.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            contact.ktpNumber.includes(searchQuery);
+    const getStatusBadge = (status: string) => {
+        const variants: Record<string, any> = {
+            Active: 'success',
+            Pending: 'warning',
+            Prospect: 'info',
+            Inactive: 'default',
+        };
+        return variants[status] || 'default';
+    };
 
-        const matchesType =
-            filterType === 'all' || contact.type.toLowerCase() === filterType.toLowerCase();
-
-        return matchesSearch && matchesType;
-    });
-
-    // Table columns for desktop
     const columns = [
         {
             key: 'name',
@@ -159,67 +119,68 @@ export default function ContactsPage() {
             sortable: true,
             render: (item: any) => (
                 <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center flex-shrink-0">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center">
                         <User className="w-5 h-5 text-white" />
                     </div>
                     <div>
-                        <p className="font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-                            {item.name}
-                            {item.coupleId && (
-                                <span className="text-xs text-slate-500 dark:text-slate-400">
-                  (Couple)
-                </span>
-                            )}
-                        </p>
-                        <p className="text-xs text-slate-600 dark:text-slate-400">{item.email}</p>
+                        <p className="font-semibold text-slate-900 dark:text-white">{item.name}</p>
+                        <p className="text-sm text-slate-500 dark:text-slate-400">{item.occupation}</p>
                     </div>
                 </div>
             ),
         },
         {
-            key: 'type',
-            label: 'Type',
-            render: (item: any) => (
-                <Badge variant={item.type === 'Owner' ? 'purple' : 'info'}>
-                    {item.type}
-                </Badge>
-            ),
-        },
-        {
-            key: 'phone',
+            key: 'email',
             label: 'Contact',
             render: (item: any) => (
                 <div className="space-y-1">
-                    <div className="flex items-center gap-2 text-sm">
-                        <Phone className="w-3.5 h-3.5 text-slate-400" />
-                        <span className="text-slate-900 dark:text-white">{item.phone}</span>
+                    <div className="flex items-center gap-2">
+                        <Mail className="w-4 h-4 text-slate-400" />
+                        <span className="text-sm text-slate-600 dark:text-slate-400">{item.email}</span>
                     </div>
-                    <div className="flex items-center gap-2 text-sm">
-                        <MessageSquare className="w-3.5 h-3.5 text-emerald-500" />
-                        <span className="text-slate-600 dark:text-slate-400">{item.whatsapp}</span>
+                    <div className="flex items-center gap-2">
+                        <Phone className="w-4 h-4 text-slate-400" />
+                        <span className="text-sm text-slate-600 dark:text-slate-400">{item.phone}</span>
                     </div>
                 </div>
             ),
         },
         {
-            key: 'property',
-            label: 'Property',
+            key: 'idNumber',
+            label: 'ID Number',
+            render: (item: any) => (
+                <span className="text-sm font-mono text-slate-600 dark:text-slate-400">{item.idNumber}</span>
+            ),
+        },
+        {
+            key: 'room',
+            label: 'Room',
             render: (item: any) => (
                 <span className="text-sm text-slate-600 dark:text-slate-400">
-          {item.property}
-        </span>
+                    {item.room || '-'}
+                </span>
             ),
         },
         {
             key: 'status',
             label: 'Status',
             render: (item: any) => (
-                <Badge
-                    variant={item.status === 'Active' ? 'success' : 'default'}
-                    dot
-                >
+                <Badge variant={getStatusBadge(item.status)} dot>
                     {item.status}
                 </Badge>
+            ),
+        },
+        {
+            key: 'moveInDate',
+            label: 'Move-in Date',
+            render: (item: any) => (
+                <span className="text-sm text-slate-600 dark:text-slate-400">
+                    {item.moveInDate ? new Date(item.moveInDate).toLocaleDateString('id-ID', {
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric',
+                    }) : '-'}
+                </span>
             ),
         },
         {
@@ -227,118 +188,131 @@ export default function ContactsPage() {
             label: 'Actions',
             render: (item: any) => (
                 <div className="flex items-center gap-2">
-                    <Button size="sm" variant="ghost" onClick={() => console.log('View', item.id)}>
-                        <Eye className="w-4 h-4" />
-                    </Button>
-                    <Button size="sm" variant="ghost" onClick={() => console.log('Edit', item.id)}>
-                        <Edit className="w-4 h-4" />
-                    </Button>
-                    <Button size="sm" variant="ghost" onClick={() => console.log('Delete', item.id)}>
-                        <Trash2 className="w-4 h-4 text-red-600" />
-                    </Button>
+                    <Button size="sm" variant="ghost"><Edit className="w-4 h-4" /></Button>
+                    <Button size="sm" variant="ghost"><Trash2 className="w-4 h-4 text-red-600" /></Button>
                 </div>
             ),
         },
     ];
 
     return (
-        <div className="p-4 md:p-6 space-y-4 md:space-y-6 pb-24 md:pb-6">
-            {/* Page Header */}
-            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div className="p-4 md:p-6 space-y-6 pb-24 md:pb-6">
+            {/* Header */}
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white">
-                        Contacts
-                    </h1>
+                    <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white">Contacts</h1>
                     <p className="text-sm md:text-base text-slate-600 dark:text-slate-400 mt-1">
-                        Manage property owners and tenants
+                        Manage tenants and prospects
                     </p>
                 </div>
-                <Button onClick={() => console.log('Add new contact')} className="w-full md:w-auto">
+                <Button onClick={() => setIsFormOpen(true)}>
                     <Plus className="w-5 h-5" />
                     Add Contact
                 </Button>
             </div>
 
-            {/* Stats Summary - Mobile optimized */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+            {/* Stats Cards */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <Card>
-                    <CardContent className="p-3 md:p-4">
-                        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
-                            <div className="flex-1 min-w-0">
-                                <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 truncate">Total</p>
-                                <p className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white mt-1">
-                                    {contacts.length}
-                                </p>
+                    <CardContent className="p-4">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-sm text-slate-600 dark:text-slate-400">Total Contacts</p>
+                                <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1">{contacts.length}</p>
                             </div>
-                            <div className="w-10 h-10 md:w-12 md:h-12 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg flex items-center justify-center flex-shrink-0">
-                                <Users className="w-5 h-5 md:w-6 md:h-6 text-indigo-600 dark:text-indigo-400" />
+                            <div className="w-12 h-12 rounded-lg bg-pink-100 dark:bg-pink-900/30 flex items-center justify-center">
+                                <User className="w-6 h-6 text-pink-600 dark:text-pink-400" />
                             </div>
                         </div>
                     </CardContent>
                 </Card>
-
                 <Card>
-                    <CardContent className="p-3 md:p-4">
-                        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
-                            <div className="flex-1 min-w-0">
-                                <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 truncate">Owners</p>
-                                <p className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white mt-1">
-                                    {contacts.filter((c) => c.type === 'Owner').length}
+                    <CardContent className="p-4">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-sm text-slate-600 dark:text-slate-400">Active</p>
+                                <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">
+                                    {contacts.filter(c => c.status === 'Active').length}
                                 </p>
                             </div>
-                            <div className="w-10 h-10 md:w-12 md:h-12 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center flex-shrink-0">
-                                <UserCheck className="w-5 h-5 md:w-6 md:h-6 text-purple-600 dark:text-purple-400" />
+                            <div className="w-12 h-12 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
+                                <User className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
                             </div>
                         </div>
                     </CardContent>
                 </Card>
-
                 <Card>
-                    <CardContent className="p-3 md:p-4">
-                        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
-                            <div className="flex-1 min-w-0">
-                                <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 truncate">Guests</p>
-                                <p className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white mt-1">
-                                    {contacts.filter((c) => c.type === 'Guest').length}
+                    <CardContent className="p-4">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-sm text-slate-600 dark:text-slate-400">Pending</p>
+                                <p className="text-2xl font-bold text-amber-600 dark:text-amber-400 mt-1">
+                                    {contacts.filter(c => c.status === 'Pending').length}
                                 </p>
                             </div>
-                            <div className="w-10 h-10 md:w-12 md:h-12 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center flex-shrink-0">
-                                <User className="w-5 h-5 md:w-6 md:h-6 text-blue-600 dark:text-blue-400" />
+                            <div className="w-12 h-12 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
+                                <User className="w-6 h-6 text-amber-600 dark:text-amber-400" />
                             </div>
                         </div>
                     </CardContent>
                 </Card>
-
                 <Card>
-                    <CardContent className="p-3 md:p-4">
-                        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
-                            <div className="flex-1 min-w-0">
-                                <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 truncate">Active</p>
-                                <p className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white mt-1">
-                                    {contacts.filter((c) => c.status === 'Active').length}
+                    <CardContent className="p-4">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-sm text-slate-600 dark:text-slate-400">Prospects</p>
+                                <p className="text-2xl font-bold text-blue-600 dark:text-blue-400 mt-1">
+                                    {contacts.filter(c => c.status === 'Prospect').length}
                                 </p>
                             </div>
-                            <div className="w-10 h-10 md:w-12 md:h-12 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg flex items-center justify-center flex-shrink-0">
-                                <UserCheck className="w-5 h-5 md:w-6 md:h-6 text-emerald-600 dark:text-emerald-400" />
+                            <div className="w-12 h-12 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                                <User className="w-6 h-6 text-blue-600 dark:text-blue-400" />
                             </div>
                         </div>
                     </CardContent>
                 </Card>
             </div>
 
-            {/* Filters - Mobile optimized */}
+            {/* Search, Filters, and View Mode Toggle */}
             <Card>
                 <CardContent className="p-3 md:p-4">
                     <div className="space-y-3">
-                        {/* Search */}
-                        <Input
-                            placeholder="Search by name, phone, email..."
-                            leftIcon={<Search className="w-5 h-5" />}
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                        />
-
-                        {/* Filter Toggle - Mobile Only */}
+                        <div className="flex gap-2">
+                            <Input
+                                placeholder="Search contacts..."
+                                leftIcon={<Search className="w-5 h-5" />}
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="flex-1"
+                            />
+                            {/* View Mode Toggle - Desktop */}
+                            <div className="hidden md:flex gap-1 bg-slate-100 dark:bg-slate-800 rounded-lg p-1">
+                                <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => setViewMode('grid')}
+                                    className={`px-3 ${
+                                        viewMode === 'grid'
+                                            ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white hover:from-indigo-600 hover:to-purple-600'
+                                            : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+                                    }`}
+                                >
+                                    <Grid3x3 className="w-4 h-4" />
+                                </Button>
+                                <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => setViewMode('list')}
+                                    className={`px-3 ${
+                                        viewMode === 'list'
+                                            ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white hover:from-indigo-600 hover:to-purple-600'
+                                            : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+                                    }`}
+                                >
+                                    <List className="w-4 h-4" />
+                                </Button>
+                            </div>
+                        </div>
                         <Button
                             variant="outline"
                             onClick={() => setShowFilters(!showFilters)}
@@ -347,90 +321,100 @@ export default function ContactsPage() {
                             <Filter className="w-4 h-4" />
                             {showFilters ? 'Hide' : 'Show'} Filters
                         </Button>
-
-                        {/* Filter Options */}
-                        <div className={`grid grid-cols-1 gap-3 md:grid-cols-3 ${showFilters ? 'block' : 'hidden md:grid'}`}>
-                            <Select
-                                options={typeOptions}
-                                value={filterType}
-                                onChange={(e) => setFilterType(e.target.value)}
-                                placeholder="Type"
-                            />
-                            <Select options={statusOptions} placeholder="Status" />
-                            <Select options={genderOptions} placeholder="Gender" />
+                        <div className={`grid grid-cols-1 gap-3 ${showFilters ? 'block' : 'hidden md:grid'}`}>
+                            <Select options={statusOptions} value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} />
                         </div>
                     </div>
                 </CardContent>
             </Card>
 
-            {/* Contacts List - Mobile: Cards, Desktop: Table */}
-            <div className="block md:hidden space-y-3">
-                {filteredContacts.map((contact) => (
-                    <Card key={contact.id} hover>
-                        <CardContent className="p-4">
-                            {/* Header */}
-                            <div className="flex items-start justify-between mb-3">
-                                <div className="flex items-center gap-3 flex-1 min-w-0">
-                                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center flex-shrink-0">
-                                        <User className="w-6 h-6 text-white" />
+            {/* Grid View */}
+            {effectiveViewMode === 'grid' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {contacts.map((contact) => (
+                        <Card key={contact.id} hover>
+                            <CardContent className="p-4">
+                                <div className="flex items-start justify-between mb-3">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center">
+                                            <User className="w-6 h-6 text-white" />
+                                        </div>
+                                        <div>
+                                            <h3 className="font-semibold text-slate-900 dark:text-white">
+                                                {contact.name}
+                                            </h3>
+                                            <p className="text-sm text-slate-500 dark:text-slate-400">{contact.occupation}</p>
+                                        </div>
                                     </div>
-                                    <div className="min-w-0 flex-1">
-                                        <p className="font-semibold text-slate-900 dark:text-white truncate">
-                                            {contact.name}
-                                        </p>
-                                        <Badge variant={contact.type === 'Owner' ? 'purple' : 'info'} size="sm" className="mt-1">
-                                            {contact.type}
-                                        </Badge>
+                                    <Badge variant={getStatusBadge(contact.status)} dot size="sm">
+                                        {contact.status}
+                                    </Badge>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <div className="flex items-center gap-2">
+                                        <Mail className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                                        <span className="text-sm text-slate-600 dark:text-slate-400 truncate">{contact.email}</span>
+                                    </div>
+
+                                    <div className="flex items-center gap-2">
+                                        <Phone className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                                        <span className="text-sm text-slate-600 dark:text-slate-400">{contact.phone}</span>
+                                    </div>
+
+                                    <div className="flex items-center gap-2">
+                                        <MapPin className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                                        <span className="text-sm text-slate-600 dark:text-slate-400">
+                                            {contact.room || 'Not assigned'}
+                                        </span>
+                                    </div>
+
+                                    <div className="pt-2 border-t border-slate-200 dark:border-slate-800">
+                                        <div className="flex items-center justify-between text-sm">
+                                            <span className="text-slate-600 dark:text-slate-400">ID:</span>
+                                            <span className="font-mono text-xs text-slate-900 dark:text-white">{contact.idNumber}</span>
+                                        </div>
+                                        {contact.moveInDate && (
+                                            <div className="flex items-center justify-between text-sm mt-1">
+                                                <span className="text-slate-600 dark:text-slate-400">Move-in:</span>
+                                                <span className="text-slate-900 dark:text-white">
+                                                    {new Date(contact.moveInDate).toLocaleDateString('id-ID', {
+                                                        day: 'numeric',
+                                                        month: 'short',
+                                                        year: 'numeric',
+                                                    })}
+                                                </span>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
-                                <Badge variant={contact.status === 'Active' ? 'success' : 'default'} dot>
-                                    {contact.status}
-                                </Badge>
-                            </div>
 
-                            {/* Contact Info */}
-                            <div className="space-y-2 mb-3">
-                                <div className="flex items-center gap-2 text-sm">
-                                    <Phone className="w-4 h-4 text-slate-400 flex-shrink-0" />
-                                    <span className="text-slate-900 dark:text-white truncate">{contact.phone}</span>
+                                <div className="flex gap-2 pt-3 border-t border-slate-200 dark:border-slate-800 mt-3">
+                                    <Button size="sm" variant="outline" className="flex-1">
+                                        <Edit className="w-4 h-4 mr-1" />
+                                        Edit
+                                    </Button>
+                                    <Button size="sm" variant="ghost">
+                                        <Trash2 className="w-4 h-4 text-red-600" />
+                                    </Button>
                                 </div>
-                                <div className="flex items-center gap-2 text-sm">
-                                    <Mail className="w-4 h-4 text-slate-400 flex-shrink-0" />
-                                    <span className="text-slate-600 dark:text-slate-400 truncate">{contact.email}</span>
-                                </div>
-                                <div className="flex items-center gap-2 text-sm">
-                                    <MapPin className="w-4 h-4 text-slate-400 flex-shrink-0" />
-                                    <span className="text-slate-600 dark:text-slate-400 truncate">{contact.property}</span>
-                                </div>
-                            </div>
+                            </CardContent>
+                        </Card>
+                    ))}
+                </div>
+            )}
 
-                            {/* Actions */}
-                            <div className="flex gap-2 pt-3 border-t border-slate-200 dark:border-slate-800">
-                                <Button size="sm" variant="outline" className="flex-1" onClick={() => console.log('View', contact.id)}>
-                                    <Eye className="w-4 h-4" />
-                                    View
-                                </Button>
-                                <Button size="sm" variant="ghost" onClick={() => console.log('Edit', contact.id)}>
-                                    <Edit className="w-4 h-4" />
-                                </Button>
-                                <Button size="sm" variant="ghost" onClick={() => console.log('Delete', contact.id)}>
-                                    <Trash2 className="w-4 h-4 text-red-600" />
-                                </Button>
-                            </div>
-                        </CardContent>
-                    </Card>
-                ))}
-            </div>
+            {/* List View (Table) */}
+            {effectiveViewMode === 'list' && (
+                <Table data={contacts} columns={columns} />
+            )}
 
-            {/* Desktop Table */}
-            <div className="hidden md:block">
-                <Table
-                    data={filteredContacts}
-                    columns={columns}
-                    onRowClick={(contact) => console.log('View contact:', contact.id)}
-                    emptyMessage="No contacts found"
-                />
-            </div>
+            {/* Add Contact Form */}
+            <AddTenantForm
+                isOpen={isFormOpen}
+                onClose={() => setIsFormOpen(false)}
+                onSubmit={handleSubmit}
+            />
         </div>
     );
 }

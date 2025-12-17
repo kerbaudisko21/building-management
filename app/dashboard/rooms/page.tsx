@@ -1,126 +1,92 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/Card';
-import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
+import Badge from '@/components/ui/Badge';
 import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
 import Table from '@/components/ui/Table';
-import {
-    Bed,
-    Plus,
-    Search,
-    Filter,
-    Grid3x3,
-    List,
-    User,
-    DollarSign,
-    Calendar,
-    Eye,
-    Edit,
-    Trash2,
-    CheckCircle,
-    XCircle,
-} from 'lucide-react';
+import AddRoomForm, { RoomFormData } from '@/components/forms/AddRoomForm';
+import { Home, Plus, Edit, Trash2, Search, Filter, Grid3x3, List, Bed, DollarSign } from 'lucide-react';
 
 export default function RoomsPage() {
-    const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
+    const [isFormOpen, setIsFormOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [showFilters, setShowFilters] = useState(false);
+    const [filterProperty, setFilterProperty] = useState('all');
+    const [filterStatus, setFilterStatus] = useState('all');
+    const [filterType, setFilterType] = useState('all');
+    const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+    const [isMobile, setIsMobile] = useState(false);
 
-    const rooms = [
+    // Detect mobile and force grid view
+    useEffect(() => {
+        const checkMobile = () => {
+            setIsMobile(window.innerWidth < 768);
+        };
+
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+
+        return () => window.removeEventListener('resize', checkMobile);
+    }, []);
+
+    const effectiveViewMode = isMobile ? 'grid' : viewMode;
+
+    // Mock properties for the form
+    const properties = [
+        { id: '1', name: 'Building A' },
+        { id: '2', name: 'Building B' },
+        { id: '3', name: 'Building C' },
+    ];
+
+    const [rooms, setRooms] = useState([
         {
-            id: 1,
-            roomNumber: '101',
+            id: '1',
+            number: '305',
             property: 'Building A',
-            floor: 1,
-            type: 'Standard',
-            size: 25,
-            capacity: 1,
-            monthlyRate: 2500000,
+            type: 'Deluxe',
+            floor: 3,
+            capacity: 2,
+            price: 3500000,
             status: 'Occupied',
             tenant: 'John Doe',
-            occupiedSince: '2024-01-15',
-            contractEnd: '2025-01-14',
-            facilities: ['AC', 'Wifi', 'Kasur', 'Lemari'],
         },
         {
-            id: 2,
-            roomNumber: '102',
-            property: 'Building A',
-            floor: 1,
-            type: 'Deluxe',
-            size: 30,
-            capacity: 2,
-            monthlyRate: 3500000,
-            status: 'Occupied',
-            tenant: 'Jane Smith & Bob Johnson',
-            occupiedSince: '2024-02-20',
-            contractEnd: '2026-02-19',
-            facilities: ['AC', 'Wifi', 'Kasur', 'Lemari', 'TV', 'Kulkas'],
-        },
-        {
-            id: 3,
-            roomNumber: '201',
-            property: 'Building A',
-            floor: 2,
+            id: '2',
+            number: '201',
+            property: 'Building B',
             type: 'Standard',
-            size: 25,
+            floor: 2,
             capacity: 1,
-            monthlyRate: 2500000,
+            price: 2500000,
             status: 'Available',
             tenant: null,
-            occupiedSince: null,
-            contractEnd: null,
-            facilities: ['AC', 'Wifi', 'Kasur', 'Lemari'],
         },
         {
-            id: 4,
-            roomNumber: '202',
+            id: '3',
+            number: '405',
             property: 'Building A',
-            floor: 2,
+            type: 'Suite',
+            floor: 4,
+            capacity: 3,
+            price: 5000000,
+            status: 'Occupied',
+            tenant: 'Jane Smith',
+        },
+        {
+            id: '4',
+            number: '102',
+            property: 'Building C',
             type: 'Standard',
-            size: 25,
+            floor: 1,
             capacity: 1,
-            monthlyRate: 2500000,
+            price: 2000000,
             status: 'Maintenance',
             tenant: null,
-            occupiedSince: null,
-            contractEnd: null,
-            facilities: ['AC', 'Wifi', 'Kasur', 'Lemari'],
         },
-        {
-            id: 5,
-            roomNumber: '305',
-            property: 'Building B',
-            floor: 3,
-            type: 'Premium',
-            size: 35,
-            capacity: 2,
-            monthlyRate: 4500000,
-            status: 'Occupied',
-            tenant: 'Alice Williams',
-            occupiedSince: '2024-03-10',
-            contractEnd: '2025-03-09',
-            facilities: ['AC', 'Wifi', 'Kasur', 'Lemari', 'TV', 'Kulkas', 'Kitchen'],
-        },
-        {
-            id: 6,
-            roomNumber: '401',
-            property: 'Building B',
-            floor: 4,
-            type: 'Standard',
-            size: 25,
-            capacity: 1,
-            monthlyRate: 2500000,
-            status: 'Available',
-            tenant: null,
-            occupiedSince: null,
-            contractEnd: null,
-            facilities: ['AC', 'Wifi', 'Kasur', 'Lemari'],
-        },
-    ];
+    ]);
 
     const propertyOptions = [
         { value: 'all', label: 'All Properties' },
@@ -134,14 +100,32 @@ export default function RoomsPage() {
         { value: 'available', label: 'Available' },
         { value: 'occupied', label: 'Occupied' },
         { value: 'maintenance', label: 'Maintenance' },
+        { value: 'reserved', label: 'Reserved' },
     ];
 
     const typeOptions = [
         { value: 'all', label: 'All Types' },
         { value: 'standard', label: 'Standard' },
         { value: 'deluxe', label: 'Deluxe' },
-        { value: 'premium', label: 'Premium' },
+        { value: 'suite', label: 'Suite' },
+        { value: 'studio', label: 'Studio' },
     ];
+
+    const handleSubmit = (data: RoomFormData) => {
+        const property = properties.find(p => p.id === data.propertyId);
+        const newRoom = {
+            id: Date.now().toString(),
+            number: data.roomNumber,
+            property: property?.name || 'Unknown',
+            type: data.type,
+            floor: data.floor,
+            capacity: 100,
+            price: 100,
+            status: 'Available',
+            tenant: null,
+        };
+        setRooms([...rooms, newRoom]);
+    };
 
     const formatCurrency = (amount: number) => {
         return new Intl.NumberFormat('id-ID', {
@@ -156,71 +140,59 @@ export default function RoomsPage() {
             Available: 'success',
             Occupied: 'info',
             Maintenance: 'warning',
+            Reserved: 'purple',
         };
         return variants[status] || 'default';
     };
 
-    // Table columns
     const columns = [
         {
-            key: 'roomNumber',
+            key: 'number',
             label: 'Room',
             sortable: true,
             render: (item: any) => (
                 <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center">
-                        <Bed className="w-5 h-5 text-white" />
+                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
+                        <Home className="w-5 h-5 text-white" />
                     </div>
                     <div>
-                        <p className="font-semibold text-slate-900 dark:text-white">
-                            Room {item.roomNumber}
-                        </p>
-                        <p className="text-xs text-slate-600 dark:text-slate-400">
-                            {item.property} - Floor {item.floor}
-                        </p>
+                        <p className="font-semibold text-slate-900 dark:text-white">Room {item.number}</p>
+                        <p className="text-sm text-slate-500 dark:text-slate-400">{item.property}</p>
                     </div>
                 </div>
             ),
         },
         {
             key: 'type',
-            label: 'Type & Size',
+            label: 'Type',
+            render: (item: any) => <Badge variant="default">{item.type}</Badge>,
+        },
+        {
+            key: 'floor',
+            label: 'Floor',
+            sortable: true,
             render: (item: any) => (
-                <div>
-                    <Badge variant="purple" size="sm">{item.type}</Badge>
-                    <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
-                        {item.size}m² • Max {item.capacity} person
-                    </p>
+                <span className="text-sm text-slate-600 dark:text-slate-400">Floor {item.floor}</span>
+            ),
+        },
+        {
+            key: 'capacity',
+            label: 'Capacity',
+            render: (item: any) => (
+                <div className="flex items-center gap-1.5">
+                    <Bed className="w-4 h-4 text-slate-400" />
+                    <span className="text-sm text-slate-600 dark:text-slate-400">{item.capacity} person(s)</span>
                 </div>
             ),
         },
         {
-            key: 'monthlyRate',
-            label: 'Monthly Rate',
+            key: 'price',
+            label: 'Price',
             sortable: true,
             render: (item: any) => (
                 <span className="text-sm font-semibold text-slate-900 dark:text-white">
-          {formatCurrency(item.monthlyRate)}
-        </span>
-            ),
-        },
-        {
-            key: 'tenant',
-            label: 'Tenant',
-            render: (item: any) => (
-                item.tenant ? (
-                    <div className="flex items-center gap-2">
-                        <User className="w-4 h-4 text-slate-400" />
-                        <div>
-                            <p className="text-sm text-slate-900 dark:text-white">{item.tenant}</p>
-                            <p className="text-xs text-slate-600 dark:text-slate-400">
-                                Since {new Date(item.occupiedSince).toLocaleDateString('id-ID', { month: 'short', year: 'numeric' })}
-                            </p>
-                        </div>
-                    </div>
-                ) : (
-                    <span className="text-sm text-slate-500 dark:text-slate-500">-</span>
-                )
+                    {formatCurrency(item.price)}
+                </span>
             ),
         },
         {
@@ -233,111 +205,144 @@ export default function RoomsPage() {
             ),
         },
         {
+            key: 'tenant',
+            label: 'Tenant',
+            render: (item: any) => (
+                <span className="text-sm text-slate-600 dark:text-slate-400">
+                    {item.tenant || '-'}
+                </span>
+            ),
+        },
+        {
             key: 'actions',
             label: 'Actions',
             render: (item: any) => (
                 <div className="flex items-center gap-2">
-                    <Button size="sm" variant="ghost">
-                        <Eye className="w-4 h-4" />
-                    </Button>
-                    <Button size="sm" variant="ghost">
-                        <Edit className="w-4 h-4" />
-                    </Button>
-                    <Button size="sm" variant="ghost">
-                        <Trash2 className="w-4 h-4 text-red-600" />
-                    </Button>
+                    <Button size="sm" variant="ghost"><Edit className="w-4 h-4" /></Button>
+                    <Button size="sm" variant="ghost"><Trash2 className="w-4 h-4 text-red-600" /></Button>
                 </div>
             ),
         },
     ];
 
     return (
-        <div className="p-4 md:p-6 space-y-4 md:space-y-6 pb-24 md:pb-6">
+        <div className="p-4 md:p-6 space-y-6 pb-24 md:pb-6">
             {/* Header */}
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white">
-                        Rooms
-                    </h1>
+                    <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white">Rooms</h1>
                     <p className="text-sm md:text-base text-slate-600 dark:text-slate-400 mt-1">
-                        Manage rooms across all properties
+                        Manage your rooms and units
                     </p>
                 </div>
-                <Button className="w-full sm:w-auto">
+                <Button onClick={() => setIsFormOpen(true)}>
                     <Plus className="w-5 h-5" />
                     Add Room
                 </Button>
             </div>
 
-            {/* Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+            {/* Stats Cards */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <Card>
-                    <CardContent className="p-3 md:p-4">
-                        <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400">Total Rooms</p>
-                        <p className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white mt-1">
-                            {rooms.length}
-                        </p>
+                    <CardContent className="p-4">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-sm text-slate-600 dark:text-slate-400">Total Rooms</p>
+                                <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1">{rooms.length}</p>
+                            </div>
+                            <div className="w-12 h-12 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                                <Home className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                            </div>
+                        </div>
                     </CardContent>
                 </Card>
                 <Card>
-                    <CardContent className="p-3 md:p-4">
-                        <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400">Available</p>
-                        <p className="text-xl md:text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">
-                            {rooms.filter(r => r.status === 'Available').length}
-                        </p>
+                    <CardContent className="p-4">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-sm text-slate-600 dark:text-slate-400">Available</p>
+                                <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">
+                                    {rooms.filter(r => r.status === 'Available').length}
+                                </p>
+                            </div>
+                            <div className="w-12 h-12 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
+                                <Home className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+                            </div>
+                        </div>
                     </CardContent>
                 </Card>
                 <Card>
-                    <CardContent className="p-3 md:p-4">
-                        <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400">Occupied</p>
-                        <p className="text-xl md:text-2xl font-bold text-blue-600 dark:text-blue-400 mt-1">
-                            {rooms.filter(r => r.status === 'Occupied').length}
-                        </p>
+                    <CardContent className="p-4">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-sm text-slate-600 dark:text-slate-400">Occupied</p>
+                                <p className="text-2xl font-bold text-blue-600 dark:text-blue-400 mt-1">
+                                    {rooms.filter(r => r.status === 'Occupied').length}
+                                </p>
+                            </div>
+                            <div className="w-12 h-12 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                                <Bed className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                            </div>
+                        </div>
                     </CardContent>
                 </Card>
                 <Card>
-                    <CardContent className="p-3 md:p-4">
-                        <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 truncate">Maintenance</p>
-                        <p className="text-xl md:text-2xl font-bold text-amber-600 dark:text-amber-400 mt-1">
-                            {rooms.filter(r => r.status === 'Maintenance').length}
-                        </p>
+                    <CardContent className="p-4">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-sm text-slate-600 dark:text-slate-400">Revenue</p>
+                                <p className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white mt-1">
+                                    {formatCurrency(rooms.filter(r => r.status === 'Occupied').reduce((sum, r) => sum + r.price, 0))}
+                                </p>
+                            </div>
+                            <div className="w-12 h-12 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
+                                <DollarSign className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+                            </div>
+                        </div>
                     </CardContent>
                 </Card>
             </div>
 
-            {/* Filters */}
+            {/* Search, Filters, and View Mode Toggle */}
             <Card>
                 <CardContent className="p-3 md:p-4">
                     <div className="space-y-3">
                         <div className="flex gap-2">
-                            <div className="flex-1">
-                                <Input
-                                    placeholder="Search rooms..."
-                                    leftIcon={<Search className="w-5 h-5" />}
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                />
-                            </div>
-
-                            {/* View Toggle - Desktop Only */}
-                            <div className="hidden md:flex gap-1 border border-slate-300 dark:border-slate-700 rounded-lg p-1">
+                            <Input
+                                placeholder="Search rooms..."
+                                leftIcon={<Search className="w-5 h-5" />}
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="flex-1"
+                            />
+                            {/* View Mode Toggle - Desktop */}
+                            <div className="hidden md:flex gap-1 bg-slate-100 dark:bg-slate-800 rounded-lg p-1">
                                 <Button
                                     size="sm"
-                                    variant={viewMode === 'grid' ? 'primary' : 'ghost'}
+                                    variant="ghost"
                                     onClick={() => setViewMode('grid')}
+                                    className={`px-3 ${
+                                        viewMode === 'grid'
+                                            ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white hover:from-indigo-600 hover:to-purple-600'
+                                            : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+                                    }`}
                                 >
                                     <Grid3x3 className="w-4 h-4" />
                                 </Button>
                                 <Button
                                     size="sm"
-                                    variant={viewMode === 'table' ? 'primary' : 'ghost'}
-                                    onClick={() => setViewMode('table')}
+                                    variant="ghost"
+                                    onClick={() => setViewMode('list')}
+                                    className={`px-3 ${
+                                        viewMode === 'list'
+                                            ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white hover:from-indigo-600 hover:to-purple-600'
+                                            : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+                                    }`}
                                 >
                                     <List className="w-4 h-4" />
                                 </Button>
                             </div>
                         </div>
-
                         <Button
                             variant="outline"
                             onClick={() => setShowFilters(!showFilters)}
@@ -346,173 +351,99 @@ export default function RoomsPage() {
                             <Filter className="w-4 h-4" />
                             {showFilters ? 'Hide' : 'Show'} Filters
                         </Button>
-
                         <div className={`grid grid-cols-1 gap-3 md:grid-cols-3 ${showFilters ? 'block' : 'hidden md:grid'}`}>
-                            <Select options={propertyOptions} placeholder="Property" />
-                            <Select options={statusOptions} placeholder="Status" />
-                            <Select options={typeOptions} placeholder="Type" />
+                            <Select options={propertyOptions} value={filterProperty} onChange={(e) => setFilterProperty(e.target.value)} />
+                            <Select options={statusOptions} value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} />
+                            <Select options={typeOptions} value={filterType} onChange={(e) => setFilterType(e.target.value)} />
                         </div>
                     </div>
                 </CardContent>
             </Card>
 
-            {/* Mobile View - Cards */}
-            <div className="block md:hidden space-y-3">
-                {rooms.map((room) => (
-                    <Card key={room.id} hover>
-                        <CardContent className="p-4">
-                            {/* Header */}
-                            <div className="flex items-start justify-between mb-3">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center">
-                                        <Bed className="w-5 h-5 text-white" />
+            {/* Grid View */}
+            {effectiveViewMode === 'grid' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {rooms.map((room) => (
+                        <Card key={room.id} hover>
+                            <CardContent className="p-4">
+                                <div className="flex items-start justify-between mb-3">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
+                                            <Home className="w-6 h-6 text-white" />
+                                        </div>
+                                        <div>
+                                            <h3 className="font-semibold text-slate-900 dark:text-white">
+                                                Room {room.number}
+                                            </h3>
+                                            <p className="text-sm text-slate-500 dark:text-slate-400">{room.property}</p>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <h3 className="font-bold text-slate-900 dark:text-white">
-                                            Room {room.roomNumber}
-                                        </h3>
-                                        <p className="text-xs text-slate-600 dark:text-slate-400">
-                                            {room.property} - Floor {room.floor}
-                                        </p>
-                                    </div>
-                                </div>
-                                <Badge variant={getStatusBadge(room.status)} dot size="sm">
-                                    {room.status}
-                                </Badge>
-                            </div>
-
-                            {/* Info */}
-                            <div className="space-y-2 mb-3 text-sm">
-                                <div className="flex items-center justify-between">
-                                    <span className="text-slate-600 dark:text-slate-400">Type:</span>
-                                    <Badge variant="purple" size="sm">{room.type}</Badge>
-                                </div>
-                                <div className="flex items-center justify-between">
-                                    <span className="text-slate-600 dark:text-slate-400">Size:</span>
-                                    <span className="text-slate-900 dark:text-white font-medium">
-                    {room.size}m² • Max {room.capacity}
-                  </span>
-                                </div>
-                                <div className="flex items-center justify-between">
-                                    <span className="text-slate-600 dark:text-slate-400">Rate:</span>
-                                    <span className="text-slate-900 dark:text-white font-semibold">
-                    {formatCurrency(room.monthlyRate)}
-                  </span>
-                                </div>
-                                {room.tenant && (
-                                    <div className="flex items-center gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
-                                        <User className="w-4 h-4 text-slate-400" />
-                                        <span className="text-slate-900 dark:text-white text-sm">{room.tenant}</span>
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* Facilities */}
-                            <div className="flex flex-wrap gap-1.5 mb-3">
-                                {room.facilities.map((facility, idx) => (
-                                    <Badge key={idx} variant="default" size="sm">
-                                        {facility}
+                                    <Badge variant={getStatusBadge(room.status)} dot size="sm">
+                                        {room.status}
                                     </Badge>
-                                ))}
-                            </div>
+                                </div>
 
-                            {/* Actions */}
-                            <div className="flex gap-2 pt-3 border-t border-slate-200 dark:border-slate-800">
-                                <Button size="sm" variant="outline" className="flex-1">
-                                    <Eye className="w-4 h-4" />
-                                    View
-                                </Button>
-                                <Button size="sm" variant="ghost">
-                                    <Edit className="w-4 h-4" />
-                                </Button>
-                                <Button size="sm" variant="ghost">
-                                    <Trash2 className="w-4 h-4 text-red-600" />
-                                </Button>
-                            </div>
-                        </CardContent>
-                    </Card>
-                ))}
-            </div>
-
-            {/* Desktop View */}
-            <div className="hidden md:block">
-                {viewMode === 'grid' ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {rooms.map((room) => (
-                            <Card key={room.id} hover>
-                                <CardContent className="p-6">
-                                    <div className="flex items-start justify-between mb-4">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center">
-                                                <Bed className="w-6 h-6 text-white" />
-                                            </div>
-                                            <div>
-                                                <h3 className="font-bold text-lg text-slate-900 dark:text-white">
-                                                    Room {room.roomNumber}
-                                                </h3>
-                                                <p className="text-sm text-slate-600 dark:text-slate-400">
-                                                    {room.property} - Floor {room.floor}
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <Badge variant={getStatusBadge(room.status)} dot>
-                                            {room.status}
-                                        </Badge>
+                                <div className="space-y-2">
+                                    <div className="flex items-center justify-between text-sm">
+                                        <span className="text-slate-600 dark:text-slate-400">Type:</span>
+                                        <Badge variant="default" size="sm">{room.type}</Badge>
                                     </div>
 
-                                    <div className="space-y-3 mb-4">
-                                        <div className="flex items-center justify-between">
-                                            <span className="text-sm text-slate-600 dark:text-slate-400">Type:</span>
-                                            <Badge variant="purple">{room.type}</Badge>
-                                        </div>
-                                        <div className="flex items-center justify-between">
-                                            <span className="text-sm text-slate-600 dark:text-slate-400">Size:</span>
-                                            <span className="text-sm text-slate-900 dark:text-white font-medium">
-                        {room.size}m² • Max {room.capacity}
-                      </span>
-                                        </div>
-                                        <div className="flex items-center justify-between">
-                                            <span className="text-sm text-slate-600 dark:text-slate-400">Rate:</span>
-                                            <span className="text-sm text-slate-900 dark:text-white font-semibold">
-                        {formatCurrency(room.monthlyRate)}
-                      </span>
-                                        </div>
-                                        {room.tenant && (
-                                            <div className="flex items-center gap-2 pt-3 border-t border-slate-200 dark:border-slate-800">
-                                                <User className="w-4 h-4 text-slate-400" />
-                                                <span className="text-sm text-slate-900 dark:text-white">{room.tenant}</span>
-                                            </div>
-                                        )}
+                                    <div className="flex items-center justify-between text-sm">
+                                        <span className="text-slate-600 dark:text-slate-400">Floor:</span>
+                                        <span className="font-medium text-slate-900 dark:text-white">Floor {room.floor}</span>
                                     </div>
 
-                                    <div className="flex flex-wrap gap-1.5 mb-4">
-                                        {room.facilities.map((facility, idx) => (
-                                            <Badge key={idx} variant="default" size="sm">
-                                                {facility}
-                                            </Badge>
-                                        ))}
+                                    <div className="flex items-center justify-between text-sm">
+                                        <span className="text-slate-600 dark:text-slate-400">Capacity:</span>
+                                        <div className="flex items-center gap-1">
+                                            <Bed className="w-4 h-4 text-slate-400" />
+                                            <span className="font-medium text-slate-900 dark:text-white">{room.capacity}</span>
+                                        </div>
                                     </div>
 
-                                    <div className="flex gap-2 pt-4 border-t border-slate-200 dark:border-slate-800">
-                                        <Button size="sm" variant="outline" className="flex-1">
-                                            <Eye className="w-4 h-4" />
-                                            View
-                                        </Button>
-                                        <Button size="sm" variant="ghost">
-                                            <Edit className="w-4 h-4" />
-                                        </Button>
-                                        <Button size="sm" variant="ghost">
-                                            <Trash2 className="w-4 h-4 text-red-600" />
-                                        </Button>
+                                    <div className="flex items-center justify-between text-sm pt-2 border-t border-slate-200 dark:border-slate-800">
+                                        <span className="text-slate-600 dark:text-slate-400">Price:</span>
+                                        <span className="font-bold text-blue-600 dark:text-blue-400">
+                                            {formatCurrency(room.price)}
+                                        </span>
                                     </div>
-                                </CardContent>
-                            </Card>
-                        ))}
-                    </div>
-                ) : (
-                    <Table data={rooms} columns={columns} />
-                )}
-            </div>
+
+                                    {room.tenant && (
+                                        <div className="flex items-center justify-between text-sm">
+                                            <span className="text-slate-600 dark:text-slate-400">Tenant:</span>
+                                            <span className="font-medium text-slate-900 dark:text-white">{room.tenant}</span>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="flex gap-2 pt-3 border-t border-slate-200 dark:border-slate-800 mt-3">
+                                    <Button size="sm" variant="outline" className="flex-1">
+                                        <Edit className="w-4 h-4 mr-1" />
+                                        Edit
+                                    </Button>
+                                    <Button size="sm" variant="ghost">
+                                        <Trash2 className="w-4 h-4 text-red-600" />
+                                    </Button>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    ))}
+                </div>
+            )}
+
+            {/* List View (Table) */}
+            {effectiveViewMode === 'list' && (
+                <Table data={rooms} columns={columns} />
+            )}
+
+            {/* Add Room Form */}
+            <AddRoomForm
+                isOpen={isFormOpen}
+                onClose={() => setIsFormOpen(false)}
+                onSubmit={handleSubmit}
+                properties={properties}
+            />
         </div>
     );
 }

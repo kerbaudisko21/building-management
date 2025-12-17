@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/Card';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
+import AddTodoForm, { TodoFormData } from '@/components/forms/AddTodoForm';
 import {
     CheckSquare,
     Plus,
@@ -15,8 +16,9 @@ import {
 
 export default function TodoListPage() {
     const [searchQuery, setSearchQuery] = useState('');
+    const [isFormOpen, setIsFormOpen] = useState(false);
 
-    const tasks = [
+    const [tasks, setTasks] = useState([
         {
             id: 1,
             title: 'Process rent payment from John Doe',
@@ -83,7 +85,22 @@ export default function TodoListPage() {
             status: 'Todo',
             completed: false,
         },
-    ];
+    ]);
+
+    const handleFormSubmit = (data: TodoFormData) => {
+        const newTask = {
+            id: tasks.length + 1,
+            title: data.title,
+            description: data.description,
+            category: data.category,
+            priority: data.priority,
+            dueDate: data.dueDate,
+            assignedTo: data.assignedTo,
+            status: data.status,
+            completed: false,
+        };
+        setTasks([...tasks, newTask]);
+    };
 
     const formatDate = (dateString: string) => {
         return new Date(dateString).toLocaleDateString('id-ID', {
@@ -122,7 +139,7 @@ export default function TodoListPage() {
                         Manage tasks and assignments
                     </p>
                 </div>
-                <Button className="w-full sm:w-auto">
+                <Button className="w-full sm:w-auto" onClick={() => setIsFormOpen(true)}>
                     <Plus className="w-5 h-5" />
                     Add Task
                 </Button>
@@ -219,6 +236,12 @@ export default function TodoListPage() {
                     </Card>
                 ))}
             </div>
+
+            <AddTodoForm
+                isOpen={isFormOpen}
+                onClose={() => setIsFormOpen(false)}
+                onSubmit={handleFormSubmit}
+            />
         </div>
     );
 }

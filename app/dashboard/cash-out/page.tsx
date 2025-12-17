@@ -7,6 +7,7 @@ import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
 import Table from '@/components/ui/Table';
+import AddCashOutForm, { CashOutFormData } from '@/components/forms/AddCashOutForm';
 import {
     TrendingDown,
     Plus,
@@ -22,8 +23,9 @@ import {
 export default function CashOutPage() {
     const [searchQuery, setSearchQuery] = useState('');
     const [showFilters, setShowFilters] = useState(false);
+    const [isFormOpen, setIsFormOpen] = useState(false);
 
-    const expenses = [
+    const [expenses, setExpenses] = useState([
         {
             id: 1,
             date: '2024-12-08',
@@ -74,7 +76,21 @@ export default function CashOutPage() {
             vendor: 'Staff Payment',
             status: 'Paid',
         },
-    ];
+    ]);
+
+    const handleFormSubmit = (data: CashOutFormData) => {
+        const newExpense = {
+            id: expenses.length + 1,
+            date: data.date,
+            category: data.category,
+            description: data.description,
+            amount: data.amount,
+            paymentMethod: data.paymentMethod,
+            vendor: data.vendor,
+            status: 'Paid',
+        };
+        setExpenses([newExpense, ...expenses]);
+    };
 
     const categoryOptions = [
         { value: 'all', label: 'All Categories' },
@@ -194,7 +210,7 @@ export default function CashOutPage() {
                         Track expenses and payments made
                     </p>
                 </div>
-                <Button className="w-full sm:w-auto">
+                <Button className="w-full sm:w-auto" onClick={() => setIsFormOpen(true)}>
                     <Plus className="w-5 h-5" />
                     Add Expense
                 </Button>
@@ -252,8 +268,8 @@ export default function CashOutPage() {
                             {showFilters ? 'Hide' : 'Show'} Filters
                         </Button>
                         <div className={`grid grid-cols-1 gap-3 md:grid-cols-3 ${showFilters ? 'block' : 'hidden md:grid'}`}>
-                            <Select options={categoryOptions} placeholder="Category" />
-                            <Select options={methodOptions} placeholder="Method" />
+                            <Select options={categoryOptions} />
+                            <Select options={methodOptions} />
                             <Input type="date" placeholder="Date" />
                         </div>
                     </div>
@@ -300,6 +316,12 @@ export default function CashOutPage() {
             <div className="hidden md:block">
                 <Table data={expenses} columns={columns} />
             </div>
+
+            <AddCashOutForm
+                isOpen={isFormOpen}
+                onClose={() => setIsFormOpen(false)}
+                onSubmit={handleFormSubmit}
+            />
         </div>
     );
 }

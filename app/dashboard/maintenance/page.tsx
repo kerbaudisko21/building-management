@@ -7,6 +7,7 @@ import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
 import Table from '@/components/ui/Table';
+import AddMaintenanceForm, { MaintenanceFormData } from '@/components/forms/AddMaintenanceForm';
 import {
     Wrench,
     Plus,
@@ -24,8 +25,18 @@ import {
 export default function MaintenancePage() {
     const [searchQuery, setSearchQuery] = useState('');
     const [showFilters, setShowFilters] = useState(false);
+    const [isFormOpen, setIsFormOpen] = useState(false);
 
-    const requests = [
+    // Mock rooms for form dropdown
+    const rooms = [
+        { id: '1', name: 'Room 305 - Building A' },
+        { id: '2', name: 'Room 201 - Building B' },
+        { id: '3', name: 'Room 102 - Building A' },
+        { id: '4', name: 'Room 405 - Building C' },
+        { id: '5', name: 'Common Area - Building A' },
+    ];
+
+    const [requests, setRequests] = useState([
         {
             id: 1,
             ticketNumber: 'MNT-2024-001',
@@ -91,7 +102,25 @@ export default function MaintenancePage() {
             assignedTo: null,
             estimatedCompletion: null,
         },
-    ];
+    ]);
+
+    const handleFormSubmit = (data: MaintenanceFormData) => {
+        const room = rooms.find(r => r.id === data.roomId);
+        const newRequest = {
+            id: Date.now(),
+            ticketNumber: `MNT-2024-${String(requests.length + 1).padStart(3, '0')}`,
+            room: room?.name || 'Unknown',
+            tenant: data.reportedBy || 'Unknown',
+            issue: data.description.substring(0, 50),
+            category: data.issueType,
+            priority: data.priority.charAt(0).toUpperCase() + data.priority.slice(1),
+            status: data.status === 'pending' ? 'Pending' : data.status === 'in-progress' ? 'In Progress' : 'Completed',
+            reportedDate: new Date().toISOString().split('T')[0],
+            assignedTo: data.assignedTo || null,
+            estimatedCompletion: data.scheduledDate || null,
+        };
+        setRequests([newRequest, ...requests]);
+    };
 
     const categoryOptions = [
         { value: 'all', label: 'All Categories' },
@@ -223,7 +252,7 @@ export default function MaintenancePage() {
                         Manage maintenance requests and schedules
                     </p>
                 </div>
-                <Button className="w-full sm:w-auto">
+                <Button className="w-full sm:w-auto" onClick={() => setIsFormOpen(true)}>
                     <Plus className="w-5 h-5" />
                     New Request
                 </Button>
@@ -282,9 +311,9 @@ export default function MaintenancePage() {
                             {showFilters ? 'Hide' : 'Show'} Filters
                         </Button>
                         <div className={`grid grid-cols-1 gap-3 md:grid-cols-3 ${showFilters ? 'block' : 'hidden md:grid'}`}>
-                            <Select options={categoryOptions} placeholder="Category" />
-                            <Select options={priorityOptions} placeholder="Priority" />
-                            <Select options={statusOptions} placeholder="Status" />
+                            <Select options={categoryOptions} />
+                            <Select options={priorityOptions} />
+                            <Select options={statusOptions} />
                         </div>
                     </div>
                 </CardContent>
@@ -350,6 +379,14 @@ export default function MaintenancePage() {
             <div className="hidden md:block">
                 <Table data={requests} columns={columns} />
             </div>
+
+            {/* Add Maintenance Form */}
+            <AddMaintenanceForm
+                isOpen={isFormOpen}
+                onClose={() => setIsFormOpen(false)}
+                onSubmit={handleFormSubmit}
+                rooms={rooms}
+            />
         </div>
     );
 }

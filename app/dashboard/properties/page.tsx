@@ -1,134 +1,118 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/Card';
-import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
+import Badge from '@/components/ui/Badge';
 import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
 import Table from '@/components/ui/Table';
-import {
-    Building2,
-    Plus,
-    Search,
-    Filter,
-    Grid3x3,
-    List,
-    MapPin,
-    Eye,
-    Edit,
-    Trash2,
-    MoreVertical,
-} from 'lucide-react';
+import AddPropertyForm, { PropertyFormData } from '@/components/forms/AddPropertyForm';
+import { Building2, MapPin, Home, Plus, Edit, Trash2, Search, Filter, Grid3x3, List } from 'lucide-react';
 
 export default function PropertiesPage() {
-    const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
+    const [isFormOpen, setIsFormOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [showFilters, setShowFilters] = useState(false);
+    const [filterType, setFilterType] = useState('all');
+    const [filterCity, setFilterCity] = useState('all');
+    const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+    const [isMobile, setIsMobile] = useState(false);
 
-    const properties = [
+    // Detect mobile and force grid view
+    useEffect(() => {
+        const checkMobile = () => {
+            setIsMobile(window.innerWidth < 768);
+        };
+
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+
+        return () => window.removeEventListener('resize', checkMobile);
+    }, []);
+
+    // Force grid view on mobile
+    const effectiveViewMode = isMobile ? 'grid' : viewMode;
+
+    // Auto switch to grid on mobile
+    useEffect(() => {
+        const handleResize = () => {
+            if (window.innerWidth < 768) {
+                setViewMode('grid');
+            }
+        };
+        handleResize();
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
+    const [properties, setProperties] = useState([
         {
-            id: 1,
-            name: 'Building A',
-            type: 'Apartemen',
+            id: '1',
+            name: 'Green Valley Apartments',
             address: 'Jl. Sudirman No. 123, Jakarta',
-            totalRooms: 50,
-            occupiedRooms: 48,
-            occupancyRate: 96,
-            monthlyRevenue: 18500000,
-            acquisitionStart: '2023-01-15',
-            acquisitionEnd: '2028-01-14',
-            status: 'Active',
+            city: 'Jakarta',
+            type: 'Apartment',
+            totalUnits: 50,
+            occupiedUnits: 42,
+            yearBuilt: 2020,
         },
         {
-            id: 2,
-            name: 'Building B',
-            type: 'Kostan',
-            address: 'Jl. Gatot Subroto No. 456, Jakarta',
-            totalRooms: 50,
-            occupiedRooms: 46,
-            occupancyRate: 92,
-            monthlyRevenue: 15200000,
-            acquisitionStart: '2023-03-20',
-            acquisitionEnd: '2028-03-19',
-            status: 'Active',
+            id: '2',
+            name: 'Blue Ocean Kost',
+            address: 'Jl. Gatot Subroto No. 45, Bandung',
+            city: 'Bandung',
+            type: 'Kost',
+            totalUnits: 30,
+            occupiedUnits: 28,
+            yearBuilt: 2019,
         },
         {
-            id: 3,
-            name: 'Building C',
-            type: 'Apartemen',
-            address: 'Jl. Thamrin No. 789, Jakarta',
-            totalRooms: 50,
-            occupiedRooms: 44,
-            occupancyRate: 88,
-            monthlyRevenue: 11600000,
-            acquisitionStart: '2023-06-10',
-            acquisitionEnd: '2028-06-09',
-            status: 'Active',
+            id: '3',
+            name: 'Sunset Villa',
+            address: 'Jl. Kuta Beach, Bali',
+            city: 'Bali',
+            type: 'Villa',
+            totalUnits: 10,
+            occupiedUnits: 8,
+            yearBuilt: 2021,
         },
-        {
-            id: 4,
-            name: 'Residence D',
-            type: 'Kostan',
-            address: 'Jl. Rasuna Said No. 321, Jakarta',
-            totalRooms: 30,
-            occupiedRooms: 25,
-            occupancyRate: 83,
-            monthlyRevenue: 8500000,
-            acquisitionStart: '2023-09-05',
-            acquisitionEnd: '2028-09-04',
-            status: 'Active',
-        },
-        {
-            id: 5,
-            name: 'Tower E',
-            type: 'Apartemen',
-            address: 'Jl. Kuningan No. 654, Jakarta',
-            totalRooms: 40,
-            occupiedRooms: 30,
-            occupancyRate: 75,
-            monthlyRevenue: 10200000,
-            acquisitionStart: '2024-01-15',
-            acquisitionEnd: '2029-01-14',
-            status: 'Active',
-        },
-        {
-            id: 6,
-            name: 'Mansion F',
-            type: 'Kostan',
-            address: 'Jl. Senopati No. 987, Jakarta',
-            totalRooms: 25,
-            occupiedRooms: 15,
-            occupancyRate: 60,
-            monthlyRevenue: 5500000,
-            acquisitionStart: '2024-03-01',
-            acquisitionEnd: '2029-02-28',
-            status: 'Maintenance',
-        },
-    ];
+    ]);
 
     const typeOptions = [
         { value: 'all', label: 'All Types' },
-        { value: 'apartemen', label: 'Apartemen' },
-        { value: 'kostan', label: 'Kostan' },
+        { value: 'apartment', label: 'Apartment' },
+        { value: 'kost', label: 'Kost' },
+        { value: 'villa', label: 'Villa' },
+        { value: 'house', label: 'House' },
     ];
 
-    const statusOptions = [
-        { value: 'all', label: 'All Status' },
-        { value: 'active', label: 'Active' },
-        { value: 'maintenance', label: 'Maintenance' },
-        { value: 'inactive', label: 'Inactive' },
+    const cityOptions = [
+        { value: 'all', label: 'All Cities' },
+        { value: 'jakarta', label: 'Jakarta' },
+        { value: 'bandung', label: 'Bandung' },
+        { value: 'surabaya', label: 'Surabaya' },
+        { value: 'bali', label: 'Bali' },
     ];
 
-    const formatCurrency = (amount: number) => {
-        return new Intl.NumberFormat('id-ID', {
-            style: 'currency',
-            currency: 'IDR',
-            minimumFractionDigits: 0,
-        }).format(amount);
+    const handleSubmit = (data: PropertyFormData) => {
+        const newProperty = {
+            id: Date.now().toString(),
+            name: data.name,
+            address: data.address,
+            city: data.city,
+            type: data.type,
+            totalUnits: data.totalUnits,
+            occupiedUnits: 0,
+            yearBuilt: data.yearBuilt || new Date().getFullYear(),
+        };
+        setProperties([...properties, newProperty]);
     };
 
-    // Table columns for desktop
+    const calculateOccupancy = (occupied: number, total: number) => {
+        return Math.round((occupied / total) * 100);
+    };
+
     const columns = [
         {
             key: 'name',
@@ -136,78 +120,77 @@ export default function PropertiesPage() {
             sortable: true,
             render: (item: any) => (
                 <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center flex-shrink-0">
-                        <Building2 className="w-6 h-6 text-white" />
+                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center">
+                        <Building2 className="w-5 h-5 text-white" />
                     </div>
                     <div>
                         <p className="font-semibold text-slate-900 dark:text-white">{item.name}</p>
-                        <p className="text-xs text-slate-600 dark:text-slate-400">{item.type}</p>
+                        <p className="text-sm text-slate-500 dark:text-slate-400">{item.type}</p>
                     </div>
                 </div>
             ),
         },
         {
             key: 'address',
-            label: 'Address',
+            label: 'Location',
             render: (item: any) => (
                 <div className="flex items-start gap-2">
-                    <MapPin className="w-4 h-4 text-slate-400 flex-shrink-0 mt-0.5" />
+                    <MapPin className="w-4 h-4 text-slate-400 mt-0.5 flex-shrink-0" />
                     <span className="text-sm text-slate-600 dark:text-slate-400">{item.address}</span>
                 </div>
             ),
         },
         {
-            key: 'occupancyRate',
-            label: 'Occupancy',
+            key: 'totalUnits',
+            label: 'Units',
             sortable: true,
             render: (item: any) => (
-                <div>
-                    <div className="flex items-center gap-2 mb-1">
-            <span className="text-sm font-semibold text-slate-900 dark:text-white">
-              {item.occupancyRate}%
-            </span>
-                        <Badge
-                            variant={
-                                item.occupancyRate >= 90
-                                    ? 'success'
-                                    : item.occupancyRate >= 70
-                                        ? 'warning'
-                                        : 'danger'
-                            }
-                            size="sm"
-                        >
-                            {item.occupiedRooms}/{item.totalRooms}
-                        </Badge>
-                    </div>
-                    <div className="w-full bg-slate-200 dark:bg-slate-800 rounded-full h-1.5">
-                        <div
-                            className="bg-gradient-to-r from-indigo-600 to-purple-600 h-1.5 rounded-full"
-                            style={{ width: `${item.occupancyRate}%` }}
-                        />
-                    </div>
+                <div className="text-center">
+                    <p className="font-semibold text-slate-900 dark:text-white">{item.totalUnits}</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">Total Units</p>
                 </div>
             ),
         },
         {
-            key: 'monthlyRevenue',
-            label: 'Revenue',
+            key: 'occupancy',
+            label: 'Occupancy',
             sortable: true,
-            render: (item: any) => (
-                <span className="text-sm font-semibold text-slate-900 dark:text-white">
-          {formatCurrency(item.monthlyRevenue)}
-        </span>
-            ),
+            render: (item: any) => {
+                const occupancy = calculateOccupancy(item.occupiedUnits, item.totalUnits);
+                return (
+                    <div className="flex items-center gap-2">
+                        <div className="flex-1">
+                            <div className="flex justify-between text-xs mb-1">
+                                <span className="text-slate-600 dark:text-slate-400">
+                                    {item.occupiedUnits}/{item.totalUnits}
+                                </span>
+                                <span className="font-semibold text-slate-900 dark:text-white">
+                                    {occupancy}%
+                                </span>
+                            </div>
+                            <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2">
+                                <div
+                                    className={`h-2 rounded-full transition-all ${
+                                        occupancy >= 80
+                                            ? 'bg-emerald-500'
+                                            : occupancy >= 50
+                                                ? 'bg-amber-500'
+                                                : 'bg-red-500'
+                                    }`}
+                                    style={{ width: `${occupancy}%` }}
+                                />
+                            </div>
+                        </div>
+                    </div>
+                );
+            },
         },
         {
-            key: 'status',
-            label: 'Status',
+            key: 'yearBuilt',
+            label: 'Year',
+            sortable: true,
             render: (item: any) => (
-                <Badge
-                    variant={item.status === 'Active' ? 'success' : 'warning'}
-                    dot
-                >
-                    {item.status}
-                </Badge>
+                <span className="text-sm text-slate-600 dark:text-slate-400">{item.yearBuilt}</span>
             ),
         },
         {
@@ -215,109 +198,132 @@ export default function PropertiesPage() {
             label: 'Actions',
             render: (item: any) => (
                 <div className="flex items-center gap-2">
-                    <Button size="sm" variant="ghost" onClick={() => console.log('View', item.id)}>
-                        <Eye className="w-4 h-4" />
-                    </Button>
-                    <Button size="sm" variant="ghost" onClick={() => console.log('Edit', item.id)}>
-                        <Edit className="w-4 h-4" />
-                    </Button>
-                    <Button size="sm" variant="ghost" onClick={() => console.log('Delete', item.id)}>
-                        <Trash2 className="w-4 h-4 text-red-600" />
-                    </Button>
+                    <Button size="sm" variant="ghost"><Edit className="w-4 h-4" /></Button>
+                    <Button size="sm" variant="ghost"><Trash2 className="w-4 h-4 text-red-600" /></Button>
                 </div>
             ),
         },
     ];
 
     return (
-        <div className="p-4 md:p-6 space-y-4 md:space-y-6 pb-24 md:pb-6">
-            {/* Page Header */}
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="p-4 md:p-6 space-y-6 pb-24 md:pb-6">
+            {/* Header */}
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white">
-                        Properties
-                    </h1>
+                    <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white">Properties</h1>
                     <p className="text-sm md:text-base text-slate-600 dark:text-slate-400 mt-1">
-                        Manage your properties and view occupancy rates
+                        Manage your properties and buildings
                     </p>
                 </div>
-                <Button onClick={() => console.log('Add new property')} className="w-full sm:w-auto">
+                <Button onClick={() => setIsFormOpen(true)}>
                     <Plus className="w-5 h-5" />
                     Add Property
                 </Button>
             </div>
 
-            {/* Stats Summary */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <Card>
-                    <CardContent className="p-3 md:p-4">
-                        <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400">Total Properties</p>
-                        <p className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white mt-1">
-                            {properties.length}
-                        </p>
+                    <CardContent className="p-4">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-sm text-slate-600 dark:text-slate-400">Total Properties</p>
+                                <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1">{properties.length}</p>
+                            </div>
+                            <div className="w-12 h-12 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center">
+                                <Building2 className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
+                            </div>
+                        </div>
                     </CardContent>
                 </Card>
                 <Card>
-                    <CardContent className="p-3 md:p-4">
-                        <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400">Total Rooms</p>
-                        <p className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white mt-1">
-                            {properties.reduce((sum, p) => sum + p.totalRooms, 0)}
-                        </p>
+                    <CardContent className="p-4">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-sm text-slate-600 dark:text-slate-400">Total Units</p>
+                                <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1">
+                                    {properties.reduce((sum, p) => sum + p.totalUnits, 0)}
+                                </p>
+                            </div>
+                            <div className="w-12 h-12 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
+                                <Home className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+                            </div>
+                        </div>
                     </CardContent>
                 </Card>
                 <Card>
-                    <CardContent className="p-3 md:p-4">
-                        <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400">Occupied Rooms</p>
-                        <p className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white mt-1">
-                            {properties.reduce((sum, p) => sum + p.occupiedRooms, 0)}
-                        </p>
+                    <CardContent className="p-4">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-sm text-slate-600 dark:text-slate-400">Occupied</p>
+                                <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1">
+                                    {properties.reduce((sum, p) => sum + p.occupiedUnits, 0)}
+                                </p>
+                            </div>
+                            <div className="w-12 h-12 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                                <Home className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                            </div>
+                        </div>
                     </CardContent>
                 </Card>
                 <Card>
-                    <CardContent className="p-3 md:p-4">
-                        <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 truncate">Total Revenue</p>
-                        <p className="text-lg md:text-2xl font-bold text-slate-900 dark:text-white mt-1 truncate">
-                            {formatCurrency(properties.reduce((sum, p) => sum + p.monthlyRevenue, 0))}
-                        </p>
+                    <CardContent className="p-4">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-sm text-slate-600 dark:text-slate-400">Avg Occupancy</p>
+                                <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1">
+                                    {Math.round((properties.reduce((sum, p) => sum + p.occupiedUnits, 0) /
+                                        properties.reduce((sum, p) => sum + p.totalUnits, 0)) * 100)}%
+                                </p>
+                            </div>
+                            <div className="w-12 h-12 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
+                                <Building2 className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+                            </div>
+                        </div>
                     </CardContent>
                 </Card>
             </div>
 
-            {/* Filters and View Toggle */}
+            {/* Search, Filters, and View Mode Toggle */}
             <Card>
                 <CardContent className="p-3 md:p-4">
                     <div className="space-y-3">
-                        {/* Search */}
                         <div className="flex gap-2">
-                            <div className="flex-1">
-                                <Input
-                                    placeholder="Search properties..."
-                                    leftIcon={<Search className="w-5 h-5" />}
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                />
-                            </div>
-
-                            {/* View Toggle - Desktop Only */}
-                            <div className="hidden md:flex gap-1 border border-slate-300 dark:border-slate-700 rounded-lg p-1">
+                            <Input
+                                placeholder="Search properties..."
+                                leftIcon={<Search className="w-5 h-5" />}
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="flex-1"
+                            />
+                            {/* View Mode Toggle - Desktop */}
+                            <div className="hidden md:flex gap-1 bg-slate-100 dark:bg-slate-800 rounded-lg p-1">
                                 <Button
                                     size="sm"
-                                    variant={viewMode === 'grid' ? 'primary' : 'ghost'}
+                                    variant="ghost"
                                     onClick={() => setViewMode('grid')}
+                                    className={`px-3 ${
+                                        viewMode === 'grid'
+                                            ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white hover:from-indigo-600 hover:to-purple-600'
+                                            : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+                                    }`}
                                 >
                                     <Grid3x3 className="w-4 h-4" />
                                 </Button>
                                 <Button
                                     size="sm"
-                                    variant={viewMode === 'table' ? 'primary' : 'ghost'}
-                                    onClick={() => setViewMode('table')}
+                                    variant="ghost"
+                                    onClick={() => setViewMode('list')}
+                                    className={`px-3 ${
+                                        viewMode === 'list'
+                                            ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white hover:from-indigo-600 hover:to-purple-600'
+                                            : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+                                    }`}
                                 >
                                     <List className="w-4 h-4" />
                                 </Button>
                             </div>
                         </div>
-
-                        {/* Filter Toggle Button - Mobile Only */}
                         <Button
                             variant="outline"
                             onClick={() => setShowFilters(!showFilters)}
@@ -326,222 +332,101 @@ export default function PropertiesPage() {
                             <Filter className="w-4 h-4" />
                             {showFilters ? 'Hide' : 'Show'} Filters
                         </Button>
-
-                        {/* Filter Options */}
                         <div className={`grid grid-cols-1 gap-3 md:grid-cols-2 ${showFilters ? 'block' : 'hidden md:grid'}`}>
-                            <Select options={typeOptions} placeholder="Type" />
-                            <Select options={statusOptions} placeholder="Status" />
+                            <Select options={typeOptions} value={filterType} onChange={(e) => setFilterType(e.target.value)} />
+                            <Select options={cityOptions} value={filterCity} onChange={(e) => setFilterCity(e.target.value)} />
                         </div>
                     </div>
                 </CardContent>
             </Card>
 
-            {/* Mobile View - Cards */}
-            <div className="block md:hidden space-y-3">
-                {properties.map((property) => (
-                    <Card key={property.id} hover>
-                        {/* Property Image Placeholder */}
-                        <div className="h-40 bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
-                            <Building2 className="w-12 h-12 text-white/80" />
-                        </div>
-
-                        <CardContent className="p-4">
-                            {/* Property Name and Type */}
-                            <div className="flex items-start justify-between mb-3">
-                                <div className="flex-1 min-w-0">
-                                    <h3 className="text-base font-bold text-slate-900 dark:text-white truncate">
-                                        {property.name}
-                                    </h3>
-                                    <p className="text-sm text-slate-600 dark:text-slate-400">
-                                        {property.type}
-                                    </p>
-                                </div>
-                                <Badge
-                                    variant={property.status === 'Active' ? 'success' : 'warning'}
-                                    dot
-                                    size="sm"
-                                >
-                                    {property.status}
-                                </Badge>
-                            </div>
-
-                            {/* Address */}
-                            <div className="flex items-start gap-2 mb-4">
-                                <MapPin className="w-4 h-4 text-slate-400 flex-shrink-0 mt-0.5" />
-                                <p className="text-sm text-slate-600 dark:text-slate-400 line-clamp-2">
-                                    {property.address}
-                                </p>
-                            </div>
-
-                            {/* Stats */}
-                            <div className="grid grid-cols-2 gap-3 mb-4">
-                                <div>
-                                    <p className="text-xs text-slate-600 dark:text-slate-400">Occupancy</p>
-                                    <p className="text-lg font-bold text-slate-900 dark:text-white">
-                                        {property.occupancyRate}%
-                                    </p>
-                                </div>
-                                <div>
-                                    <p className="text-xs text-slate-600 dark:text-slate-400">Revenue</p>
-                                    <p className="text-lg font-bold text-slate-900 dark:text-white truncate">
-                                        {formatCurrency(property.monthlyRevenue)}
-                                    </p>
-                                </div>
-                            </div>
-
-                            {/* Occupancy Bar */}
-                            <div className="mb-4">
-                                <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-xs text-slate-600 dark:text-slate-400">
-                    {property.occupiedRooms} / {property.totalRooms} rooms
-                  </span>
-                                </div>
-                                <div className="w-full bg-slate-200 dark:bg-slate-800 rounded-full h-2">
-                                    <div
-                                        className="bg-gradient-to-r from-indigo-600 to-purple-600 h-2 rounded-full transition-all"
-                                        style={{ width: `${property.occupancyRate}%` }}
-                                    />
-                                </div>
-                            </div>
-
-                            {/* Actions */}
-                            <div className="flex gap-2 pt-4 border-t border-slate-200 dark:border-slate-800">
-                                <Button
-                                    size="sm"
-                                    variant="outline"
-                                    className="flex-1"
-                                    onClick={() => console.log('View', property.id)}
-                                >
-                                    <Eye className="w-4 h-4" />
-                                    View
-                                </Button>
-                                <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    onClick={() => console.log('Edit', property.id)}
-                                >
-                                    <Edit className="w-4 h-4" />
-                                </Button>
-                                <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    onClick={() => console.log('More', property.id)}
-                                >
-                                    <MoreVertical className="w-4 h-4" />
-                                </Button>
-                            </div>
-                        </CardContent>
-                    </Card>
-                ))}
-            </div>
-
-            {/* Desktop View - Grid or Table */}
-            <div className="hidden md:block">
-                {viewMode === 'grid' ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {properties.map((property) => (
-                            <Card key={property.id} hover className="overflow-hidden">
-                                {/* Property Image Placeholder */}
-                                <div className="h-48 bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
-                                    <Building2 className="w-16 h-16 text-white/80" />
-                                </div>
-
-                                <CardContent className="p-6">
-                                    {/* Property Name and Type */}
+            {/* Grid View */}
+            {effectiveViewMode === 'grid' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {properties.map((property) => {
+                        const occupancy = calculateOccupancy(property.occupiedUnits, property.totalUnits);
+                        return (
+                            <Card key={property.id} hover>
+                                <CardContent className="p-4">
                                     <div className="flex items-start justify-between mb-3">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center">
+                                                <Building2 className="w-6 h-6 text-white" />
+                                            </div>
+                                            <div>
+                                                <h3 className="font-semibold text-slate-900 dark:text-white">
+                                                    {property.name}
+                                                </h3>
+                                                <Badge variant="default" size="sm">{property.type}</Badge>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-3">
+                                        <div className="flex items-start gap-2">
+                                            <MapPin className="w-4 h-4 text-slate-400 mt-0.5 flex-shrink-0" />
+                                            <p className="text-sm text-slate-600 dark:text-slate-400">{property.address}</p>
+                                        </div>
+
+                                        <div className="flex items-center justify-between text-sm">
+                                            <span className="text-slate-600 dark:text-slate-400">Total Units:</span>
+                                            <span className="font-semibold text-slate-900 dark:text-white">{property.totalUnits}</span>
+                                        </div>
+
+                                        <div className="flex items-center justify-between text-sm">
+                                            <span className="text-slate-600 dark:text-slate-400">Year Built:</span>
+                                            <span className="font-semibold text-slate-900 dark:text-white">{property.yearBuilt}</span>
+                                        </div>
+
                                         <div>
-                                            <h3 className="text-lg font-bold text-slate-900 dark:text-white">
-                                                {property.name}
-                                            </h3>
-                                            <p className="text-sm text-slate-600 dark:text-slate-400">
-                                                {property.type}
-                                            </p>
+                                            <div className="flex justify-between text-xs mb-1">
+                                                <span className="text-slate-600 dark:text-slate-400">Occupancy</span>
+                                                <span className="font-semibold text-slate-900 dark:text-white">
+                                                    {property.occupiedUnits}/{property.totalUnits} ({occupancy}%)
+                                                </span>
+                                            </div>
+                                            <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2">
+                                                <div
+                                                    className={`h-2 rounded-full transition-all ${
+                                                        occupancy >= 80
+                                                            ? 'bg-emerald-500'
+                                                            : occupancy >= 50
+                                                                ? 'bg-amber-500'
+                                                                : 'bg-red-500'
+                                                    }`}
+                                                    style={{ width: `${occupancy}%` }}
+                                                />
+                                            </div>
                                         </div>
-                                        <Badge
-                                            variant={property.status === 'Active' ? 'success' : 'warning'}
-                                            dot
-                                        >
-                                            {property.status}
-                                        </Badge>
-                                    </div>
 
-                                    {/* Address */}
-                                    <div className="flex items-start gap-2 mb-4">
-                                        <MapPin className="w-4 h-4 text-slate-400 flex-shrink-0 mt-0.5" />
-                                        <p className="text-sm text-slate-600 dark:text-slate-400 line-clamp-2">
-                                            {property.address}
-                                        </p>
-                                    </div>
-
-                                    {/* Stats */}
-                                    <div className="grid grid-cols-2 gap-4 mb-4">
-                                        <div>
-                                            <p className="text-xs text-slate-600 dark:text-slate-400">Occupancy</p>
-                                            <p className="text-lg font-bold text-slate-900 dark:text-white">
-                                                {property.occupancyRate}%
-                                            </p>
+                                        <div className="flex gap-2 pt-3 border-t border-slate-200 dark:border-slate-800">
+                                            <Button size="sm" variant="outline" className="flex-1">
+                                                <Edit className="w-4 h-4 mr-1" />
+                                                Edit
+                                            </Button>
+                                            <Button size="sm" variant="ghost">
+                                                <Trash2 className="w-4 h-4 text-red-600" />
+                                            </Button>
                                         </div>
-                                        <div>
-                                            <p className="text-xs text-slate-600 dark:text-slate-400">Revenue</p>
-                                            <p className="text-lg font-bold text-slate-900 dark:text-white">
-                                                {formatCurrency(property.monthlyRevenue)}
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    {/* Occupancy Bar */}
-                                    <div className="mb-4">
-                                        <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-xs text-slate-600 dark:text-slate-400">
-                        {property.occupiedRooms} / {property.totalRooms} rooms
-                      </span>
-                                        </div>
-                                        <div className="w-full bg-slate-200 dark:bg-slate-800 rounded-full h-2">
-                                            <div
-                                                className="bg-gradient-to-r from-indigo-600 to-purple-600 h-2 rounded-full transition-all"
-                                                style={{ width: `${property.occupancyRate}%` }}
-                                            />
-                                        </div>
-                                    </div>
-
-                                    {/* Actions */}
-                                    <div className="flex gap-2 pt-4 border-t border-slate-200 dark:border-slate-800">
-                                        <Button
-                                            size="sm"
-                                            variant="outline"
-                                            className="flex-1"
-                                            onClick={() => console.log('View', property.id)}
-                                        >
-                                            <Eye className="w-4 h-4" />
-                                            View
-                                        </Button>
-                                        <Button
-                                            size="sm"
-                                            variant="ghost"
-                                            onClick={() => console.log('Edit', property.id)}
-                                        >
-                                            <Edit className="w-4 h-4" />
-                                        </Button>
-                                        <Button
-                                            size="sm"
-                                            variant="ghost"
-                                            onClick={() => console.log('More', property.id)}
-                                        >
-                                            <MoreVertical className="w-4 h-4" />
-                                        </Button>
                                     </div>
                                 </CardContent>
                             </Card>
-                        ))}
-                    </div>
-                ) : (
-                    <Table
-                        data={properties}
-                        columns={columns}
-                        onRowClick={(property) => console.log('View property:', property.id)}
-                    />
-                )}
-            </div>
+                        );
+                    })}
+                </div>
+            )}
+
+            {/* List View (Table) */}
+            {effectiveViewMode === 'list' && (
+                <Table data={properties} columns={columns} onRowClick={(property) => console.log('Clicked:', property)} />
+            )}
+
+            {/* Add Property Form */}
+            <AddPropertyForm
+                isOpen={isFormOpen}
+                onClose={() => setIsFormOpen(false)}
+                onSubmit={handleSubmit}
+            />
         </div>
     );
 }
