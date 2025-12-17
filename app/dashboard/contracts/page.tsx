@@ -2,168 +2,100 @@
 
 import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/Card';
-import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
+import Badge from '@/components/ui/Badge';
 import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
 import Table from '@/components/ui/Table';
-import {
-    FileText,
-    Plus,
-    Search,
-    Filter,
-    User,
-    Calendar,
-    DollarSign,
-    Eye,
-    Download,
-    AlertCircle,
-    CheckCircle,
-    Clock, XCircle,
-} from 'lucide-react';
+import AddContractForm, { ContractFormData } from '@/components/forms/AddContractForm';
+import { FileText, User, Home, Plus, Calendar, DollarSign, Search, Filter } from 'lucide-react';
 
 export default function ContractsPage() {
+    const [isFormOpen, setIsFormOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [showFilters, setShowFilters] = useState(false);
+    const [filterStatus, setFilterStatus] = useState('all');
 
-    const contracts = [
+    const tenants = [
+        { id: '1', name: 'John Doe' },
+        { id: '2', name: 'Jane Smith' },
+    ];
+
+    const rooms = [
+        { id: '1', name: 'Room 201' },
+        { id: '2', name: 'Room 202' },
+    ];
+
+    const [contracts, setContracts] = useState([
         {
-            id: 1,
-            contractNumber: 'CNT-2024-001',
-            tenant: 'John Doe',
-            room: 'Room 305 - Building A',
-            startDate: '2024-01-15',
-            endDate: '2025-01-14',
-            monthlyRate: 3500000,
-            deposit: 7000000,
-            status: 'Active',
-            daysUntilExpiry: 35,
-            autoRenew: true,
-        },
-        {
-            id: 2,
-            contractNumber: 'CNT-2024-002',
-            tenant: 'Jane Smith',
-            room: 'Room 201 - Building B',
-            startDate: '2024-02-20',
-            endDate: '2026-02-19',
-            monthlyRate: 2500000,
-            deposit: 5000000,
-            status: 'Active',
-            daysUntilExpiry: 437,
-            autoRenew: false,
-        },
-        {
-            id: 3,
-            contractNumber: 'CNT-2024-003',
-            tenant: 'Bob Johnson',
-            room: 'Room 102 - Building A',
-            startDate: '2024-03-10',
+            id: '1',
+            tenantName: 'John Doe',
+            roomName: 'Room 201',
+            startDate: '2024-01-01',
             endDate: '2024-12-31',
-            monthlyRate: 2500000,
-            deposit: 5000000,
-            status: 'Expiring Soon',
-            daysUntilExpiry: 21,
-            autoRenew: false,
+            monthlyRent: 5000000,
+            status: 'active',
+            daysRemaining: 180,
         },
         {
-            id: 4,
-            contractNumber: 'CNT-2023-045',
-            tenant: 'Alice Williams',
-            room: 'Room 405 - Building C',
-            startDate: '2023-11-05',
-            endDate: '2024-11-04',
-            monthlyRate: 3000000,
-            deposit: 6000000,
-            status: 'Expired',
-            daysUntilExpiry: -36,
-            autoRenew: false,
-        },
-        {
-            id: 5,
-            contractNumber: 'CNT-2024-004',
-            tenant: 'Charlie Brown',
-            room: 'Room 501 - Building B',
+            id: '2',
+            tenantName: 'Jane Smith',
+            roomName: 'Room 301',
             startDate: '2024-06-01',
-            endDate: '2025-05-31',
-            monthlyRate: 4500000,
-            deposit: 9000000,
-            status: 'Active',
-            daysUntilExpiry: 172,
-            autoRenew: true,
+            endDate: '2024-11-30',
+            monthlyRent: 4500000,
+            status: 'expiring',
+            daysRemaining: 14,
         },
-    ];
+    ]);
 
-    const statusOptions = [
-        { value: 'all', label: 'All Status' },
-        { value: 'active', label: 'Active' },
-        { value: 'expiring-soon', label: 'Expiring Soon' },
-        { value: 'expired', label: 'Expired' },
-        { value: 'terminated', label: 'Terminated' },
-    ];
+    const handleSubmit = (data: ContractFormData) => {
+        const tenant = tenants.find(t => t.id === data.tenantId);
+        const room = rooms.find(r => r.id === data.roomId);
 
-    const propertyOptions = [
-        { value: 'all', label: 'All Properties' },
-        { value: 'building-a', label: 'Building A' },
-        { value: 'building-b', label: 'Building B' },
-        { value: 'building-c', label: 'Building C' },
-    ];
+        const start = new Date(data.startDate);
+        const end = new Date(data.endDate);
+        const today = new Date();
+        const daysRemaining = Math.ceil((end.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
 
-    const formatCurrency = (amount: number) => {
-        return new Intl.NumberFormat('id-ID', {
-            style: 'currency',
-            currency: 'IDR',
-            minimumFractionDigits: 0,
-        }).format(amount);
-    };
+        const newContract = {
+            id: Date.now().toString(),
+            tenantName: tenant?.name || 'Unknown',
+            roomName: room?.name || 'Unknown',
+            startDate: data.startDate,
+            endDate: data.endDate,
+            monthlyRent: data.monthlyRent,
+            status: daysRemaining < 30 ? 'expiring' : 'active',
+            daysRemaining,
+        };
 
-    const formatDate = (dateString: string) => {
-        return new Date(dateString).toLocaleDateString('id-ID', {
-            day: 'numeric',
-            month: 'short',
-            year: 'numeric',
-        });
+        setContracts([...contracts, newContract]);
     };
 
     const getStatusBadge = (status: string) => {
-        const variants: Record<string, any> = {
-            Active: { variant: 'success', icon: CheckCircle },
-            'Expiring Soon': { variant: 'warning', icon: AlertCircle },
-            Expired: { variant: 'danger', icon: XCircle },
-            Terminated: { variant: 'default', icon: XCircle },
+        const config: Record<string, any> = {
+            active: { variant: 'success', label: 'Active' },
+            expiring: { variant: 'warning', label: 'Expiring Soon' },
+            expired: { variant: 'danger', label: 'Expired' },
         };
-        return variants[status] || variants.Active;
+        const s = config[status] || config.active;
+        return <Badge variant={s.variant}>{s.label}</Badge>;
     };
 
-    // Table columns
     const columns = [
         {
-            key: 'contractNumber',
-            label: 'Contract',
+            key: 'tenant',
+            label: 'Tenant & Room',
             sortable: true,
             render: (item: any) => (
                 <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center">
                         <FileText className="w-5 h-5 text-white" />
                     </div>
                     <div>
-                        <p className="font-semibold text-slate-900 dark:text-white">
-                            {item.contractNumber}
-                        </p>
-                        <p className="text-xs text-slate-600 dark:text-slate-400">
-                            {item.room}
-                        </p>
+                        <p className="font-semibold text-slate-900 dark:text-white">{item.tenantName}</p>
+                        <p className="text-sm text-slate-500 dark:text-slate-400">{item.roomName}</p>
                     </div>
-                </div>
-            ),
-        },
-        {
-            key: 'tenant',
-            label: 'Tenant',
-            render: (item: any) => (
-                <div className="flex items-center gap-2">
-                    <User className="w-4 h-4 text-slate-400" />
-                    <span className="text-sm text-slate-900 dark:text-white">{item.tenant}</span>
                 </div>
             ),
         },
@@ -171,123 +103,111 @@ export default function ContractsPage() {
             key: 'period',
             label: 'Contract Period',
             render: (item: any) => (
-                <div className="space-y-1">
-                    <div className="flex items-center gap-2 text-sm">
-                        <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                        <span className="text-slate-900 dark:text-white">
-              {formatDate(item.startDate)}
-            </span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm">
-                        <span className="text-slate-600 dark:text-slate-400">to</span>
-                        <span className="text-slate-900 dark:text-white">
-              {formatDate(item.endDate)}
-            </span>
-                    </div>
+                <div className="text-sm">
+                    <p className="text-slate-900 dark:text-white">{item.startDate}</p>
+                    <p className="text-slate-500 dark:text-slate-400">to {item.endDate}</p>
                 </div>
             ),
         },
         {
-            key: 'monthlyRate',
-            label: 'Monthly Rate',
+            key: 'monthlyRent',
+            label: 'Monthly Rent',
             sortable: true,
             render: (item: any) => (
-                <span className="text-sm font-semibold text-slate-900 dark:text-white">
-          {formatCurrency(item.monthlyRate)}
-        </span>
+                <div className="font-semibold text-slate-900 dark:text-white">
+                    Rp {item.monthlyRent.toLocaleString('id-ID')}
+                </div>
+            ),
+        },
+        {
+            key: 'daysRemaining',
+            label: 'Days Remaining',
+            sortable: true,
+            render: (item: any) => (
+                <div className={`font-semibold ${item.daysRemaining < 30 ? 'text-amber-600' : 'text-emerald-600'}`}>
+                    {item.daysRemaining} days
+                </div>
             ),
         },
         {
             key: 'status',
             label: 'Status',
-            render: (item: any) => {
-                const statusInfo = getStatusBadge(item.status);
-                const StatusIcon = statusInfo.icon;
-                return (
-                    <div>
-                        <Badge variant={statusInfo.variant} dot>
-                            {item.status}
-                        </Badge>
-                        {item.status === 'Expiring Soon' && (
-                            <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
-                                {item.daysUntilExpiry} days left
-                            </p>
-                        )}
-                    </div>
-                );
-            },
-        },
-        {
-            key: 'actions',
-            label: 'Actions',
-            render: (item: any) => (
-                <div className="flex items-center gap-2">
-                    <Button size="sm" variant="ghost">
-                        <Eye className="w-4 h-4" />
-                    </Button>
-                    <Button size="sm" variant="ghost">
-                        <Download className="w-4 h-4" />
-                    </Button>
-                </div>
-            ),
+            sortable: true,
+            render: (item: any) => getStatusBadge(item.status),
         },
     ];
 
     return (
-        <div className="p-4 md:p-6 space-y-4 md:space-y-6 pb-24 md:pb-6">
-            {/* Header */}
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="p-4 md:p-6 space-y-6 pb-24 md:pb-6">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white">
-                        Contracts
-                    </h1>
+                    <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white">Contracts</h1>
                     <p className="text-sm md:text-base text-slate-600 dark:text-slate-400 mt-1">
                         Manage tenant contracts and agreements
                     </p>
                 </div>
-                <Button className="w-full sm:w-auto">
+                <Button onClick={() => setIsFormOpen(true)}>
                     <Plus className="w-5 h-5" />
                     New Contract
                 </Button>
             </div>
 
-            {/* Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <Card>
-                    <CardContent className="p-3 md:p-4">
-                        <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400">Total</p>
-                        <p className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white mt-1">
-                            {contracts.length}
-                        </p>
+                    <CardContent className="p-4">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-sm text-slate-600 dark:text-slate-400">Total</p>
+                                <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1">{contracts.length}</p>
+                            </div>
+                            <FileText className="w-8 h-8 text-indigo-600" />
+                        </div>
                     </CardContent>
                 </Card>
+
                 <Card>
-                    <CardContent className="p-3 md:p-4">
-                        <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400">Active</p>
-                        <p className="text-xl md:text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">
-                            {contracts.filter(c => c.status === 'Active').length}
-                        </p>
+                    <CardContent className="p-4">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-sm text-slate-600 dark:text-slate-400">Active</p>
+                                <p className="text-2xl font-bold text-emerald-600 mt-1">
+                                    {contracts.filter(c => c.status === 'active').length}
+                                </p>
+                            </div>
+                            <FileText className="w-8 h-8 text-emerald-600" />
+                        </div>
                     </CardContent>
                 </Card>
+
                 <Card>
-                    <CardContent className="p-3 md:p-4">
-                        <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 truncate">Expiring Soon</p>
-                        <p className="text-xl md:text-2xl font-bold text-amber-600 dark:text-amber-400 mt-1">
-                            {contracts.filter(c => c.status === 'Expiring Soon').length}
-                        </p>
+                    <CardContent className="p-4">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-sm text-slate-600 dark:text-slate-400">Expiring</p>
+                                <p className="text-2xl font-bold text-amber-600 mt-1">
+                                    {contracts.filter(c => c.status === 'expiring').length}
+                                </p>
+                            </div>
+                            <FileText className="w-8 h-8 text-amber-600" />
+                        </div>
                     </CardContent>
                 </Card>
+
                 <Card>
-                    <CardContent className="p-3 md:p-4">
-                        <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400">Expired</p>
-                        <p className="text-xl md:text-2xl font-bold text-red-600 dark:text-red-400 mt-1">
-                            {contracts.filter(c => c.status === 'Expired').length}
-                        </p>
+                    <CardContent className="p-4">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-sm text-slate-600 dark:text-slate-400">Revenue</p>
+                                <p className="text-lg font-bold text-blue-600 mt-1">
+                                    {(contracts.reduce((sum, c) => sum + c.monthlyRent, 0) / 1000000).toFixed(0)}M
+                                </p>
+                            </div>
+                            <DollarSign className="w-8 h-8 text-blue-600" />
+                        </div>
                     </CardContent>
                 </Card>
             </div>
 
-            {/* Filters */}
             <Card>
                 <CardContent className="p-3 md:p-4">
                     <div className="space-y-3">
@@ -297,7 +217,6 @@ export default function ContractsPage() {
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                         />
-
                         <Button
                             variant="outline"
                             onClick={() => setShowFilters(!showFilters)}
@@ -306,100 +225,31 @@ export default function ContractsPage() {
                             <Filter className="w-4 h-4" />
                             {showFilters ? 'Hide' : 'Show'} Filters
                         </Button>
-
-                        <div className={`grid grid-cols-1 gap-3 md:grid-cols-2 ${showFilters ? 'block' : 'hidden md:grid'}`}>
-                            <Select options={statusOptions} placeholder="Status" />
-                            <Select options={propertyOptions} placeholder="Property" />
+                        <div className={`grid grid-cols-1 gap-3 ${showFilters ? 'block' : 'hidden md:grid'}`}>
+                            <Select
+                                options={[
+                                    { value: 'all', label: 'All Status' },
+                                    { value: 'active', label: 'Active' },
+                                    { value: 'expiring', label: 'Expiring Soon' },
+                                    { value: 'expired', label: 'Expired' },
+                                ]}
+                                value={filterStatus}
+                                onChange={(e) => setFilterStatus(e.target.value)}
+                            />
                         </div>
                     </div>
                 </CardContent>
             </Card>
 
-            {/* Mobile View - Cards */}
-            <div className="block md:hidden space-y-3">
-                {contracts.map((contract) => {
-                    const statusInfo = getStatusBadge(contract.status);
-                    const StatusIcon = statusInfo.icon;
+            <Table data={contracts} columns={columns} />
 
-                    return (
-                        <Card key={contract.id} hover>
-                            <CardContent className="p-4">
-                                {/* Header */}
-                                <div className="flex items-start justify-between mb-3">
-                                    <div className="flex-1 min-w-0">
-                                        <h3 className="font-bold text-slate-900 dark:text-white truncate">
-                                            {contract.contractNumber}
-                                        </h3>
-                                        <p className="text-xs text-slate-600 dark:text-slate-400 truncate">
-                                            {contract.room}
-                                        </p>
-                                    </div>
-                                    <Badge variant={statusInfo.variant} dot size="sm">
-                                        {contract.status}
-                                    </Badge>
-                                </div>
-
-                                {/* Tenant */}
-                                <div className="flex items-center gap-2 mb-3">
-                                    <User className="w-4 h-4 text-slate-400" />
-                                    <span className="text-sm text-slate-900 dark:text-white">{contract.tenant}</span>
-                                </div>
-
-                                {/* Info Grid */}
-                                <div className="space-y-2 mb-3 text-sm">
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-slate-600 dark:text-slate-400">Period:</span>
-                                        <span className="text-slate-900 dark:text-white font-medium">
-                      {formatDate(contract.startDate)} - {formatDate(contract.endDate)}
-                    </span>
-                                    </div>
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-slate-600 dark:text-slate-400">Monthly:</span>
-                                        <span className="text-slate-900 dark:text-white font-semibold">
-                      {formatCurrency(contract.monthlyRate)}
-                    </span>
-                                    </div>
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-slate-600 dark:text-slate-400">Deposit:</span>
-                                        <span className="text-slate-900 dark:text-white font-medium">
-                      {formatCurrency(contract.deposit)}
-                    </span>
-                                    </div>
-                                    {contract.status === 'Expiring Soon' && (
-                                        <div className="flex items-center gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
-                                            <AlertCircle className="w-4 h-4 text-amber-600" />
-                                            <span className="text-amber-600 dark:text-amber-400 font-medium">
-                        {contract.daysUntilExpiry} days until expiry
-                      </span>
-                                        </div>
-                                    )}
-                                </div>
-
-                                {/* Actions */}
-                                <div className="flex gap-2 pt-3 border-t border-slate-200 dark:border-slate-800">
-                                    <Button size="sm" variant="outline" className="flex-1">
-                                        <Eye className="w-4 h-4" />
-                                        View
-                                    </Button>
-                                    <Button size="sm" variant="outline" className="flex-1">
-                                        <Download className="w-4 h-4" />
-                                        Download
-                                    </Button>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    );
-                })}
-            </div>
-
-            {/* Desktop View - Table */}
-            <div className="hidden md:block">
-                <Table
-                    data={contracts}
-                    columns={columns}
-                    emptyMessage="No contracts found"
-                />
-            </div>
+            <AddContractForm
+                isOpen={isFormOpen}
+                onClose={() => setIsFormOpen(false)}
+                onSubmit={handleSubmit}
+                tenants={tenants}
+                rooms={rooms}
+            />
         </div>
     );
 }

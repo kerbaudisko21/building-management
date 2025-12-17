@@ -119,9 +119,9 @@ export default function RoomsPage() {
             property: property?.name || 'Unknown',
             type: data.type,
             floor: data.floor,
-            capacity: 100,
-            price: 100,
-            status: 'Available',
+            capacity: 1, // Default capacity, can be updated later
+            price: data.monthlyRate, // Use monthlyRate from form
+            status: data.status === 'available' ? 'Available' : 'Occupied',
             tenant: null,
         };
         setRooms([...rooms, newRoom]);

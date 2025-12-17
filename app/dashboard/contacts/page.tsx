@@ -32,7 +32,19 @@ export default function ContactsPage() {
 
     const effectiveViewMode = isMobile ? 'grid' : viewMode;
 
-    const [contacts, setContacts] = useState([
+    type ContactType = {
+        id: string;
+        name: string;
+        email: string;
+        phone: string;
+        idNumber: string;
+        occupation: string;
+        room: string | null;
+        status: string;
+        moveInDate: string | null;
+    };
+
+    const [contacts, setContacts] = useState<ContactType[]>([
         {
             id: '1',
             name: 'John Doe',
@@ -93,13 +105,13 @@ export default function ContactsPage() {
             name: data.name,
             email: data.email,
             phone: data.phone,
-            idNumber: data.idNumber,
+            idNumber: data.idNumber || '-', // Use '-' if not provided
             occupation: data.occupation || '-',
-            room: null,
+            room: null as string | null, // Explicitly type as nullable
             status: 'Prospect',
-            moveInDate: null,
+            moveInDate: null as string | null, // Explicitly type as nullable
         };
-        // setContacts([...contacts, newContact]);
+        setContacts([...contacts, newContact]);
     };
 
     const getStatusBadge = (status: string) => {

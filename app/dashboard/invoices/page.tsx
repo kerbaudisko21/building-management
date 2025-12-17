@@ -7,6 +7,7 @@ import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
 import Table from '@/components/ui/Table';
+import AddInvoiceForm, { InvoiceFormData } from '@/components/forms/AddInvoiceForm';
 import {
     Receipt,
     Plus,
@@ -25,8 +26,31 @@ import {
 export default function InvoicesPage() {
     const [searchQuery, setSearchQuery] = useState('');
     const [showFilters, setShowFilters] = useState(false);
+    const [filterStatus, setFilterStatus] = useState('all');
+    const [filterType, setFilterType] = useState('all');
+    const [isFormOpen, setIsFormOpen] = useState(false);
 
-    const invoices = [
+    // Mock tenants for form
+    const tenants = [
+        { id: '1', name: 'John Doe' },
+        { id: '2', name: 'Jane Smith' },
+        { id: '3', name: 'Bob Johnson' },
+    ];
+
+    type InvoiceType = {
+        id: number;
+        invoiceNumber: string;
+        tenant: string;
+        room: string;
+        issueDate: string;
+        dueDate: string;
+        amount: number;
+        status: string;
+        paidDate: string | null;
+        paymentMethod: string | null;
+    };
+
+    const [invoices, setInvoices] = useState<InvoiceType[]>([
         {
             id: 1,
             invoiceNumber: 'INV-2024-001',
@@ -98,8 +122,8 @@ export default function InvoicesPage() {
             status: 'Cancelled',
             paidDate: null,
             paymentMethod: null,
-        },
-    ];
+        }
+    ]);
 
     const statusOptions = [
         { value: 'all', label: 'All Status' },
@@ -255,7 +279,7 @@ export default function InvoicesPage() {
                         Manage and track invoice payments
                     </p>
                 </div>
-                <Button className="w-full sm:w-auto">
+                <Button className="w-full sm:w-auto" onClick={() => setIsFormOpen(true)}>
                     <Plus className="w-5 h-5" />
                     Create Invoice
                 </Button>
@@ -316,8 +340,8 @@ export default function InvoicesPage() {
                         </Button>
 
                         <div className={`grid grid-cols-1 gap-3 md:grid-cols-2 ${showFilters ? 'block' : 'hidden md:grid'}`}>
-                            <Select options={statusOptions} placeholder="Status" />
-                            <Select options={propertyOptions} placeholder="Property" />
+                            <Select options={statusOptions} value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} />
+                            <Select options={propertyOptions} value={filterType} onChange={(e) => setFilterType(e.target.value)} />
                         </div>
                     </div>
                 </CardContent>
@@ -408,6 +432,31 @@ export default function InvoicesPage() {
                     emptyMessage="No invoices found"
                 />
             </div>
+
+            {/* Add Invoice Form */}
+            <AddInvoiceForm
+                isOpen={isFormOpen}
+                onClose={() => setIsFormOpen(false)}
+                onSubmit={handleFormSubmit}
+                tenants={tenants}
+            />
         </div>
     );
+
+    function handleFormSubmit(data: InvoiceFormData) {
+        const tenant = tenants.find(t => t.id === data.tenantId);
+        const newInvoice: InvoiceType = {
+            id: invoices.length + 1,
+            invoiceNumber: `INV-${new Date().getFullYear()}-${String(invoices.length + 1).padStart(3, '0')}`,
+            tenant: tenant?.name || 'Unknown',
+            room: 'TBD', // Can be added to form later
+            issueDate: data.issueDate,
+            dueDate: data.dueDate,
+            amount: data.amount,
+            status: data.status === 'paid' ? 'Paid' : data.status === 'pending' ? 'Pending' : 'Overdue',
+            paidDate: data.status === 'paid' ? new Date().toISOString().split('T')[0] : null,
+            paymentMethod: data.status === 'paid' ? 'Bank Transfer' : null,
+        };
+        setInvoices([newInvoice, ...invoices]);
+    }
 }
