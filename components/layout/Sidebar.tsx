@@ -56,7 +56,7 @@ export default function Sidebar({ onCollapseChange }: SidebarProps) {
     const menuItems = [
         { label: 'Dashboard', icon: LayoutDashboard, href: '/dashboard' },
         { label: 'Properties', icon: Building2, href: '/dashboard/properties' },
-        { label: 'Rooms', icon: Bed, href: '/dashboard/rooms' },
+        { label: 'Rooms/Units', icon: Bed, href: '/dashboard/rooms' },
         { label: 'Contacts', icon: Users, href: '/dashboard/contacts' },
         { label: 'Waiting List', icon: ClipboardList, href: '/dashboard/waiting-list' },
         { label: 'Contracts', icon: FileText, href: '/dashboard/contracts' },

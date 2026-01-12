@@ -1,557 +1,536 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/Card';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
 import {
-    Calendar,
-    Clock,
-    Wrench,
-    ClipboardCheck,
-    KeyRound,
+    LogIn,
+    LogOut,
     Sparkles,
+    Wrench,
+    DollarSign,
+    Home,
+    AlertCircle,
+    FileText,
+    Calendar,
+    Plus,
     Phone,
     MessageCircle,
-    AlertCircle,
-    DollarSign,
-    FileText,
-    TrendingUp,
-    Users,
-    Home,
+    User,
+    Clock,
     CheckCircle,
-    XCircle,
-    ChevronRight,
+    TrendingUp,
 } from 'lucide-react';
 
-export default function EnhancedDashboard() {
-    const [expandedSections, setExpandedSections] = useState({
-        schedule: true,
-        alerts: true,
-        week: false,
-    });
+export default function DashboardPage() {
+    const [holidays, setHolidays] = useState<any[]>([]);
+    const [loadingHolidays, setLoadingHolidays] = useState(true);
 
-    // Mock data - Today's schedule
-    const todaySchedule = [
-        {
-            id: 1,
-            time: '09:00',
-            type: 'maintenance',
-            title: 'AC Repair',
-            location: 'Room 201, Building A',
-            assignee: 'John Doe',
-            phone: '+628123456789',
-            status: 'scheduled',
-            priority: 'high',
-        },
-        {
-            id: 2,
-            time: '10:00',
-            type: 'checkout',
-            title: 'Check-out',
-            location: 'Room 301, Building B',
-            guest: 'Sarah Lee',
-            action: 'Call cleaning team',
-            status: 'pending',
-            priority: 'high',
-        },
-        {
-            id: 3,
-            time: '11:00',
-            type: 'checkin',
-            title: 'Check-in',
-            location: 'Room 205, Building A',
-            guest: 'Mike Chen',
-            contract: '1 year contract',
-            status: 'scheduled',
-            priority: 'medium',
-        },
-        {
-            id: 4,
-            time: '13:00',
-            type: 'maintenance',
-            title: 'Plumbing Fix',
-            location: 'Room 305, Building A',
-            assignee: 'Bob Wilson',
-            phone: '+628123456790',
-            status: 'scheduled',
-            priority: 'medium',
-        },
-        {
-            id: 5,
-            time: '14:00',
-            type: 'survey',
-            title: 'Property Survey',
-            location: 'Unit 102, Building A',
-            prospect: 'Jane Doe',
-            phone: '+628123456791',
-            status: 'scheduled',
-            priority: 'low',
-        },
+    // Check-in today
+    const checkInsToday = [
+        { id: 1, name: 'John Doe', room: 'Room 305', time: '14:00', status: 'Confirmed' },
+        { id: 2, name: 'Sarah Wilson', room: 'Room 201', time: '15:30', status: 'Pending' },
+        { id: 3, name: 'Michael Chen', room: 'Room 402', time: '16:00', status: 'Confirmed' },
     ];
 
-    // Alerts
-    const alerts = [
-        {
-            id: 1,
-            type: 'payment',
-            severity: 'urgent',
-            title: '3 Late Payments',
-            description: 'Total outstanding: Rp 14,500,000',
-            items: [
-                { room: 'Room 205', amount: 'Rp 5,000,000', days: 7 },
-                { room: 'Room 301', amount: 'Rp 4,500,000', days: 3 },
-                { room: 'Room 108', amount: 'Rp 5,000,000', days: 14 },
-            ],
-        },
-        {
-            id: 2,
-            type: 'contract',
-            severity: 'warning',
-            title: '2 Contracts Expiring Soon',
-            items: [
-                { room: 'Room 401', tenant: 'Ahmad', days: 5 },
-                { room: 'Room 203', tenant: 'Siti', days: 12 },
-            ],
-        },
-        {
-            id: 3,
-            type: 'maintenance',
-            severity: 'urgent',
-            title: '1 Urgent Maintenance',
-            description: 'Water leak - Room 501',
-            time: '2 hours ago',
-        },
+    // Check-out today
+    const checkOutsToday = [
+        { id: 1, name: 'Jane Smith', room: 'Room 102', time: '11:00', status: 'Completed' },
+        { id: 2, name: 'Bob Johnson', room: 'Room 205', time: '12:00', status: 'Pending' },
     ];
 
-    // Week overview
-    const weekSchedule = [
-        { day: 'Mon', tasks: 3, types: ['maintenance', 'survey', 'checkout'] },
-        { day: 'Tue', tasks: 2, types: ['maintenance', 'checkin'] },
-        { day: 'Wed', tasks: 1, types: ['survey'] },
-        { day: 'Thu', tasks: 4, types: ['maintenance', 'checkout', 'checkin'] },
-        { day: 'Fri', tasks: 2, types: ['survey', 'checkout'] },
-        { day: 'Sat', tasks: 1, types: ['checkin'] },
-        { day: 'Sun', tasks: 0, types: [] },
+    // Cleaner tasks
+    const cleanerTasks = [
+        { id: 1, room: 'Room 102', task: 'Deep cleaning after checkout', status: 'In Progress' },
+        { id: 2, room: 'Room 305', task: 'Pre check-in preparation', status: 'Pending' },
+        { id: 3, room: 'Common Area', task: 'Daily cleaning', status: 'Completed' },
     ];
 
-    const getTypeIcon = (type: string) => {
-        const icons = {
-            maintenance: Wrench,
-            survey: ClipboardCheck,
-            checkin: KeyRound,
-            checkout: Sparkles,
+    // Maintenance tasks
+    const maintenanceTasks = [
+        { id: 1, room: 'Room 201', issue: 'AC not cooling', status: 'In Progress' },
+        { id: 2, room: 'Room 403', issue: 'Leaking faucet', status: 'Pending' },
+        { id: 3, room: 'Lobby', issue: 'Light bulb replacement', status: 'Pending' },
+    ];
+
+    // Outstanding payments
+    const outstandingPayments = [
+        { id: 1, tenant: 'Alice Brown', room: 'Room 301', amount: 3500000, daysOverdue: 5 },
+        { id: 2, tenant: 'Charlie Davis', room: 'Room 404', amount: 4200000, daysOverdue: 3 },
+    ];
+
+    // Expiring contracts
+    const expiringContracts = [
+        { id: 1, tenant: 'Emma Wilson', room: 'Room 203', expiryDate: '2024-12-20', daysLeft: 7 },
+        { id: 2, tenant: 'David Lee', room: 'Room 305', expiryDate: '2024-12-25', daysLeft: 12 },
+    ];
+
+    useEffect(() => {
+        const fetchHolidays = async () => {
+            try {
+                setLoadingHolidays(true);
+                const currentYear = new Date().getFullYear();
+                const response = await fetch(`https://api-harilibur.vercel.app/api?year=${currentYear}`);
+
+                if (!response.ok) {
+                    throw new Error('API failed');
+                }
+
+                const data = await response.json();
+
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+
+                const upcoming = data
+                    .filter((item: any) => item.is_national_holiday || item.holiday_name) // Filter actual holidays
+                    .map((holiday: any) => {
+                        const holidayDate = new Date(holiday.holiday_date);
+                        const diffTime = holidayDate.getTime() - today.getTime();
+                        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                        return {
+                            id: holiday.holiday_date,
+                            name: holiday.holiday_name,
+                            date: holiday.holiday_date,
+                            daysUntil: diffDays,
+                            isNational: holiday.is_national_holiday
+                        };
+                    })
+                    .filter((h: any) => h.daysUntil >= 0 && h.daysUntil <= 30)
+                    .sort((a: any, b: any) => a.daysUntil - b.daysUntil)
+                    .slice(0, 6);
+
+                setHolidays(upcoming);
+            } catch (error) {
+                console.error('Error fetching holidays:', error);
+
+                try {
+                    const currentYear = new Date().getFullYear();
+                    const response = await fetch(
+                        `https://calendarific.com/api/v2/holidays?&api_key=YOUR_API_KEY&country=ID&year=${currentYear}`
+                    );
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0);
+
+                        const upcoming = data.response.holidays
+                            .map((holiday: any) => {
+                                const holidayDate = new Date(holiday.date.iso);
+                                const diffTime = holidayDate.getTime() - today.getTime();
+                                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                                return {
+                                    id: holiday.date.iso,
+                                    name: holiday.name,
+                                    date: holiday.date.iso,
+                                    daysUntil: diffDays,
+                                    isNational: holiday.type.includes('National')
+                                };
+                            })
+                            .filter((h: any) => h.daysUntil >= 0 && h.daysUntil <= 30) // Next 30 days (1 month)
+                            .sort((a: any, b: any) => a.daysUntil - b.daysUntil)
+                            .slice(0, 6);
+
+                        setHolidays(upcoming);
+                    } else {
+                        setHolidays([]);
+                    }
+                } catch (fallbackError) {
+                    console.error('Fallback API also failed:', fallbackError);
+                    setHolidays([]);
+                }
+            } finally {
+                setLoadingHolidays(false);
+            }
         };
-        return icons[type as keyof typeof icons] || Calendar;
+
+        fetchHolidays();
+    }, []);
+
+    const todayRevenue = 15750000;
+    const todayOccupancy = 85; // percentage
+
+    const formatCurrency = (amount: number) => {
+        return new Intl.NumberFormat('id-ID', {
+            style: 'currency',
+            currency: 'IDR',
+            minimumFractionDigits: 0,
+        }).format(amount);
     };
 
-    const getTypeColor = (type: string) => {
-        const colors = {
-            maintenance: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
-            survey: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-            checkin: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
-            checkout: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
+    const getStatusBadge = (status: string) => {
+        const variants: Record<string, any> = {
+            'Completed': 'success',
+            'In Progress': 'info',
+            'Pending': 'warning',
+            'Confirmed': 'success',
         };
-        return colors[type as keyof typeof colors] || 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400';
-    };
-
-    const getSeverityColor = (severity: string) => {
-        const colors = {
-            urgent: 'bg-red-100 border-red-300 dark:bg-red-900/20 dark:border-red-800',
-            warning: 'bg-amber-100 border-amber-300 dark:bg-amber-900/20 dark:border-amber-800',
-            info: 'bg-blue-100 border-blue-300 dark:bg-blue-900/20 dark:border-blue-800',
-        };
-        return colors[severity as keyof typeof colors] || 'bg-slate-100 border-slate-300 dark:bg-slate-800 dark:border-slate-700';
-    };
-
-    const callPhone = (phone: string) => {
-        window.location.href = `tel:${phone}`;
-    };
-
-    const callWhatsApp = (phone: string, message: string) => {
-        const encodedMessage = encodeURIComponent(message);
-        window.open(`https://wa.me/${phone.replace(/[^0-9]/g, '')}?text=${encodedMessage}`, '_blank');
+        return variants[status] || 'default';
     };
 
     return (
         <div className="p-4 md:p-6 space-y-4 md:space-y-6 pb-24 md:pb-6">
-            {/* Header with Greeting */}
+            {/* Header */}
             <div>
                 <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white">
-                    Good Morning, Pak Owner! 👋
+                    Dashboard
                 </h1>
                 <p className="text-sm md:text-base text-slate-600 dark:text-slate-400 mt-1">
-                    Here's what needs your attention today
+                    Welcome back! Here's what's happening today.
                 </p>
             </div>
 
-            {/* Quick Stats */}
+            {/* Key Metrics - Top Row */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+                {/* Check-ins Today */}
                 <Card>
                     <CardContent className="p-3 md:p-4">
-                        <div className="flex items-center gap-2 mb-2">
-                            <DollarSign className="w-5 h-5 text-emerald-600" />
-                            <p className="text-xs text-slate-600 dark:text-slate-400">Today Revenue</p>
+                        <div className="flex items-center justify-between">
+                            <div className="min-w-0 flex-1">
+                                <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 truncate">
+                                    Check-ins Today
+                                </p>
+                                <p className="text-xl md:text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1 truncate">
+                                    {checkInsToday.length}
+                                </p>
+                            </div>
+                            <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center flex-shrink-0 ml-2">
+                                <LogIn className="w-5 h-5 md:w-6 md:h-6 text-emerald-600 dark:text-emerald-400" />
+                            </div>
                         </div>
-                        <p className="text-lg md:text-xl font-bold text-slate-900 dark:text-white">
-                            Rp 5M
-                        </p>
                     </CardContent>
                 </Card>
+
+                {/* Check-outs Today */}
                 <Card>
                     <CardContent className="p-3 md:p-4">
-                        <div className="flex items-center gap-2 mb-2">
-                            <Home className="w-5 h-5 text-indigo-600" />
-                            <p className="text-xs text-slate-600 dark:text-slate-400">Occupancy</p>
+                        <div className="flex items-center justify-between">
+                            <div className="min-w-0 flex-1">
+                                <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 truncate">
+                                    Check-outs Today
+                                </p>
+                                <p className="text-xl md:text-2xl font-bold text-blue-600 dark:text-blue-400 mt-1 truncate">
+                                    {checkOutsToday.length}
+                                </p>
+                            </div>
+                            <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0 ml-2">
+                                <LogOut className="w-5 h-5 md:w-6 md:h-6 text-blue-600 dark:text-blue-400" />
+                            </div>
                         </div>
-                        <p className="text-lg md:text-xl font-bold text-slate-900 dark:text-white">
-                            85%
-                        </p>
                     </CardContent>
                 </Card>
+
+                {/* Today Revenue */}
                 <Card>
                     <CardContent className="p-3 md:p-4">
-                        <div className="flex items-center gap-2 mb-2">
-                            <Calendar className="w-5 h-5 text-blue-600" />
-                            <p className="text-xs text-slate-600 dark:text-slate-400">Today Tasks</p>
+                        <div className="flex items-center justify-between">
+                            <div className="min-w-0 flex-1">
+                                <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 truncate">
+                                    Today Revenue
+                                </p>
+                                <p className="text-base md:text-xl font-bold text-purple-600 dark:text-purple-400 mt-1 truncate">
+                                    {formatCurrency(todayRevenue).substring(0, 10)}
+                                </p>
+                            </div>
+                            <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center flex-shrink-0 ml-2">
+                                <DollarSign className="w-5 h-5 md:w-6 md:h-6 text-purple-600 dark:text-purple-400" />
+                            </div>
                         </div>
-                        <p className="text-lg md:text-xl font-bold text-slate-900 dark:text-white">
-                            {todaySchedule.length}
-                        </p>
                     </CardContent>
                 </Card>
+
+                {/* Today Occupancy */}
                 <Card>
                     <CardContent className="p-3 md:p-4">
-                        <div className="flex items-center gap-2 mb-2">
-                            <AlertCircle className="w-5 h-5 text-red-600" />
-                            <p className="text-xs text-slate-600 dark:text-slate-400">Urgent</p>
+                        <div className="flex items-center justify-between">
+                            <div className="min-w-0 flex-1">
+                                <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 truncate">
+                                    Today Occupancy
+                                </p>
+                                <p className="text-xl md:text-2xl font-bold text-indigo-600 dark:text-indigo-400 mt-1 truncate">
+                                    {todayOccupancy}%
+                                </p>
+                            </div>
+                            <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center flex-shrink-0 ml-2">
+                                <Home className="w-5 h-5 md:w-6 md:h-6 text-indigo-600 dark:text-indigo-400" />
+                            </div>
                         </div>
-                        <p className="text-lg md:text-xl font-bold text-red-600 dark:text-red-400">
-                            {alerts.filter(a => a.severity === 'urgent').length}
-                        </p>
                     </CardContent>
                 </Card>
             </div>
 
-            {/* Urgent Alerts */}
-            <Card className="border-l-4 border-l-red-500">
-                <CardContent className="p-4">
-                    <div
-                        className="flex items-center justify-between cursor-pointer"
-                        onClick={() => setExpandedSections(prev => ({ ...prev, alerts: !prev.alerts }))}
-                    >
-                        <div className="flex items-center gap-3">
-                            <AlertCircle className="w-6 h-6 text-red-600" />
-                            <div>
-                                <h2 className="text-lg font-bold text-slate-900 dark:text-white">
-                                    ⚠️ {alerts.length} Urgent Alerts
-                                </h2>
-                                <p className="text-sm text-slate-600 dark:text-slate-400">
-                                    Requires immediate attention
-                                </p>
-                            </div>
-                        </div>
-                        <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${expandedSections.alerts ? 'rotate-90' : ''}`} />
+            {/* Quick Actions */}
+            <Card>
+                <CardContent className="p-4 md:p-6">
+                    <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                        <TrendingUp className="w-5 h-5" />
+                        Quick Actions
+                    </h2>
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+                        <Button variant="outline" className="flex-col h-auto py-3 gap-2">
+                            <Calendar className="w-5 h-5" />
+                            <span className="text-xs">Survey</span>
+                        </Button>
+                        <Button variant="outline" className="flex-col h-auto py-3 gap-2">
+                            <Plus className="w-5 h-5" />
+                            <span className="text-xs">New Booking</span>
+                        </Button>
+                        <Button variant="outline" className="flex-col h-auto py-3 gap-2">
+                            <Wrench className="w-5 h-5" />
+                            <span className="text-xs">Maintenance</span>
+                        </Button>
+                        <Button variant="outline" className="flex-col h-auto py-3 gap-2">
+                            <MessageCircle className="w-5 h-5" />
+                            <span className="text-xs">Call Cleaning</span>
+                        </Button>
+                        <Button variant="outline" className="flex-col h-auto py-3 gap-2">
+                            <Phone className="w-5 h-5" />
+                            <span className="text-xs">Call Maintenance</span>
+                        </Button>
+                        <Button variant="outline" className="flex-col h-auto py-3 gap-2">
+                            <Calendar className="w-5 h-5" />
+                            <span className="text-xs">Holidays</span>
+                        </Button>
                     </div>
+                </CardContent>
+            </Card>
 
-                    {expandedSections.alerts && (
-                        <div className="mt-4 space-y-3">
-                            {alerts.map((alert) => (
-                                <div
-                                    key={alert.id}
-                                    className={`p-4 rounded-lg border-2 ${getSeverityColor(alert.severity)}`}
-                                >
-                                    <div className="flex items-start justify-between mb-2">
-                                        <h3 className="font-semibold text-slate-900 dark:text-white">
-                                            {alert.title}
-                                        </h3>
-                                        <Badge variant={alert.severity === 'urgent' ? 'danger' : 'warning'} size="sm">
-                                            {alert.severity}
-                                        </Badge>
+            {/* Check-ins & Check-outs */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Check-ins Today */}
+                <Card>
+                    <CardContent className="p-4">
+                        <h3 className="font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+                            <LogIn className="w-5 h-5 text-emerald-600" />
+                            Check-ins Today
+                        </h3>
+                        <div className="space-y-2">
+                            {checkInsToday.map((checkin) => (
+                                <div key={checkin.id} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
+                                    <div className="flex-1 min-w-0">
+                                        <p className="font-medium text-slate-900 dark:text-white text-sm truncate">
+                                            {checkin.name}
+                                        </p>
+                                        <p className="text-xs text-slate-600 dark:text-slate-400">
+                                            {checkin.room} • {checkin.time}
+                                        </p>
                                     </div>
-                                    {alert.description && (
-                                        <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">
-                                            {alert.description}
-                                        </p>
-                                    )}
-                                    {alert.items && (
-                                        <div className="space-y-1">
-                                            {alert.items.map((item: any, idx: number) => (
-                                                <div key={idx} className="text-sm text-slate-700 dark:text-slate-300 flex items-center justify-between">
-                          <span>
-                            {item.room || item.tenant}
-                              {item.amount && ` - ${item.amount}`}
-                              {item.days && ` (${item.days} days ${alert.type === 'payment' ? 'late' : 'until expiry'})`}
-                          </span>
-                                                    {alert.type === 'payment' && (
-                                                        <Button size="sm" variant="outline" className="ml-2">
-                                                            Send Reminder
-                                                        </Button>
-                                                    )}
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
-                                    {alert.time && (
-                                        <p className="text-xs text-slate-500 dark:text-slate-500 mt-2">
-                                            Submitted: {alert.time}
-                                        </p>
-                                    )}
+                                    <Badge variant={getStatusBadge(checkin.status)} size="sm">
+                                        {checkin.status}
+                                    </Badge>
                                 </div>
                             ))}
                         </div>
-                    )}
-                </CardContent>
-            </Card>
+                    </CardContent>
+                </Card>
 
-            {/* Today's Schedule */}
-            <Card>
-                <CardContent className="p-4">
-                    <div
-                        className="flex items-center justify-between cursor-pointer mb-4"
-                        onClick={() => setExpandedSections(prev => ({ ...prev, schedule: !prev.schedule }))}
-                    >
-                        <div className="flex items-center gap-3">
-                            <Calendar className="w-6 h-6 text-indigo-600" />
-                            <div>
-                                <h2 className="text-lg md:text-xl font-bold text-slate-900 dark:text-white">
-                                    📅 Today's Schedule
-                                </h2>
-                                <p className="text-sm text-slate-600 dark:text-slate-400">
-                                    Tuesday, December 17, 2024
-                                </p>
-                            </div>
-                        </div>
-                        <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${expandedSections.schedule ? 'rotate-90' : ''}`} />
-                    </div>
-
-                    {expandedSections.schedule && (
-                        <div className="space-y-3">
-                            {todaySchedule.map((item) => {
-                                const Icon = getTypeIcon(item.type);
-                                return (
-                                    <Card key={item.id} hover className="border-l-4 border-l-indigo-500">
-                                        <CardContent className="p-4">
-                                            <div className="flex items-start gap-3">
-                                                {/* Time */}
-                                                <div className="flex-shrink-0 text-center">
-                                                    <div className="w-16 h-16 rounded-lg bg-slate-100 dark:bg-slate-800 flex flex-col items-center justify-center">
-                                                        <Clock className="w-4 h-4 text-slate-600 dark:text-slate-400 mb-1" />
-                                                        <span className="text-sm font-bold text-slate-900 dark:text-white">
-                              {item.time}
-                            </span>
-                                                    </div>
-                                                </div>
-
-                                                {/* Content */}
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="flex items-start justify-between gap-2 mb-2">
-                                                        <div className="flex items-center gap-2">
-                                                            <div className={`w-8 h-8 rounded-lg ${getTypeColor(item.type)} flex items-center justify-center`}>
-                                                                <Icon className="w-4 h-4" />
-                                                            </div>
-                                                            <div>
-                                                                <h3 className="font-semibold text-slate-900 dark:text-white">
-                                                                    {item.title}
-                                                                </h3>
-                                                                <p className="text-sm text-slate-600 dark:text-slate-400">
-                                                                    {item.location}
-                                                                </p>
-                                                            </div>
-                                                        </div>
-                                                        <Badge
-                                                            variant={item.priority === 'high' ? 'danger' : item.priority === 'medium' ? 'warning' : 'default'}
-                                                            size="sm"
-                                                        >
-                                                            {item.priority}
-                                                        </Badge>
-                                                    </div>
-
-                                                    {/* Details */}
-                                                    <div className="space-y-2 mb-3">
-                                                        {item.assignee && (
-                                                            <p className="text-sm text-slate-700 dark:text-slate-300">
-                                                                👤 Technician: <span className="font-medium">{item.assignee}</span>
-                                                            </p>
-                                                        )}
-                                                        {item.guest && (
-                                                            <p className="text-sm text-slate-700 dark:text-slate-300">
-                                                                👤 Guest: <span className="font-medium">{item.guest}</span>
-                                                            </p>
-                                                        )}
-                                                        {item.prospect && (
-                                                            <p className="text-sm text-slate-700 dark:text-slate-300">
-                                                                👤 Prospect: <span className="font-medium">{item.prospect}</span>
-                                                            </p>
-                                                        )}
-                                                        {item.contract && (
-                                                            <p className="text-sm text-slate-700 dark:text-slate-300">
-                                                                📄 {item.contract}
-                                                            </p>
-                                                        )}
-                                                        {item.action && (
-                                                            <p className="text-sm font-medium text-amber-600 dark:text-amber-400">
-                                                                ⚡ Action: {item.action}
-                                                            </p>
-                                                        )}
-                                                    </div>
-
-                                                    {/* Action Buttons */}
-                                                    <div className="flex flex-wrap gap-2">
-                                                        {item.type === 'checkout' && (
-                                                            <Button
-                                                                size="sm"
-                                                                onClick={() => callWhatsApp('+628123456789', `Room ${item.location} sudah check-out. Mohon segera dibersihkan.`)}
-                                                            >
-                                                                <MessageCircle className="w-4 h-4 mr-1" />
-                                                                Call Cleaning Team
-                                                            </Button>
-                                                        )}
-                                                        {item.phone && (
-                                                            <Button
-                                                                size="sm"
-                                                                variant="outline"
-                                                                onClick={() => callPhone(item.phone!)}
-                                                            >
-                                                                <Phone className="w-4 h-4 mr-1" />
-                                                                Call
-                                                            </Button>
-                                                        )}
-                                                        {item.type === 'checkin' && (
-                                                            <Button size="sm" variant="outline">
-                                                                <CheckCircle className="w-4 h-4 mr-1" />
-                                                                Confirm Check-in
-                                                            </Button>
-                                                        )}
-                                                        <Button size="sm" variant="outline">
-                                                            <CheckCircle className="w-4 h-4 mr-1" />
-                                                            Mark Done
-                                                        </Button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </CardContent>
-                                    </Card>
-                                );
-                            })}
-                        </div>
-                    )}
-                </CardContent>
-            </Card>
-
-            {/* This Week Overview */}
-            <Card>
-                <CardContent className="p-4">
-                    <div
-                        className="flex items-center justify-between cursor-pointer mb-4"
-                        onClick={() => setExpandedSections(prev => ({ ...prev, week: !prev.week }))}
-                    >
-                        <div>
-                            <h2 className="text-lg md:text-xl font-bold text-slate-900 dark:text-white">
-                                This Week Overview
-                            </h2>
-                            <p className="text-sm text-slate-600 dark:text-slate-400">
-                                Dec 17-23, 2024
-                            </p>
-                        </div>
-                        <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${expandedSections.week ? 'rotate-90' : ''}`} />
-                    </div>
-
-                    {expandedSections.week && (
-                        <div>
-                            <div className="grid grid-cols-7 gap-2 mb-4">
-                                {weekSchedule.map((day, idx) => (
-                                    <div
-                                        key={idx}
-                                        className={`text-center p-3 rounded-lg ${idx === 0 ? 'bg-indigo-100 dark:bg-indigo-900/30' : 'bg-slate-100 dark:bg-slate-800'}`}
-                                    >
-                                        <p className="text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
-                                            {day.day}
+                {/* Check-outs Today */}
+                <Card>
+                    <CardContent className="p-4">
+                        <h3 className="font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+                            <LogOut className="w-5 h-5 text-blue-600" />
+                            Check-outs Today
+                        </h3>
+                        <div className="space-y-2">
+                            {checkOutsToday.map((checkout) => (
+                                <div key={checkout.id} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
+                                    <div className="flex-1 min-w-0">
+                                        <p className="font-medium text-slate-900 dark:text-white text-sm truncate">
+                                            {checkout.name}
                                         </p>
-                                        <p className={`text-2xl font-bold ${day.tasks > 0 ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-slate-600'}`}>
-                                            {day.tasks}
+                                        <p className="text-xs text-slate-600 dark:text-slate-400">
+                                            {checkout.room} • {checkout.time}
                                         </p>
-                                        {day.tasks > 0 && (
-                                            <div className="flex justify-center gap-0.5 mt-1">
-                                                {day.types.slice(0, 3).map((type, i) => {
-                                                    const Icon = getTypeIcon(type);
-                                                    return (
-                                                        <Icon key={i} className="w-3 h-3 text-slate-500 dark:text-slate-400" />
-                                                    );
-                                                })}
-                                            </div>
-                                        )}
                                     </div>
-                                ))}
-                            </div>
-
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                                <div className="text-center p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg">
-                                    <Wrench className="w-5 h-5 text-amber-600 mx-auto mb-1" />
-                                    <p className="text-sm font-medium text-slate-900 dark:text-white">5</p>
-                                    <p className="text-xs text-slate-600 dark:text-slate-400">Maintenance</p>
+                                    <Badge variant={getStatusBadge(checkout.status)} size="sm">
+                                        {checkout.status}
+                                    </Badge>
                                 </div>
-                                <div className="text-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                                    <ClipboardCheck className="w-5 h-5 text-blue-600 mx-auto mb-1" />
-                                    <p className="text-sm font-medium text-slate-900 dark:text-white">4</p>
-                                    <p className="text-xs text-slate-600 dark:text-slate-400">Surveys</p>
-                                </div>
-                                <div className="text-center p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg">
-                                    <KeyRound className="w-5 h-5 text-emerald-600 mx-auto mb-1" />
-                                    <p className="text-sm font-medium text-slate-900 dark:text-white">2</p>
-                                    <p className="text-xs text-slate-600 dark:text-slate-400">Check-ins</p>
-                                </div>
-                                <div className="text-center p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
-                                    <Sparkles className="w-5 h-5 text-purple-600 mx-auto mb-1" />
-                                    <p className="text-sm font-medium text-slate-900 dark:text-white">2</p>
-                                    <p className="text-xs text-slate-600 dark:text-slate-400">Check-outs</p>
-                                </div>
-                            </div>
+                            ))}
                         </div>
-                    )}
-                </CardContent>
-            </Card>
+                    </CardContent>
+                </Card>
+            </div>
 
-            {/* Quick Actions */}
+            {/* Tasks */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Cleaner Tasks */}
+                <Card>
+                    <CardContent className="p-4">
+                        <h3 className="font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+                            <Sparkles className="w-5 h-5 text-pink-600" />
+                            Cleaner Tasks ({cleanerTasks.filter(t => t.status !== 'Completed').length})
+                        </h3>
+                        <div className="space-y-2">
+                            {cleanerTasks.map((task) => (
+                                <div key={task.id} className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
+                                    <div className="flex items-start justify-between">
+                                        <div className="flex-1 min-w-0">
+                                            <p className="font-medium text-slate-900 dark:text-white text-sm">
+                                                {task.room}
+                                            </p>
+                                            <p className="text-xs text-slate-600 dark:text-slate-400">
+                                                {task.task}
+                                            </p>
+                                        </div>
+                                        <Badge variant={getStatusBadge(task.status)} size="sm">
+                                            {task.status}
+                                        </Badge>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {/* Maintenance Tasks */}
+                <Card>
+                    <CardContent className="p-4">
+                        <h3 className="font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+                            <Wrench className="w-5 h-5 text-amber-600" />
+                            Maintenance Tasks ({maintenanceTasks.filter(t => t.status !== 'Completed').length})
+                        </h3>
+                        <div className="space-y-2">
+                            {maintenanceTasks.map((task) => (
+                                <div key={task.id} className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
+                                    <div className="flex items-start justify-between">
+                                        <div className="flex-1 min-w-0">
+                                            <p className="font-medium text-slate-900 dark:text-white text-sm">
+                                                {task.room}
+                                            </p>
+                                            <p className="text-xs text-slate-600 dark:text-slate-400">
+                                                {task.issue}
+                                            </p>
+                                        </div>
+                                        <Badge variant={getStatusBadge(task.status)} size="sm">
+                                            {task.status}
+                                        </Badge>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+
+            {/* Alerts */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Outstanding Payments */}
+                <Card>
+                    <CardContent className="p-4">
+                        <h3 className="font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+                            <AlertCircle className="w-5 h-5 text-red-600" />
+                            Outstanding Payments ({outstandingPayments.length})
+                        </h3>
+                        <div className="space-y-2">
+                            {outstandingPayments.map((payment) => (
+                                <div key={payment.id} className="p-3 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-900/50">
+                                    <div className="flex items-start justify-between">
+                                        <div className="flex-1 min-w-0">
+                                            <p className="font-medium text-slate-900 dark:text-white text-sm truncate">
+                                                {payment.tenant}
+                                            </p>
+                                            <p className="text-xs text-slate-600 dark:text-slate-400">
+                                                {payment.room}
+                                            </p>
+                                            <p className="text-sm font-bold text-red-600 dark:text-red-400 mt-1">
+                                                {formatCurrency(payment.amount)}
+                                            </p>
+                                        </div>
+                                        <Badge variant="danger" size="sm">
+                                            {payment.daysOverdue}d overdue
+                                        </Badge>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {/* Expiring Contracts */}
+                <Card>
+                    <CardContent className="p-4">
+                        <h3 className="font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+                            <FileText className="w-5 h-5 text-amber-600" />
+                            Contract Expiring Soon ({expiringContracts.length})
+                        </h3>
+                        <div className="space-y-2">
+                            {expiringContracts.map((contract) => (
+                                <div key={contract.id} className="p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-900/50">
+                                    <div className="flex items-start justify-between">
+                                        <div className="flex-1 min-w-0">
+                                            <p className="font-medium text-slate-900 dark:text-white text-sm truncate">
+                                                {contract.tenant}
+                                            </p>
+                                            <p className="text-xs text-slate-600 dark:text-slate-400">
+                                                {contract.room}
+                                            </p>
+                                            <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
+                                                Expires: {contract.expiryDate}
+                                            </p>
+                                        </div>
+                                        <Badge variant="warning" size="sm">
+                                            {contract.daysLeft} days left
+                                        </Badge>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+
+            {/* Upcoming Holidays */}
             <Card>
                 <CardContent className="p-4">
-                    <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-4">
-                        Quick Actions
-                    </h2>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                        <Button
-                            variant="outline"
-                            className="justify-start"
-                            onClick={() => callWhatsApp('+628123456789', 'Butuh bantuan cleaning team')}
-                        >
-                            <MessageCircle className="w-4 h-4 mr-2" />
-                            Call Cleaning
-                        </Button>
-                        <Button
-                            variant="outline"
-                            className="justify-start"
-                            onClick={() => callWhatsApp('+628123456790', 'Butuh bantuan maintenance')}
-                        >
-                            <Phone className="w-4 h-4 mr-2" />
-                            Call Maintenance
-                        </Button>
-                        <Button variant="outline" className="justify-start">
-                            <Wrench className="w-4 h-4 mr-2" />
-                            New Maintenance
-                        </Button>
-                        <Button variant="outline" className="justify-start">
-                            <ClipboardCheck className="w-4 h-4 mr-2" />
-                            Schedule Survey
-                        </Button>
-                        <Button variant="outline" className="justify-start">
-                            <FileText className="w-4 h-4 mr-2" />
-                            Generate Report
-                        </Button>
-                        <Button variant="outline" className="justify-start">
-                            <DollarSign className="w-4 h-4 mr-2" />
-                            Record Payment
-                        </Button>
-                    </div>
+                    <h3 className="font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+                        <Calendar className="w-5 h-5 text-indigo-600" />
+                        Upcoming Holidays (Indonesia)
+                    </h3>
+                    {loadingHolidays ? (
+                        <div className="text-center py-8 text-slate-500 dark:text-slate-400">
+                            Loading holidays...
+                        </div>
+                    ) : holidays.length > 0 ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                            {holidays.map((holiday) => (
+                                <div key={holiday.id} className="p-3 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg border border-indigo-200 dark:border-indigo-900/50">
+                                    <div className="flex items-start justify-between gap-2">
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <p className="font-medium text-slate-900 dark:text-white text-sm">
+                                                    {holiday.name}
+                                                </p>
+                                                {holiday.isNational && (
+                                                    <span className="text-xs px-1.5 py-0.5 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded">
+                                                        Nasional
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <p className="text-xs text-slate-600 dark:text-slate-400">
+                                                {new Date(holiday.date).toLocaleDateString('id-ID', {
+                                                    weekday: 'long',
+                                                    day: 'numeric',
+                                                    month: 'long',
+                                                    year: 'numeric'
+                                                })}
+                                            </p>
+                                        </div>
+                                        <Badge variant="purple" size="sm" className="flex-shrink-0">
+                                            {holiday.daysUntil === 0 ? 'Hari ini' :
+                                                holiday.daysUntil === 1 ? 'Besok' :
+                                                    `${holiday.daysUntil} hari`}
+                                        </Badge>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="text-center py-8 text-slate-500 dark:text-slate-400">
+                            Tidak ada libur dalam 30 hari ke depan
+                        </div>
+                    )}
                 </CardContent>
             </Card>
         </div>

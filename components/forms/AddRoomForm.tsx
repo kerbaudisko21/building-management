@@ -1,94 +1,184 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Modal from '@/components/ui/Modal';
 import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
-import Textarea from '@/components/ui/Textarea';
 import Button from '@/components/ui/Button';
-import { Home, DollarSign, Maximize } from 'lucide-react';
+import { Home, Building, User, DollarSign, Eye, Maximize } from 'lucide-react';
 
 interface AddRoomFormProps {
     isOpen: boolean;
     onClose: () => void;
     onSubmit: (data: RoomFormData) => void;
-    properties?: { id: string; name: string }[];
+    editData?: RoomFormData | null;
 }
 
 export interface RoomFormData {
-    propertyId: string;
-    roomNumber: string;
-    floor: number;
+    name: string;
     type: string;
-    size: number;
-    monthlyRate: number;
-    status: string;
-    facilities?: string;
-    description?: string;
+    tower: string;
+    floor: number;
+    capacity: number;
+    view: string;
+    luas: number;
+    owner: string;
+    tenant: string | null;
+    rent_type: 'flexible' | 'daily' | 'monthly' | 'yearly';
+    price_daily: number;
+    price_monthly: number;
+    price_yearly: number;
 }
 
-export default function AddRoomForm({ isOpen, onClose, onSubmit, properties = [] }: AddRoomFormProps) {
+export default function AddRoomForm({
+                                        isOpen,
+                                        onClose,
+                                        onSubmit,
+                                        editData,
+                                    }: AddRoomFormProps) {
     const [formData, setFormData] = useState<RoomFormData>({
-        propertyId: '',
-        roomNumber: '',
-        floor: 1,
+        name: '',
         type: '',
-        size: 0,
-        monthlyRate: 0,
-        status: 'available',
-        facilities: '',
-        description: '',
+        tower: '',
+        floor: 1,
+        capacity: 1,
+        view: '',
+        luas: 0,
+        owner: '',
+        tenant: null,
+        rent_type: 'flexible',
+        price_daily: 0,
+        price_monthly: 0,
+        price_yearly: 0,
     });
 
     const [errors, setErrors] = useState<Partial<Record<keyof RoomFormData, string>>>({});
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const roomTypes = [
-        { value: '', label: 'Select room type' },
-        { value: 'standard', label: 'Standard' },
-        { value: 'deluxe', label: 'Deluxe' },
-        { value: 'suite', label: 'Suite' },
-        { value: 'studio', label: 'Studio' },
-        { value: 'penthouse', label: 'Penthouse' },
+    // Load edit data
+    useEffect(() => {
+        if (editData) {
+            setFormData(editData);
+        } else {
+            setFormData({
+                name: '',
+                type: '',
+                tower: '',
+                floor: 1,
+                capacity: 1,
+                view: '',
+                luas: 0,
+                owner: '',
+                tenant: null,
+                rent_type: 'flexible',
+                price_daily: 0,
+                price_monthly: 0,
+                price_yearly: 0,
+            });
+        }
+        setErrors({});
+    }, [editData, isOpen]);
+
+    const typeOptions = [
+        { value: '', label: 'Select unit type' },
+        { value: 'Standard', label: 'Standard' },
+        { value: 'Studio', label: 'Studio' },
+        { value: 'Deluxe', label: 'Deluxe' },
+        { value: 'Suite', label: 'Suite' },
+        { value: 'Penthouse', label: 'Penthouse' },
     ];
 
-    const statusOptions = [
-        { value: 'available', label: 'Available' },
-        { value: 'occupied', label: 'Occupied' },
-        { value: 'maintenance', label: 'Under Maintenance' },
-        { value: 'reserved', label: 'Reserved' },
+    const rentTypeOptions = [
+        { value: 'flexible', label: 'Flexible (Daily + Monthly + Yearly)' },
+        { value: 'daily', label: 'Daily Only' },
+        { value: 'monthly', label: 'Monthly Only' },
+        { value: 'yearly', label: 'Yearly Only' },
     ];
 
-    const propertyOptions = [
-        { value: '', label: 'Select property' },
-        ...properties.map(p => ({ value: p.id, label: p.name })),
+    const viewOptions = [
+        { value: '', label: 'Select view' },
+        { value: 'City View', label: 'City View' },
+        { value: 'Ocean View', label: 'Ocean View' },
+        { value: 'Garden View', label: 'Garden View' },
+        { value: 'Pool View', label: 'Pool View' },
+        { value: 'Mountain View', label: 'Mountain View' },
+        { value: 'No View', label: 'No View' },
+    ];
+
+    // Mock owners from contacts (type = Owner)
+    const ownerOptions = [
+        { value: '', label: 'Select owner' },
+        { value: 'PT Properti Indah', label: 'PT Properti Indah' },
+        { value: 'Budi Santoso', label: 'Budi Santoso' },
+        { value: 'CV Investasi Jaya', label: 'CV Investasi Jaya' },
+    ];
+
+    // Mock tenants from contacts (type = Customer, status = Active)
+    const tenantOptions = [
+        { value: '', label: 'No tenant (Available)' },
+        { value: 'John Doe', label: 'John Doe' },
+        { value: 'Sarah Wilson', label: 'Sarah Wilson' },
+        { value: 'Michael Chen', label: 'Michael Chen' },
     ];
 
     const validate = (): boolean => {
         const newErrors: Partial<Record<keyof RoomFormData, string>> = {};
 
-        if (!formData.propertyId) {
-            newErrors.propertyId = 'Please select a property';
+        if (!formData.name.trim()) {
+            newErrors.name = 'Unit name is required';
         }
 
-        if (!formData.roomNumber.trim()) {
-            newErrors.roomNumber = 'Room number is required';
+        if (!formData.type) {
+            newErrors.type = 'Unit type is required';
+        }
+
+        if (!formData.tower.trim()) {
+            newErrors.tower = 'Tower is required';
         }
 
         if (formData.floor < 0) {
             newErrors.floor = 'Floor cannot be negative';
         }
 
-        if (!formData.type) {
-            newErrors.type = 'Room type is required';
+        if (!formData.capacity || formData.capacity < 1) {
+            newErrors.capacity = 'Capacity must be at least 1';
         }
 
-        if (!formData.size || formData.size < 1) {
-            newErrors.size = 'Size must be greater than 0';
+        if (!formData.view) {
+            newErrors.view = 'View is required';
         }
 
-        if (!formData.monthlyRate || formData.monthlyRate < 1) {
-            newErrors.monthlyRate = 'Monthly rate must be greater than 0';
+        if (!formData.luas || formData.luas < 1) {
+            newErrors.luas = 'Size must be greater than 0';
+        }
+
+        if (!formData.owner) {
+            newErrors.owner = 'Owner is required';
+        }
+
+        // Validate prices based on rent_type
+        if (formData.rent_type === 'flexible') {
+            if (!formData.price_daily || formData.price_daily < 1) {
+                newErrors.price_daily = 'Daily price is required for flexible';
+            }
+            if (!formData.price_monthly || formData.price_monthly < 1) {
+                newErrors.price_monthly = 'Monthly price is required for flexible';
+            }
+            if (!formData.price_yearly || formData.price_yearly < 1) {
+                newErrors.price_yearly = 'Yearly price is required for flexible';
+            }
+        } else if (formData.rent_type === 'daily') {
+            if (!formData.price_daily || formData.price_daily < 1) {
+                newErrors.price_daily = 'Daily price is required';
+            }
+        } else if (formData.rent_type === 'monthly') {
+            if (!formData.price_monthly || formData.price_monthly < 1) {
+                newErrors.price_monthly = 'Monthly price is required';
+            }
+        } else if (formData.rent_type === 'yearly') {
+            if (!formData.price_yearly || formData.price_yearly < 1) {
+                newErrors.price_yearly = 'Yearly price is required';
+            }
         }
 
         setErrors(newErrors);
@@ -104,8 +194,21 @@ export default function AddRoomForm({ isOpen, onClose, onSubmit, properties = []
 
         setIsSubmitting(true);
 
+        // Clean up prices based on rent_type
+        const submitData = { ...formData };
+        if (formData.rent_type === 'daily') {
+            submitData.price_monthly = 0;
+            submitData.price_yearly = 0;
+        } else if (formData.rent_type === 'monthly') {
+            submitData.price_daily = 0;
+            submitData.price_yearly = 0;
+        } else if (formData.rent_type === 'yearly') {
+            submitData.price_daily = 0;
+            submitData.price_monthly = 0;
+        }
+
         setTimeout(() => {
-            onSubmit(formData);
+            onSubmit(submitData);
             setIsSubmitting(false);
             handleClose();
         }, 1000);
@@ -113,127 +216,218 @@ export default function AddRoomForm({ isOpen, onClose, onSubmit, properties = []
 
     const handleClose = () => {
         setFormData({
-            propertyId: '',
-            roomNumber: '',
-            floor: 1,
+            name: '',
             type: '',
-            size: 0,
-            monthlyRate: 0,
-            status: 'available',
-            facilities: '',
-            description: '',
+            tower: '',
+            floor: 1,
+            capacity: 1,
+            view: '',
+            luas: 0,
+            owner: '',
+            tenant: null,
+            rent_type: 'flexible',
+            price_daily: 0,
+            price_monthly: 0,
+            price_yearly: 0,
         });
         setErrors({});
         onClose();
+    };
+
+    const shouldShowPrice = (priceType: 'daily' | 'monthly' | 'yearly') => {
+        if (formData.rent_type === 'flexible') return true;
+        return formData.rent_type === priceType;
     };
 
     return (
         <Modal
             isOpen={isOpen}
             onClose={handleClose}
-            title="Add New Room"
-            description="Fill in the details to add a new room"
+            title={editData ? 'Edit Unit' : 'Add New Unit'}
+            description={editData ? 'Update unit information' : 'Fill in the unit details'}
             size="lg"
         >
             <form onSubmit={handleSubmit} className="space-y-4">
-                {/* Property Selection */}
-                <Select
-                    label="Property"
-                    options={propertyOptions}
-                    value={formData.propertyId}
-                    onChange={(e) => setFormData({ ...formData, propertyId: e.target.value })}
-                    error={errors.propertyId}
+                {/* Unit Name */}
+                <Input
+                    label="Unit Name"
+                    type="text"
+                    placeholder="e.g., Unit 305-A"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    error={errors.name}
                     required
+                    leftIcon={<Home className="w-5 h-5" />}
                 />
 
-                {/* Room Number and Floor */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Input
-                        label="Room Number"
-                        type="text"
-                        placeholder="e.g., 201"
-                        value={formData.roomNumber}
-                        onChange={(e) => setFormData({ ...formData, roomNumber: e.target.value })}
-                        error={errors.roomNumber}
-                        required
-                        leftIcon={<Home className="w-5 h-5" />}
-                    />
-
-                    <Input
-                        label="Floor"
-                        type="number"
-                        placeholder="e.g., 2"
-                        value={formData.floor || ''}
-                        onChange={(e) => setFormData({ ...formData, floor: parseInt(e.target.value) || 0 })}
-                        error={errors.floor}
-                        required
-                    />
-                </div>
-
-                {/* Room Type and Status */}
+                {/* Type and Tower */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <Select
-                        label="Room Type"
-                        options={roomTypes}
+                        label="Unit Type"
+                        options={typeOptions}
                         value={formData.type}
                         onChange={(e) => setFormData({ ...formData, type: e.target.value })}
                         error={errors.type}
                         required
                     />
 
-                    <Select
-                        label="Status"
-                        options={statusOptions}
-                        value={formData.status}
-                        onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                    <Input
+                        label="Tower / Building"
+                        type="text"
+                        placeholder="e.g., Tower A"
+                        value={formData.tower}
+                        onChange={(e) => setFormData({ ...formData, tower: e.target.value })}
+                        error={errors.tower}
                         required
+                        leftIcon={<Building className="w-5 h-5" />}
                     />
                 </div>
 
-                {/* Size and Monthly Rate */}
+                {/* Floor and Capacity */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Input
+                        label="Floor"
+                        type="number"
+                        placeholder="e.g., 3"
+                        value={formData.floor || ''}
+                        onChange={(e) => setFormData({ ...formData, floor: parseInt(e.target.value) || 0 })}
+                        error={errors.floor}
+                        required
+                        helperText="Ground floor = 0"
+                    />
+
+                    <Input
+                        label="Capacity (persons)"
+                        type="number"
+                        placeholder="e.g., 2"
+                        value={formData.capacity || ''}
+                        onChange={(e) => setFormData({ ...formData, capacity: parseInt(e.target.value) || 0 })}
+                        error={errors.capacity}
+                        required
+                        leftIcon={<User className="w-5 h-5" />}
+                    />
+                </div>
+
+                {/* View and Size */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Select
+                        label="View"
+                        options={viewOptions}
+                        value={formData.view}
+                        onChange={(e) => setFormData({ ...formData, view: e.target.value })}
+                        error={errors.view}
+                        required
+                    />
+
                     <Input
                         label="Size (m²)"
                         type="number"
-                        placeholder="e.g., 25"
-                        value={formData.size || ''}
-                        onChange={(e) => setFormData({ ...formData, size: parseFloat(e.target.value) || 0 })}
-                        error={errors.size}
+                        placeholder="e.g., 35"
+                        value={formData.luas || ''}
+                        onChange={(e) => setFormData({ ...formData, luas: parseFloat(e.target.value) || 0 })}
+                        error={errors.luas}
                         required
                         leftIcon={<Maximize className="w-5 h-5" />}
                     />
+                </div>
 
-                    <Input
-                        label="Monthly Rate (Rp)"
-                        type="number"
-                        placeholder="e.g., 5000000"
-                        value={formData.monthlyRate || ''}
-                        onChange={(e) => setFormData({ ...formData, monthlyRate: parseFloat(e.target.value) || 0 })}
-                        error={errors.monthlyRate}
+                {/* Owner and Tenant */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Select
+                        label="Owner"
+                        options={ownerOptions}
+                        value={formData.owner}
+                        onChange={(e) => setFormData({ ...formData, owner: e.target.value })}
+                        error={errors.owner}
                         required
-                        leftIcon={<DollarSign className="w-5 h-5" />}
+                        helperText="From contacts (type = Owner)"
+                    />
+
+                    <Select
+                        label="Tenant"
+                        options={tenantOptions}
+                        value={formData.tenant || ''}
+                        onChange={(e) => setFormData({ ...formData, tenant: e.target.value || null })}
+                        helperText="Optional - From active customers"
                     />
                 </div>
 
-                {/* Facilities */}
-                <Input
-                    label="Facilities"
-                    type="text"
-                    placeholder="e.g., AC, WiFi, Water Heater, Wardrobe"
-                    value={formData.facilities}
-                    onChange={(e) => setFormData({ ...formData, facilities: e.target.value })}
-                    helperText="Separate multiple facilities with commas"
-                />
+                {/* Rent Type */}
+                <div className="pt-4 border-t border-slate-200 dark:border-slate-800">
+                    <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-3">
+                        Pricing Information
+                    </h3>
+                    <Select
+                        label="Rent Type"
+                        options={rentTypeOptions}
+                        value={formData.rent_type}
+                        onChange={(e) => setFormData({ ...formData, rent_type: e.target.value as any })}
+                        required
+                        helperText="Select which rent periods are available"
+                    />
+                </div>
 
-                {/* Description */}
-                <Textarea
-                    label="Description"
-                    placeholder="Additional information about the room"
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    rows={4}
-                    helperText="Optional: Add any additional details"
-                />
+                {/* Dynamic Price Fields */}
+                <div className="space-y-4">
+                    {shouldShowPrice('daily') && (
+                        <Input
+                            label="Daily Price (Rp)"
+                            type="number"
+                            placeholder="e.g., 500000"
+                            value={formData.price_daily || ''}
+                            onChange={(e) => setFormData({ ...formData, price_daily: parseFloat(e.target.value) || 0 })}
+                            error={errors.price_daily}
+                            required={formData.rent_type === 'daily' || formData.rent_type === 'flexible'}
+                            leftIcon={<DollarSign className="w-5 h-5" />}
+                        />
+                    )}
+
+                    {shouldShowPrice('monthly') && (
+                        <Input
+                            label="Monthly Price (Rp)"
+                            type="number"
+                            placeholder="e.g., 5000000"
+                            value={formData.price_monthly || ''}
+                            onChange={(e) => setFormData({ ...formData, price_monthly: parseFloat(e.target.value) || 0 })}
+                            error={errors.price_monthly}
+                            required={formData.rent_type === 'monthly' || formData.rent_type === 'flexible'}
+                            leftIcon={<DollarSign className="w-5 h-5" />}
+                        />
+                    )}
+
+                    {shouldShowPrice('yearly') && (
+                        <Input
+                            label="Yearly Price (Rp)"
+                            type="number"
+                            placeholder="e.g., 50000000"
+                            value={formData.price_yearly || ''}
+                            onChange={(e) => setFormData({ ...formData, price_yearly: parseFloat(e.target.value) || 0 })}
+                            error={errors.price_yearly}
+                            required={formData.rent_type === 'yearly' || formData.rent_type === 'flexible'}
+                            leftIcon={<DollarSign className="w-5 h-5" />}
+                        />
+                    )}
+                </div>
+
+                {/* Pricing Summary */}
+                {(formData.price_daily > 0 || formData.price_monthly > 0 || formData.price_yearly > 0) && (
+                    <div className="p-3 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg border border-indigo-200 dark:border-indigo-800">
+                        <p className="text-sm font-semibold text-indigo-900 dark:text-indigo-100 mb-2">
+                            Pricing Summary:
+                        </p>
+                        <div className="space-y-1 text-xs text-indigo-800 dark:text-indigo-200">
+                            {formData.price_daily > 0 && (
+                                <p>Daily: <span className="font-bold">Rp {formData.price_daily.toLocaleString('id-ID')}</span></p>
+                            )}
+                            {formData.price_monthly > 0 && (
+                                <p>Monthly: <span className="font-bold">Rp {formData.price_monthly.toLocaleString('id-ID')}</span></p>
+                            )}
+                            {formData.price_yearly > 0 && (
+                                <p>Yearly: <span className="font-bold">Rp {formData.price_yearly.toLocaleString('id-ID')}</span></p>
+                            )}
+                        </div>
+                    </div>
+                )}
 
                 {/* Actions */}
                 <div className="flex gap-3 pt-4 border-t border-slate-200 dark:border-slate-800">
@@ -251,7 +445,7 @@ export default function AddRoomForm({ isOpen, onClose, onSubmit, properties = []
                         className="flex-1"
                         disabled={isSubmitting}
                     >
-                        {isSubmitting ? 'Adding...' : 'Add Room'}
+                        {isSubmitting ? (editData ? 'Updating...' : 'Adding...') : (editData ? 'Update Unit' : 'Add Unit')}
                     </Button>
                 </div>
             </form>

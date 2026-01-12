@@ -1,63 +1,61 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Modal from '@/components/ui/Modal';
 import Input from '@/components/ui/Input';
-import Select from '@/components/ui/Select';
 import Textarea from '@/components/ui/Textarea';
 import Button from '@/components/ui/Button';
-import { Building2, MapPin, Home, DollarSign } from 'lucide-react';
+import { Building, MapPin, Home } from 'lucide-react';
 
 interface AddPropertyFormProps {
     isOpen: boolean;
     onClose: () => void;
     onSubmit: (data: PropertyFormData) => void;
+    editData?: PropertyFormData | null;
 }
 
 export interface PropertyFormData {
     name: string;
     address: string;
-    city: string;
-    type: string;
-    totalUnits: number;
-    description?: string;
-    yearBuilt?: number;
-    facilities?: string;
+    total_unit: number;
+    occupancy: number;
+    facility: string[];
 }
 
-export default function AddPropertyForm({ isOpen, onClose, onSubmit }: AddPropertyFormProps) {
+export default function AddPropertyForm({
+                                            isOpen,
+                                            onClose,
+                                            onSubmit,
+                                            editData,
+                                        }: AddPropertyFormProps) {
     const [formData, setFormData] = useState<PropertyFormData>({
         name: '',
         address: '',
-        city: '',
-        type: '',
-        totalUnits: 0,
-        description: '',
-        yearBuilt: new Date().getFullYear(),
-        facilities: '',
+        total_unit: 0,
+        occupancy: 0,
+        facility: [],
     });
 
+    const [facilityInput, setFacilityInput] = useState('');
     const [errors, setErrors] = useState<Partial<Record<keyof PropertyFormData, string>>>({});
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const propertyTypes = [
-        { value: '', label: 'Select property type' },
-        { value: 'apartment', label: 'Apartment' },
-        { value: 'kost', label: 'Kost / Boarding House' },
-        { value: 'house', label: 'House' },
-        { value: 'villa', label: 'Villa' },
-        { value: 'office', label: 'Office Space' },
-    ];
-
-    const cities = [
-        { value: '', label: 'Select city' },
-        { value: 'jakarta', label: 'Jakarta' },
-        { value: 'bandung', label: 'Bandung' },
-        { value: 'surabaya', label: 'Surabaya' },
-        { value: 'yogyakarta', label: 'Yogyakarta' },
-        { value: 'semarang', label: 'Semarang' },
-        { value: 'other', label: 'Other' },
-    ];
+    useEffect(() => {
+        if (editData) {
+            setFormData(editData);
+            setFacilityInput(editData.facility.join(', '));
+        } else {
+            setFormData({
+                name: '',
+                address: '',
+                total_unit: 0,
+                occupancy: 0,
+                facility: [],
+            });
+            setFacilityInput('');
+        }
+        setErrors({});
+    }, [editData, isOpen]);
 
     const validate = (): boolean => {
         const newErrors: Partial<Record<keyof PropertyFormData, string>> = {};
@@ -70,20 +68,16 @@ export default function AddPropertyForm({ isOpen, onClose, onSubmit }: AddProper
             newErrors.address = 'Address is required';
         }
 
-        if (!formData.city) {
-            newErrors.city = 'City is required';
+        if (!formData.total_unit || formData.total_unit < 1) {
+            newErrors.total_unit = 'Total units must be at least 1';
         }
 
-        if (!formData.type) {
-            newErrors.type = 'Property type is required';
+        if (formData.occupancy < 0) {
+            newErrors.occupancy = 'Occupancy cannot be negative';
         }
 
-        if (!formData.totalUnits || formData.totalUnits < 1) {
-            newErrors.totalUnits = 'Total units must be at least 1';
-        }
-
-        if (formData.yearBuilt && (formData.yearBuilt < 1900 || formData.yearBuilt > new Date().getFullYear() + 5)) {
-            newErrors.yearBuilt = 'Please enter a valid year';
+        if (formData.occupancy > formData.total_unit) {
+            newErrors.occupancy = 'Occupancy cannot exceed total units';
         }
 
         setErrors(newErrors);
@@ -99,9 +93,18 @@ export default function AddPropertyForm({ isOpen, onClose, onSubmit }: AddProper
 
         setIsSubmitting(true);
 
-        // Simulate API call
+        const facilities = facilityInput
+            .split(',')
+            .map(f => f.trim())
+            .filter(f => f.length > 0);
+
+        const submitData = {
+            ...formData,
+            facility: facilities,
+        };
+
         setTimeout(() => {
-            onSubmit(formData);
+            onSubmit(submitData);
             setIsSubmitting(false);
             handleClose();
         }, 1000);
@@ -111,13 +114,11 @@ export default function AddPropertyForm({ isOpen, onClose, onSubmit }: AddProper
         setFormData({
             name: '',
             address: '',
-            city: '',
-            type: '',
-            totalUnits: 0,
-            description: '',
-            yearBuilt: new Date().getFullYear(),
-            facilities: '',
+            total_unit: 0,
+            occupancy: 0,
+            facility: [],
         });
+        setFacilityInput('');
         setErrors({});
         onClose();
     };
@@ -126,8 +127,8 @@ export default function AddPropertyForm({ isOpen, onClose, onSubmit }: AddProper
         <Modal
             isOpen={isOpen}
             onClose={handleClose}
-            title="Add New Property"
-            description="Fill in the details to add a new property"
+            title={editData ? 'Edit Property' : 'Add New Property'}
+            description={editData ? 'Update property information' : 'Fill in the property details'}
             size="lg"
         >
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -135,39 +136,18 @@ export default function AddPropertyForm({ isOpen, onClose, onSubmit }: AddProper
                 <Input
                     label="Property Name"
                     type="text"
-                    placeholder="e.g., Green Valley Apartments"
+                    placeholder="e.g., Menteng Residence"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     error={errors.name}
                     required
-                    leftIcon={<Building2 className="w-5 h-5" />}
+                    leftIcon={<Building className="w-5 h-5" />}
                 />
-
-                {/* Type and City */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Select
-                        label="Property Type"
-                        options={propertyTypes}
-                        value={formData.type}
-                        onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                        error={errors.type}
-                        required
-                    />
-
-                    <Select
-                        label="City"
-                        options={cities}
-                        value={formData.city}
-                        onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                        error={errors.city}
-                        required
-                    />
-                </div>
 
                 {/* Address */}
                 <Textarea
                     label="Full Address"
-                    placeholder="Enter complete address"
+                    placeholder="e.g., Jl. Menteng Raya No. 45, Jakarta Pusat"
                     value={formData.address}
                     onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                     error={errors.address}
@@ -175,48 +155,83 @@ export default function AddPropertyForm({ isOpen, onClose, onSubmit }: AddProper
                     required
                 />
 
-                {/* Total Units and Year Built */}
+                {/* Total Units and Occupancy */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <Input
                         label="Total Units"
                         type="number"
                         placeholder="e.g., 50"
-                        value={formData.totalUnits || ''}
-                        onChange={(e) => setFormData({ ...formData, totalUnits: parseInt(e.target.value) || 0 })}
-                        error={errors.totalUnits}
+                        value={formData.total_unit || ''}
+                        onChange={(e) => setFormData({ ...formData, total_unit: parseInt(e.target.value) || 0 })}
+                        error={errors.total_unit}
                         required
                         leftIcon={<Home className="w-5 h-5" />}
+                        helperText="Total number of units/rooms"
                     />
 
                     <Input
-                        label="Year Built"
+                        label="Currently Occupied"
                         type="number"
-                        placeholder="e.g., 2020"
-                        value={formData.yearBuilt || ''}
-                        onChange={(e) => setFormData({ ...formData, yearBuilt: parseInt(e.target.value) || undefined })}
-                        error={errors.yearBuilt}
+                        placeholder="e.g., 42"
+                        value={formData.occupancy || ''}
+                        onChange={(e) => setFormData({ ...formData, occupancy: parseInt(e.target.value) || 0 })}
+                        error={errors.occupancy}
+                        required
+                        leftIcon={<Home className="w-5 h-5" />}
+                        helperText="Number of occupied units"
                     />
                 </div>
 
-                {/* Facilities */}
-                <Input
-                    label="Facilities"
-                    type="text"
-                    placeholder="e.g., Swimming Pool, Gym, Parking, Security"
-                    value={formData.facilities}
-                    onChange={(e) => setFormData({ ...formData, facilities: e.target.value })}
-                    helperText="Separate multiple facilities with commas"
-                />
+                {/* Occupancy Info */}
+                {formData.total_unit > 0 && (
+                    <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700">
+                        <div className="flex items-center justify-between text-sm">
+                            <span className="text-slate-600 dark:text-slate-400">Occupancy Rate:</span>
+                            <span className="font-bold text-indigo-600 dark:text-indigo-400">
+                                {Math.round((formData.occupancy / formData.total_unit) * 100)}%
+                            </span>
+                        </div>
+                        <div className="flex items-center justify-between text-sm mt-1">
+                            <span className="text-slate-600 dark:text-slate-400">Available Units:</span>
+                            <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                                {formData.total_unit - formData.occupancy}
+                            </span>
+                        </div>
+                    </div>
+                )}
 
-                {/* Description */}
-                <Textarea
-                    label="Description"
-                    placeholder="Additional information about the property"
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    rows={4}
-                    helperText="Optional: Add any additional details"
-                />
+                {/* Facilities */}
+                <div>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                        Facilities
+                    </label>
+                    <Input
+                        type="text"
+                        placeholder="WiFi, Parking, Security 24/7, Swimming Pool, Gym"
+                        value={facilityInput}
+                        onChange={(e) => setFacilityInput(e.target.value)}
+                        leftIcon={<MapPin className="w-5 h-5" />}
+                    />
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                        Separate multiple facilities with commas
+                    </p>
+                    {facilityInput && (
+                        <div className="flex flex-wrap gap-2 mt-2">
+                            {facilityInput.split(',').map((fac, idx) => {
+                                const trimmed = fac.trim();
+                                if (!trimmed) return null;
+                                return (
+                                    <span
+                                        key={idx}
+                                        className="px-2 py-1 text-xs bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-md"
+                                    >
+                                        {trimmed}
+                                    </span>
+                                );
+                            })}
+                        </div>
+                    )}
+                </div>
 
                 {/* Actions */}
                 <div className="flex gap-3 pt-4 border-t border-slate-200 dark:border-slate-800">
@@ -234,7 +249,7 @@ export default function AddPropertyForm({ isOpen, onClose, onSubmit }: AddProper
                         className="flex-1"
                         disabled={isSubmitting}
                     >
-                        {isSubmitting ? 'Adding...' : 'Add Property'}
+                        {isSubmitting ? (editData ? 'Updating...' : 'Adding...') : (editData ? 'Update Property' : 'Add Property')}
                     </Button>
                 </div>
             </form>

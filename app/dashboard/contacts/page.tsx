@@ -1,280 +1,377 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
+import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
 import Table from '@/components/ui/Table';
-import AddTenantForm, { TenantFormData } from '@/components/forms/AddTenantForm';
-import { User, Plus, Edit, Trash2, Search, Filter, Grid3x3, List, Mail, Phone, MapPin } from 'lucide-react';
+import AddContactForm, { ContactFormData } from '@/components/forms/AddContactForm';
+import {
+    Users,
+    Plus,
+    Search,
+    Filter,
+    User,
+    Phone,
+    Mail,
+    MapPin,
+    Edit,
+    Trash2,
+    Building,
+    Calendar,
+} from 'lucide-react';
 
 export default function ContactsPage() {
-    const [isFormOpen, setIsFormOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [showFilters, setShowFilters] = useState(false);
+    const [filterType, setFilterType] = useState('all');
     const [filterStatus, setFilterStatus] = useState('all');
-    const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-    const [isMobile, setIsMobile] = useState(false);
+    const [isFormOpen, setIsFormOpen] = useState(false);
+    const [editingContact, setEditingContact] = useState<any>(null);
 
-    // Detect mobile and force grid view
-    useEffect(() => {
-        const checkMobile = () => {
-            setIsMobile(window.innerWidth < 768);
-        };
-
-        checkMobile();
-        window.addEventListener('resize', checkMobile);
-
-        return () => window.removeEventListener('resize', checkMobile);
-    }, []);
-
-    const effectiveViewMode = isMobile ? 'grid' : viewMode;
-
-    type ContactType = {
-        id: string;
-        name: string;
-        email: string;
-        phone: string;
-        idNumber: string;
-        occupation: string;
-        room: string | null;
-        status: string;
-        moveInDate: string | null;
-    };
-
-    const [contacts, setContacts] = useState<ContactType[]>([
+    const [contacts, setContacts] = useState([
         {
             id: '1',
             name: 'John Doe',
-            email: 'john.doe@email.com',
-            phone: '+62 812 3456 7890',
-            idNumber: '3201234567890123',
-            occupation: 'Software Engineer',
+            no_ktp: '3174012505850001',
+            no_wa: '+62 812 3456 7890',
+            address: 'Jl. Sudirman No. 123, Jakarta',
+            type: 'Customer',
             room: 'Room 305',
             status: 'Active',
-            moveInDate: '2024-01-15',
+            date_check_in: '2024-01-15',
         },
         {
             id: '2',
-            name: 'Jane Smith',
-            email: 'jane.smith@email.com',
-            phone: '+62 813 9876 5432',
-            idNumber: '3301987654321098',
-            occupation: 'Marketing Manager',
-            room: 'Room 201',
+            name: 'CV Bersih Selalu',
+            no_ktp: '0312345678901234',
+            no_wa: '+62 821 9876 5432',
+            address: 'Jl. Gatot Subroto No. 45, Jakarta',
+            type: 'Vendor',
+            room: null,
             status: 'Active',
-            moveInDate: '2024-03-01',
+            date_check_in: null,
         },
         {
             id: '3',
-            name: 'Bob Johnson',
-            email: 'bob.johnson@email.com',
-            phone: '+62 821 5555 4444',
-            idNumber: '3401122334455667',
-            occupation: 'Teacher',
-            room: null,
-            status: 'Prospect',
-            moveInDate: null,
+            name: 'Sarah Wilson',
+            no_ktp: '3173045612920002',
+            no_wa: '+62 813 2468 1357',
+            address: 'Jl. Thamrin No. 88, Jakarta',
+            type: 'Customer',
+            room: 'Room 201',
+            status: 'Active',
+            date_check_in: '2024-02-10',
         },
         {
             id: '4',
-            name: 'Alice Williams',
-            email: 'alice.w@email.com',
-            phone: '+62 856 7777 8888',
-            idNumber: '3501998877665544',
-            occupation: 'Graphic Designer',
-            room: 'Room 405',
-            status: 'Pending',
-            moveInDate: '2024-12-20',
+            name: 'PT Properti Indah',
+            no_ktp: '0298765432109876',
+            no_wa: '+62 811 5555 6666',
+            address: 'Jl. Rasuna Said Kav. C-22, Jakarta',
+            type: 'Owner',
+            room: null,
+            status: 'Active',
+            date_check_in: null,
+        },
+        {
+            id: '5',
+            name: 'Michael Chen',
+            no_ktp: '3175089012850003',
+            no_wa: '+62 856 7890 1234',
+            address: 'Jl. Asia Afrika No. 56, Bandung',
+            type: 'Customer',
+            room: 'Room 402',
+            status: 'Active',
+            date_check_in: '2024-03-05',
+        },
+        {
+            id: '6',
+            name: 'Toko Elektronik Jaya',
+            no_ktp: '0387654321098765',
+            no_wa: '+62 822 3333 4444',
+            address: 'Jl. Mangga Dua No. 78, Jakarta',
+            type: 'Vendor',
+            room: null,
+            status: 'Active',
+            date_check_in: null,
+        },
+        {
+            id: '7',
+            name: 'Amanda Lee',
+            no_ktp: '',
+            no_wa: '+62 817 8888 9999',
+            address: 'Jl. Kemang Raya No. 12, Jakarta',
+            type: 'Customer',
+            room: '',
+            status: 'Prospect',
+            date_check_in: null,
+        },
+        {
+            id: '8',
+            name: 'Robert Kim',
+            no_ktp: '',
+            no_wa: '+62 819 5555 4444',
+            address: 'Jl. Senopati No. 45, Jakarta',
+            type: 'Customer',
+            room: '',
+            status: 'Prospect',
+            date_check_in: null,
         },
     ]);
 
-    const statusOptions = [
-        { value: 'all', label: 'All Status' },
-        { value: 'active', label: 'Active' },
-        { value: 'pending', label: 'Pending' },
-        { value: 'prospect', label: 'Prospect' },
-        { value: 'inactive', label: 'Inactive' },
+    const typeOptions = [
+        { value: 'all', label: 'All Types' },
+        { value: 'Customer', label: 'Customer' },
+        { value: 'Vendor', label: 'Vendor' },
+        { value: 'Owner', label: 'Owner' },
     ];
 
-    const handleSubmit = (data: TenantFormData) => {
-        const newContact = {
-            id: Date.now().toString(),
-            name: data.name,
-            email: data.email,
-            phone: data.phone,
-            idNumber: data.idNumber || '-', // Use '-' if not provided
-            occupation: data.occupation || '-',
-            room: null as string | null, // Explicitly type as nullable
-            status: 'Prospect',
-            moveInDate: null as string | null, // Explicitly type as nullable
-        };
-        setContacts([...contacts, newContact]);
+    const statusOptions = [
+        { value: 'all', label: 'All Status' },
+        { value: 'Active', label: 'Active' },
+        { value: 'Prospect', label: 'Prospect' },
+        { value: 'Inactive', label: 'Inactive' },
+    ];
+
+    const formatDate = (dateString: string | null) => {
+        if (!dateString) return '-';
+        return new Date(dateString).toLocaleDateString('id-ID', {
+            day: 'numeric',
+            month: 'short',
+            year: 'numeric',
+        });
     };
 
-    const getStatusBadge = (status: string) => {
+    const getTypeBadge = (type: string) => {
         const variants: Record<string, any> = {
-            Active: 'success',
-            Pending: 'warning',
-            Prospect: 'info',
-            Inactive: 'default',
+            Customer: 'info',
+            Vendor: 'purple',
+            Owner: 'success',
         };
-        return variants[status] || 'default';
+        return variants[type] || 'default';
+    };
+
+    const getTypeIcon = (type: string) => {
+        const icons: Record<string, any> = {
+            Customer: User,
+            Vendor: Building,
+            Owner: Users,
+        };
+        return icons[type] || User;
     };
 
     const columns = [
         {
             key: 'name',
-            label: 'Name',
+            label: 'Contact Info',
+            sortable: true,
+            render: (item: any) => {
+                const Icon = getTypeIcon(item.type);
+                return (
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center">
+                            <Icon className="w-5 h-5 text-white" />
+                        </div>
+                        <div className="min-w-0">
+                            <p className="font-semibold text-slate-900 dark:text-white truncate">
+                                {item.name}
+                            </p>
+                            <p className="text-xs text-slate-600 dark:text-slate-400 truncate">
+                                KTP: {item.no_ktp}
+                            </p>
+                        </div>
+                    </div>
+                );
+            },
+        },
+        {
+            key: 'type',
+            label: 'Type',
             sortable: true,
             render: (item: any) => (
-                <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center">
-                        <User className="w-5 h-5 text-white" />
-                    </div>
-                    <div>
-                        <p className="font-semibold text-slate-900 dark:text-white">{item.name}</p>
-                        <p className="text-sm text-slate-500 dark:text-slate-400">{item.occupation}</p>
-                    </div>
-                </div>
+                <Badge variant={getTypeBadge(item.type)}>{item.type}</Badge>
             ),
         },
         {
-            key: 'email',
+            key: 'contact',
             label: 'Contact',
             render: (item: any) => (
                 <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                        <Mail className="w-4 h-4 text-slate-400" />
-                        <span className="text-sm text-slate-600 dark:text-slate-400">{item.email}</span>
+                        <Phone className="w-3 h-3 text-slate-400" />
+                        <span className="text-sm text-slate-900 dark:text-white">
+                            {item.no_wa}
+                        </span>
                     </div>
-                    <div className="flex items-center gap-2">
-                        <Phone className="w-4 h-4 text-slate-400" />
-                        <span className="text-sm text-slate-600 dark:text-slate-400">{item.phone}</span>
+                    <div className="flex items-start gap-2">
+                        <MapPin className="w-3 h-3 text-slate-400 mt-0.5 flex-shrink-0" />
+                        <span className="text-xs text-slate-600 dark:text-slate-400 line-clamp-1">
+                            {item.address}
+                        </span>
                     </div>
                 </div>
             ),
         },
         {
-            key: 'idNumber',
-            label: 'ID Number',
-            render: (item: any) => (
-                <span className="text-sm font-mono text-slate-600 dark:text-slate-400">{item.idNumber}</span>
-            ),
-        },
-        {
             key: 'room',
-            label: 'Room',
+            label: 'Room/Unit',
             render: (item: any) => (
-                <span className="text-sm text-slate-600 dark:text-slate-400">
+                <span className="text-sm text-slate-900 dark:text-white">
                     {item.room || '-'}
                 </span>
             ),
         },
         {
-            key: 'status',
-            label: 'Status',
+            key: 'date_check_in',
+            label: 'Check-in Date',
+            sortable: true,
             render: (item: any) => (
-                <Badge variant={getStatusBadge(item.status)} dot>
-                    {item.status}
-                </Badge>
+                <div className="flex items-center gap-2">
+                    <Calendar className="w-4 h-4 text-slate-400" />
+                    <span className="text-sm text-slate-600 dark:text-slate-400">
+                        {formatDate(item.date_check_in)}
+                    </span>
+                </div>
             ),
         },
         {
-            key: 'moveInDate',
-            label: 'Move-in Date',
-            render: (item: any) => (
-                <span className="text-sm text-slate-600 dark:text-slate-400">
-                    {item.moveInDate ? new Date(item.moveInDate).toLocaleDateString('id-ID', {
-                        day: 'numeric',
-                        month: 'short',
-                        year: 'numeric',
-                    }) : '-'}
-                </span>
-            ),
+            key: 'status',
+            label: 'Status',
+            sortable: true,
+            render: (item: any) => {
+                const variant = item.status === 'Active' ? 'success' :
+                    item.status === 'Prospect' ? 'warning' : 'default';
+                return (
+                    <Badge variant={variant} dot>
+                        {item.status}
+                    </Badge>
+                );
+            },
         },
         {
             key: 'actions',
             label: 'Actions',
             render: (item: any) => (
                 <div className="flex items-center gap-2">
-                    <Button size="sm" variant="ghost"><Edit className="w-4 h-4" /></Button>
-                    <Button size="sm" variant="ghost"><Trash2 className="w-4 h-4 text-red-600" /></Button>
+                    <Button size="sm" variant="ghost" onClick={() => handleEdit(item)}>
+                        <Edit className="w-4 h-4" />
+                    </Button>
+                    <Button size="sm" variant="ghost" onClick={() => handleDelete(item.id)}>
+                        <Trash2 className="w-4 h-4 text-red-600" />
+                    </Button>
                 </div>
             ),
         },
     ];
 
+    // Filter contacts
+    const filteredContacts = contacts.filter(contact => {
+        const matchSearch = contact.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            contact.no_wa.includes(searchQuery) ||
+            contact.no_ktp.includes(searchQuery);
+        const matchType = filterType === 'all' || contact.type === filterType;
+        const matchStatus = filterStatus === 'all' || contact.status === filterStatus;
+        return matchSearch && matchType && matchStatus;
+    });
+
+    // Stats
+    const totalContacts = contacts.length;
+    const customerCount = contacts.filter(c => c.type === 'Customer' && c.status === 'Active').length;
+    const prospectCount = contacts.filter(c => c.type === 'Customer' && c.status === 'Prospect').length;
+    const vendorCount = contacts.filter(c => c.type === 'Vendor').length;
+    const ownerCount = contacts.filter(c => c.type === 'Owner').length;
+
+    // Form handlers
+    const handleFormSubmit = (data: ContactFormData) => {
+        if (editingContact) {
+            // Update existing contact
+            setContacts(contacts.map(c =>
+                c.id === editingContact.id
+                    ? { ...c, ...data }
+                    : c
+            ));
+        } else {
+            // Add new contact
+            const newContact = {
+                id: Date.now().toString(),
+                ...data,
+            };
+            setContacts([newContact, ...contacts]);
+        }
+        setEditingContact(null);
+    };
+
+    const handleEdit = (contact: any) => {
+        setEditingContact(contact);
+        setIsFormOpen(true);
+    };
+
+    const handleDelete = (id: string) => {
+        if (confirm('Are you sure you want to delete this contact?')) {
+            setContacts(contacts.filter(c => c.id !== id));
+        }
+    };
+
+    const handleCloseForm = () => {
+        setIsFormOpen(false);
+        setEditingContact(null);
+    };
+
+    const handleAddNew = () => {
+        setEditingContact(null);
+        setIsFormOpen(true);
+    };
+
     return (
-        <div className="p-4 md:p-6 space-y-6 pb-24 md:pb-6">
+        <div className="p-4 md:p-6 space-y-4 md:space-y-6 pb-24 md:pb-6">
             {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                    <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white">Contacts</h1>
+                    <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white">
+                        Contacts
+                    </h1>
                     <p className="text-sm md:text-base text-slate-600 dark:text-slate-400 mt-1">
-                        Manage tenants and prospects
+                        Manage customers, vendors, and property owners
                     </p>
                 </div>
-                <Button onClick={() => setIsFormOpen(true)}>
+                <Button className="w-full sm:w-auto" onClick={handleAddNew}>
                     <Plus className="w-5 h-5" />
                     Add Contact
                 </Button>
             </div>
 
             {/* Stats Cards */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-3 md:gap-4">
                 <Card>
                     <CardContent className="p-3 md:p-4">
                         <div className="flex items-center justify-between">
                             <div className="min-w-0 flex-1">
-                                <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 truncate">Total Contacts</p>
-                                <p className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white mt-1 truncate">{contacts.length}</p>
-                            </div>
-                            <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-pink-100 dark:bg-pink-900/30 flex items-center justify-center flex-shrink-0 ml-2">
-                                <User className="w-5 h-5 md:w-6 md:h-6 text-pink-600 dark:text-pink-400" />
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardContent className="p-3 md:p-4">
-                        <div className="flex items-center justify-between">
-                            <div className="min-w-0 flex-1">
-                                <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 truncate">Active</p>
-                                <p className="text-xl md:text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1 truncate">
-                                    {contacts.filter(c => c.status === 'Active').length}
+                                <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 truncate">
+                                    Total Contacts
+                                </p>
+                                <p className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white mt-1 truncate">
+                                    {totalContacts}
                                 </p>
                             </div>
-                            <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center flex-shrink-0 ml-2">
-                                <User className="w-5 h-5 md:w-6 md:h-6 text-emerald-600 dark:text-emerald-400" />
+                            <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center flex-shrink-0 ml-2">
+                                <Users className="w-5 h-5 md:w-6 md:h-6 text-slate-600 dark:text-slate-400" />
                             </div>
                         </div>
                     </CardContent>
                 </Card>
+
                 <Card>
                     <CardContent className="p-3 md:p-4">
                         <div className="flex items-center justify-between">
                             <div className="min-w-0 flex-1">
-                                <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 truncate">Pending</p>
-                                <p className="text-xl md:text-2xl font-bold text-amber-600 dark:text-amber-400 mt-1 truncate">
-                                    {contacts.filter(c => c.status === 'Pending').length}
+                                <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 truncate">
+                                    Customers
                                 </p>
-                            </div>
-                            <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center flex-shrink-0 ml-2">
-                                <User className="w-5 h-5 md:w-6 md:h-6 text-amber-600 dark:text-amber-400" />
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardContent className="p-3 md:p-4">
-                        <div className="flex items-center justify-between">
-                            <div className="min-w-0 flex-1">
-                                <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 truncate">Prospects</p>
                                 <p className="text-xl md:text-2xl font-bold text-blue-600 dark:text-blue-400 mt-1 truncate">
-                                    {contacts.filter(c => c.status === 'Prospect').length}
+                                    {customerCount}
                                 </p>
                             </div>
                             <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0 ml-2">
@@ -283,48 +380,72 @@ export default function ContactsPage() {
                         </div>
                     </CardContent>
                 </Card>
+
+                <Card>
+                    <CardContent className="p-3 md:p-4">
+                        <div className="flex items-center justify-between">
+                            <div className="min-w-0 flex-1">
+                                <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 truncate">
+                                    Prospects
+                                </p>
+                                <p className="text-xl md:text-2xl font-bold text-amber-600 dark:text-amber-400 mt-1 truncate">
+                                    {prospectCount}
+                                </p>
+                            </div>
+                            <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center flex-shrink-0 ml-2">
+                                <User className="w-5 h-5 md:w-6 md:h-6 text-amber-600 dark:text-amber-400" />
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardContent className="p-3 md:p-4">
+                        <div className="flex items-center justify-between">
+                            <div className="min-w-0 flex-1">
+                                <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 truncate">
+                                    Vendors
+                                </p>
+                                <p className="text-xl md:text-2xl font-bold text-purple-600 dark:text-purple-400 mt-1 truncate">
+                                    {vendorCount}
+                                </p>
+                            </div>
+                            <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center flex-shrink-0 ml-2">
+                                <Building className="w-5 h-5 md:w-6 md:h-6 text-purple-600 dark:text-purple-400" />
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardContent className="p-3 md:p-4">
+                        <div className="flex items-center justify-between">
+                            <div className="min-w-0 flex-1">
+                                <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 truncate">
+                                    Owners
+                                </p>
+                                <p className="text-xl md:text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1 truncate">
+                                    {ownerCount}
+                                </p>
+                            </div>
+                            <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center flex-shrink-0 ml-2">
+                                <Users className="w-5 h-5 md:w-6 md:h-6 text-emerald-600 dark:text-emerald-400" />
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
             </div>
 
-            {/* Search, Filters, and View Mode Toggle */}
+            {/* Search & Filters */}
             <Card>
                 <CardContent className="p-3 md:p-4">
                     <div className="space-y-3">
-                        <div className="flex gap-2">
-                            <Input
-                                placeholder="Search contacts..."
-                                leftIcon={<Search className="w-5 h-5" />}
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="flex-1"
-                            />
-                            {/* View Mode Toggle - Desktop */}
-                            <div className="hidden md:flex gap-1 bg-slate-100 dark:bg-slate-800 rounded-lg p-1">
-                                <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    onClick={() => setViewMode('grid')}
-                                    className={`px-3 ${
-                                        viewMode === 'grid'
-                                            ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white hover:from-indigo-600 hover:to-purple-600'
-                                            : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
-                                    }`}
-                                >
-                                    <Grid3x3 className="w-4 h-4" />
-                                </Button>
-                                <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    onClick={() => setViewMode('list')}
-                                    className={`px-3 ${
-                                        viewMode === 'list'
-                                            ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white hover:from-indigo-600 hover:to-purple-600'
-                                            : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
-                                    }`}
-                                >
-                                    <List className="w-4 h-4" />
-                                </Button>
-                            </div>
-                        </div>
+                        <Input
+                            placeholder="Search by name, phone, or KTP..."
+                            leftIcon={<Search className="w-5 h-5" />}
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                        />
                         <Button
                             variant="outline"
                             onClick={() => setShowFilters(!showFilters)}
@@ -333,99 +454,94 @@ export default function ContactsPage() {
                             <Filter className="w-4 h-4" />
                             {showFilters ? 'Hide' : 'Show'} Filters
                         </Button>
-                        <div className={`grid grid-cols-1 gap-3 ${showFilters ? 'block' : 'hidden md:grid'}`}>
-                            <Select options={statusOptions} value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} />
+                        <div className={`grid grid-cols-1 gap-3 md:grid-cols-2 ${showFilters ? 'block' : 'hidden md:grid'}`}>
+                            <Select
+                                options={typeOptions}
+                                value={filterType}
+                                onChange={(e) => setFilterType(e.target.value)}
+                            />
+                            <Select
+                                options={statusOptions}
+                                value={filterStatus}
+                                onChange={(e) => setFilterStatus(e.target.value)}
+                            />
                         </div>
                     </div>
                 </CardContent>
             </Card>
 
-            {/* Grid View */}
-            {effectiveViewMode === 'grid' && (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {contacts.map((contact) => (
+            {/* Mobile Cards */}
+            <div className="block md:hidden space-y-3">
+                {filteredContacts.map((contact) => {
+                    const Icon = getTypeIcon(contact.type);
+                    return (
                         <Card key={contact.id} hover>
                             <CardContent className="p-4">
-                                <div className="flex items-start justify-between mb-3">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center">
-                                            <User className="w-6 h-6 text-white" />
-                                        </div>
-                                        <div>
-                                            <h3 className="font-semibold text-slate-900 dark:text-white">
-                                                {contact.name}
-                                            </h3>
-                                            <p className="text-sm text-slate-500 dark:text-slate-400">{contact.occupation}</p>
-                                        </div>
+                                <div className="flex items-start gap-3 mb-3">
+                                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center flex-shrink-0">
+                                        <Icon className="w-5 h-5 text-white" />
                                     </div>
-                                    <Badge variant={getStatusBadge(contact.status)} dot size="sm">
+                                    <div className="flex-1 min-w-0">
+                                        <p className="font-semibold text-slate-900 dark:text-white truncate">
+                                            {contact.name}
+                                        </p>
+                                        <Badge variant={getTypeBadge(contact.type)} size="sm" className="mt-1">
+                                            {contact.type}
+                                        </Badge>
+                                    </div>
+                                    <Badge variant={contact.status === 'Active' ? 'success' : 'default'} dot size="sm">
                                         {contact.status}
                                     </Badge>
                                 </div>
 
-                                <div className="space-y-2">
-                                    <div className="flex items-center gap-2">
-                                        <Mail className="w-4 h-4 text-slate-400 flex-shrink-0" />
-                                        <span className="text-sm text-slate-600 dark:text-slate-400 truncate">{contact.email}</span>
-                                    </div>
-
+                                <div className="space-y-2 text-sm">
                                     <div className="flex items-center gap-2">
                                         <Phone className="w-4 h-4 text-slate-400 flex-shrink-0" />
-                                        <span className="text-sm text-slate-600 dark:text-slate-400">{contact.phone}</span>
+                                        <span className="text-slate-900 dark:text-white">{contact.no_wa}</span>
                                     </div>
-
-                                    <div className="flex items-center gap-2">
-                                        <MapPin className="w-4 h-4 text-slate-400 flex-shrink-0" />
-                                        <span className="text-sm text-slate-600 dark:text-slate-400">
-                                            {contact.room || 'Not assigned'}
+                                    <div className="flex items-start gap-2">
+                                        <MapPin className="w-4 h-4 text-slate-400 flex-shrink-0 mt-0.5" />
+                                        <span className="text-slate-600 dark:text-slate-400 text-xs">
+                                            {contact.address}
                                         </span>
                                     </div>
-
-                                    <div className="pt-2 border-t border-slate-200 dark:border-slate-800">
-                                        <div className="flex items-center justify-between text-sm">
-                                            <span className="text-slate-600 dark:text-slate-400">ID:</span>
-                                            <span className="font-mono text-xs text-slate-900 dark:text-white">{contact.idNumber}</span>
+                                    <div className="flex items-center justify-between pt-2 border-t border-slate-200 dark:border-slate-700">
+                                        <div>
+                                            <span className="text-xs text-slate-500">KTP:</span>
+                                            <span className="text-xs text-slate-900 dark:text-white ml-1">
+                                                {contact.no_ktp}
+                                            </span>
                                         </div>
-                                        {contact.moveInDate && (
-                                            <div className="flex items-center justify-between text-sm mt-1">
-                                                <span className="text-slate-600 dark:text-slate-400">Move-in:</span>
-                                                <span className="text-slate-900 dark:text-white">
-                                                    {new Date(contact.moveInDate).toLocaleDateString('id-ID', {
-                                                        day: 'numeric',
-                                                        month: 'short',
-                                                        year: 'numeric',
-                                                    })}
-                                                </span>
-                                            </div>
+                                        {contact.room && (
+                                            <span className="text-xs font-medium text-indigo-600 dark:text-indigo-400">
+                                                {contact.room}
+                                            </span>
                                         )}
                                     </div>
-                                </div>
-
-                                <div className="flex gap-2 pt-3 border-t border-slate-200 dark:border-slate-800 mt-3">
-                                    <Button size="sm" variant="outline" className="flex-1">
-                                        <Edit className="w-4 h-4 mr-1" />
-                                        Edit
-                                    </Button>
-                                    <Button size="sm" variant="ghost">
-                                        <Trash2 className="w-4 h-4 text-red-600" />
-                                    </Button>
+                                    {contact.date_check_in && (
+                                        <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
+                                            <Calendar className="w-3 h-3" />
+                                            Check-in: {formatDate(contact.date_check_in)}
+                                        </div>
+                                    )}
                                 </div>
                             </CardContent>
                         </Card>
-                    ))}
-                </div>
-            )}
+                    );
+                })}
+            </div>
 
-            {/* List View (Table) */}
-            {effectiveViewMode === 'list' && (
-                <Table data={contacts} columns={columns} />
-            )}
+            {/* Desktop Table */}
+            <div className="hidden md:block">
+                <Table data={filteredContacts} columns={columns} />
+            </div>
 
-            {/* Add Contact Form */}
-            <AddTenantForm
+            {/* Add/Edit Contact Form */}
+            <AddContactForm
                 isOpen={isFormOpen}
-                onClose={() => setIsFormOpen(false)}
-                onSubmit={handleSubmit}
+                onClose={handleCloseForm}
+                onSubmit={handleFormSubmit}
+                editData={editingContact}
             />
         </div>
     );

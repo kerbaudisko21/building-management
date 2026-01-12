@@ -1,59 +1,79 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Modal from '@/components/ui/Modal';
 import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
-import Textarea from '@/components/ui/Textarea';
 import Button from '@/components/ui/Button';
-import { User, Mail, Phone, Home, Calendar } from 'lucide-react';
+import { User, Phone, Building, Home, DollarSign, Calendar } from 'lucide-react';
 
 interface AddWaitingListFormProps {
     isOpen: boolean;
     onClose: () => void;
     onSubmit: (data: WaitingListFormData) => void;
+    editData?: WaitingListFormData | null;
 }
 
 export interface WaitingListFormData {
     name: string;
-    email: string;
     phone: string;
-    roomType: string;
-    moveInDate: string;
+    property: string;
+    room_unit: string;
     budget: number;
-    notes?: string;
-    status: string;
+    date_entry_plan: string;
 }
 
-export default function AddWaitingListForm({ isOpen, onClose, onSubmit }: AddWaitingListFormProps) {
+export default function AddWaitingListForm({
+                                               isOpen,
+                                               onClose,
+                                               onSubmit,
+                                               editData,
+                                           }: AddWaitingListFormProps) {
     const [formData, setFormData] = useState<WaitingListFormData>({
         name: '',
-        email: '',
         phone: '',
-        roomType: '',
-        moveInDate: '',
+        property: '',
+        room_unit: '',
         budget: 0,
-        notes: '',
-        status: 'waiting',
+        date_entry_plan: '',
     });
 
     const [errors, setErrors] = useState<Partial<Record<keyof WaitingListFormData, string>>>({});
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const roomTypeOptions = [
-        { value: '', label: 'Select room type' },
-        { value: 'standard', label: 'Standard Room' },
-        { value: 'deluxe', label: 'Deluxe Room' },
-        { value: 'suite', label: 'Suite' },
-        { value: 'studio', label: 'Studio' },
-        { value: 'any', label: 'Any Available' },
+    // Load edit data
+    useEffect(() => {
+        if (editData) {
+            setFormData(editData);
+        } else {
+            setFormData({
+                name: '',
+                phone: '',
+                property: '',
+                room_unit: '',
+                budget: 0,
+                date_entry_plan: '',
+            });
+        }
+        setErrors({});
+    }, [editData, isOpen]);
+
+    // Property options (FK from properties)
+    const propertyOptions = [
+        { value: '', label: 'Select property' },
+        { value: 'Menteng Residence', label: 'Menteng Residence' },
+        { value: 'BSD City Apartment', label: 'BSD City Apartment' },
+        { value: 'Kemang Suites', label: 'Kemang Suites' },
+        { value: 'Sudirman Park', label: 'Sudirman Park' },
     ];
 
-    const statusOptions = [
-        { value: 'waiting', label: 'Waiting' },
-        { value: 'contacted', label: 'Contacted' },
-        { value: 'interested', label: 'Interested' },
-        { value: 'not-interested', label: 'Not Interested' },
+    // Room/Unit options (FK from rooms)
+    const roomUnitOptions = [
+        { value: '', label: 'Select room/unit type' },
+        { value: 'Standard (30m²)', label: 'Standard (30m²)' },
+        { value: 'Studio (35m²)', label: 'Studio (35m²)' },
+        { value: 'Deluxe (45m²)', label: 'Deluxe (45m²)' },
+        { value: 'Suite (60m²)', label: 'Suite (60m²)' },
     ];
 
     const validate = (): boolean => {
@@ -63,28 +83,33 @@ export default function AddWaitingListForm({ isOpen, onClose, onSubmit }: AddWai
             newErrors.name = 'Name is required';
         }
 
-        if (!formData.email.trim()) {
-            newErrors.email = 'Email is required';
-        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-            newErrors.email = 'Invalid email format';
-        }
-
         if (!formData.phone.trim()) {
             newErrors.phone = 'Phone number is required';
         } else if (!/^(\+62|62|0)[0-9]{9,12}$/.test(formData.phone.replace(/[\s-]/g, ''))) {
             newErrors.phone = 'Invalid Indonesian phone number';
         }
 
-        if (!formData.roomType) {
-            newErrors.roomType = 'Room type is required';
+        if (!formData.property) {
+            newErrors.property = 'Property is required';
         }
 
-        if (!formData.moveInDate) {
-            newErrors.moveInDate = 'Move-in date is required';
+        if (!formData.room_unit) {
+            newErrors.room_unit = 'Room/unit type is required';
         }
 
         if (!formData.budget || formData.budget < 1) {
-            newErrors.budget = 'Budget is required';
+            newErrors.budget = 'Budget must be greater than 0';
+        }
+
+        if (!formData.date_entry_plan) {
+            newErrors.date_entry_plan = 'Entry date is required';
+        } else {
+            const entryDate = new Date(formData.date_entry_plan);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            if (entryDate < today) {
+                newErrors.date_entry_plan = 'Entry date cannot be in the past';
+            }
         }
 
         setErrors(newErrors);
@@ -110,13 +135,11 @@ export default function AddWaitingListForm({ isOpen, onClose, onSubmit }: AddWai
     const handleClose = () => {
         setFormData({
             name: '',
-            email: '',
             phone: '',
-            roomType: '',
-            moveInDate: '',
+            property: '',
+            room_unit: '',
             budget: 0,
-            notes: '',
-            status: 'waiting',
+            date_entry_plan: '',
         });
         setErrors({});
         onClose();
@@ -126,8 +149,8 @@ export default function AddWaitingListForm({ isOpen, onClose, onSubmit }: AddWai
         <Modal
             isOpen={isOpen}
             onClose={handleClose}
-            title="Add to Waiting List"
-            description="Add a prospect to the waiting list"
+            title={editData ? 'Edit Prospect' : 'Add New Prospect'}
+            description={editData ? 'Update prospect information' : 'Add prospect to waiting list'}
             size="lg"
         >
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -135,91 +158,102 @@ export default function AddWaitingListForm({ isOpen, onClose, onSubmit }: AddWai
                 <Input
                     label="Full Name"
                     type="text"
-                    placeholder="e.g., John Doe"
+                    placeholder="e.g., Amanda Lee"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     error={errors.name}
                     required
                     leftIcon={<User className="w-5 h-5" />}
+                    helperText="From contacts (type = Customer, status = Prospect)"
                 />
 
-                {/* Email and Phone */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Input
-                        label="Email"
-                        type="email"
-                        placeholder="john@example.com"
-                        value={formData.email}
-                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        error={errors.email}
-                        required
-                        leftIcon={<Mail className="w-5 h-5" />}
-                    />
-
-                    <Input
-                        label="Phone Number"
-                        type="tel"
-                        placeholder="+62 812 3456 7890"
-                        value={formData.phone}
-                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                        error={errors.phone}
-                        required
-                        leftIcon={<Phone className="w-5 h-5" />}
-                    />
-                </div>
-
-                {/* Room Type */}
-                <Select
-                    label="Preferred Room Type"
-                    options={roomTypeOptions}
-                    value={formData.roomType}
-                    onChange={(e) => setFormData({ ...formData, roomType: e.target.value })}
-                    error={errors.roomType}
+                {/* Phone */}
+                <Input
+                    label="WhatsApp Number"
+                    type="tel"
+                    placeholder="+62 817 8888 9999"
+                    value={formData.phone}
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    error={errors.phone}
                     required
+                    leftIcon={<Phone className="w-5 h-5" />}
                 />
 
-                {/* Move-in Date and Budget */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Input
-                        label="Desired Move-in Date"
-                        type="date"
-                        value={formData.moveInDate}
-                        onChange={(e) => setFormData({ ...formData, moveInDate: e.target.value })}
-                        error={errors.moveInDate}
-                        required
-                        leftIcon={<Calendar className="w-5 h-5" />}
-                    />
-
-                    <Input
-                        label="Budget (Rp/month)"
-                        type="number"
-                        placeholder="e.g., 5000000"
-                        value={formData.budget || ''}
-                        onChange={(e) => setFormData({ ...formData, budget: parseFloat(e.target.value) || 0 })}
-                        error={errors.budget}
-                        required
-                        leftIcon={<Home className="w-5 h-5" />}
-                    />
-                </div>
-
-                {/* Status */}
+                {/* Property */}
                 <Select
-                    label="Status"
-                    options={statusOptions}
-                    value={formData.status}
-                    onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                    label="Interested Property"
+                    options={propertyOptions}
+                    value={formData.property}
+                    onChange={(e) => setFormData({ ...formData, property: e.target.value })}
+                    error={errors.property}
                     required
+                    helperText="From properties table (FK)"
                 />
 
-                {/* Notes */}
-                <Textarea
-                    label="Notes"
-                    placeholder="Any additional information or special requests"
-                    value={formData.notes}
-                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                    rows={3}
-                    helperText="Optional: Add any relevant details"
+                {/* Room/Unit Type */}
+                <Select
+                    label="Preferred Room/Unit Type"
+                    options={roomUnitOptions}
+                    value={formData.room_unit}
+                    onChange={(e) => setFormData({ ...formData, room_unit: e.target.value })}
+                    error={errors.room_unit}
+                    required
+                    helperText="From rooms table (FK)"
                 />
+
+                {/* Budget */}
+                <Input
+                    label="Budget (Rp/month)"
+                    type="number"
+                    placeholder="e.g., 5000000"
+                    value={formData.budget || ''}
+                    onChange={(e) => setFormData({ ...formData, budget: parseFloat(e.target.value) || 0 })}
+                    error={errors.budget}
+                    required
+                    leftIcon={<DollarSign className="w-5 h-5" />}
+                    helperText="Expected monthly budget"
+                />
+
+                {/* Entry Date */}
+                <Input
+                    label="Planned Entry Date"
+                    type="date"
+                    value={formData.date_entry_plan}
+                    onChange={(e) => setFormData({ ...formData, date_entry_plan: e.target.value })}
+                    error={errors.date_entry_plan}
+                    required
+                    leftIcon={<Calendar className="w-5 h-5" />}
+                    helperText="When they plan to move in"
+                />
+
+                {/* Info Box */}
+                {formData.budget > 0 && formData.date_entry_plan && (
+                    <div className="p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
+                        <p className="text-sm font-semibold text-purple-900 dark:text-purple-100 mb-2">
+                            Prospect Summary:
+                        </p>
+                        <div className="space-y-1 text-xs text-purple-800 dark:text-purple-200">
+                            <p>
+                                <span className="font-semibold">{formData.name || 'Prospect'}</span> interested in{' '}
+                                <span className="font-semibold">{formData.room_unit || 'a unit'}</span>
+                            </p>
+                            <p>
+                                at <span className="font-semibold">{formData.property || 'property'}</span> with budget{' '}
+                                <span className="font-semibold">Rp {formData.budget.toLocaleString('id-ID')}</span>
+                            </p>
+                            <p>
+                                Planning to move in on{' '}
+                                <span className="font-semibold">
+                                    {new Date(formData.date_entry_plan).toLocaleDateString('id-ID', {
+                                        day: 'numeric',
+                                        month: 'long',
+                                        year: 'numeric'
+                                    })}
+                                </span>
+                            </p>
+                        </div>
+                    </div>
+                )}
 
                 {/* Actions */}
                 <div className="flex gap-3 pt-4 border-t border-slate-200 dark:border-slate-800">
@@ -237,7 +271,7 @@ export default function AddWaitingListForm({ isOpen, onClose, onSubmit }: AddWai
                         className="flex-1"
                         disabled={isSubmitting}
                     >
-                        {isSubmitting ? 'Adding...' : 'Add to Waiting List'}
+                        {isSubmitting ? (editData ? 'Updating...' : 'Adding...') : (editData ? 'Update Prospect' : 'Add Prospect')}
                     </Button>
                 </div>
             </form>
