@@ -8,126 +8,102 @@ import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
 import Table from '@/components/ui/Table';
 import AddAssetForm, { AssetFormData } from '@/components/forms/AddAssetForm';
-import { Package, Plus, Search, Filter, Calendar, MapPin, DollarSign, Edit, Trash2, CheckCircle, AlertCircle } from 'lucide-react';
+import { formatCurrency, formatCurrencyShort } from '@/utils/currency';
+import {
+    Package,
+    Plus,
+    Search,
+    Filter,
+    Building,
+    Home,
+    MapPin,
+    DollarSign,
+    CheckCircle,
+    AlertCircle,
+    Edit,
+    Trash2,
+    Move,
+} from 'lucide-react';
 
-export default function AssetPage() {
-    const [isFormOpen, setIsFormOpen] = useState(false);
+export default function AssetsPage() {
     const [searchQuery, setSearchQuery] = useState('');
     const [showFilters, setShowFilters] = useState(false);
-    const [filterCategory, setFilterCategory] = useState('all');
-    const [filterCondition, setFilterCondition] = useState('all');
+    const [filterProperty, setFilterProperty] = useState('all');
+    const [filterStatus, setFilterStatus] = useState('all');
+    const [isFormOpen, setIsFormOpen] = useState(false);
+    const [editingAsset, setEditingAsset] = useState<any>(null);
 
     const [assets, setAssets] = useState([
         {
             id: '1',
-            name: 'AC Unit - Room 305',
-            category: 'HVAC',
-            location: 'Building A, Room 305',
-            purchaseDate: '2023-01-15',
-            purchasePrice: 5000000,
-            currentValue: 4000000,
+            property: 'Menteng Residence',
+            room_unit: 'Unit 305-A',
+            name: 'AC Split 1.5 PK',
+            number: 'AST-001',
+            current_location: 'Unit 305-A',
+            category: 'Electronics',
             condition: 'Good',
-            serialNumber: 'AC-2023-001',
+            purchase_date: '2023-01-15',
+            purchase_price: 4500000,
+            notes: 'Regular maintenance required',
         },
         {
             id: '2',
-            name: 'Refrigerator - Room 201',
+            property: 'BSD City Apartment',
+            room_unit: 'Unit 201-B',
+            name: 'Water Heater Ariston',
+            number: 'AST-002',
+            current_location: 'Unit 201-B',
             category: 'Appliances',
-            location: 'Building B, Room 201',
-            purchaseDate: '2022-06-10',
-            purchasePrice: 3500000,
-            currentValue: 2500000,
-            condition: 'Good',
-            serialNumber: 'REF-2022-045',
+            condition: 'Excellent',
+            purchase_date: '2023-03-20',
+            purchase_price: 2500000,
+            notes: 'Under warranty until 2025',
         },
         {
             id: '3',
-            name: 'Security Camera System',
+            property: 'Kemang Suites',
+            room_unit: 'Common Area',
+            name: 'CCTV Camera Indoor',
+            number: 'AST-003',
+            current_location: 'Lobby',
             category: 'Security',
-            location: 'Building A, Main Entrance',
-            purchaseDate: '2023-08-20',
-            purchasePrice: 8000000,
-            currentValue: 6500000,
-            condition: 'Excellent',
-            serialNumber: 'SEC-2023-012',
+            condition: 'Good',
+            purchase_date: '2022-11-10',
+            purchase_price: 1500000,
+            notes: 'Covering main entrance',
         },
         {
             id: '4',
-            name: 'Water Heater - Room 405',
-            category: 'Appliances',
-            location: 'Building A, Room 405',
-            purchaseDate: '2021-03-15',
-            purchasePrice: 2000000,
-            currentValue: 800000,
+            property: 'Menteng Residence',
+            room_unit: 'Unit 104-A',
+            name: 'King Bed Frame',
+            number: 'AST-004',
+            current_location: 'Warehouse',
+            category: 'Furniture',
             condition: 'Fair',
-            serialNumber: 'WH-2021-033',
-        },
-        {
-            id: '5',
-            name: 'Generator Backup',
-            category: 'Equipment',
-            location: 'Building C, Basement',
-            purchaseDate: '2020-11-01',
-            purchasePrice: 15000000,
-            currentValue: 10000000,
-            condition: 'Needs Repair',
-            serialNumber: 'GEN-2020-005',
+            purchase_date: '2021-05-15',
+            purchase_price: 3500000,
+            notes: 'Currently in warehouse, unit under renovation',
         },
     ]);
 
-    const categoryOptions = [
-        { value: 'all', label: 'All Categories' },
-        { value: 'furniture', label: 'Furniture' },
-        { value: 'electronics', label: 'Electronics' },
-        { value: 'appliances', label: 'Appliances' },
-        { value: 'hvac', label: 'HVAC System' },
-        { value: 'security', label: 'Security Equipment' },
-        { value: 'vehicle', label: 'Vehicle' },
-        { value: 'tools', label: 'Tools & Equipment' },
-        { value: 'other', label: 'Other' },
+    const propertyOptions = [
+        { value: 'all', label: 'All Properties' },
+        { value: 'Menteng Residence', label: 'Menteng Residence' },
+        { value: 'BSD City Apartment', label: 'BSD City Apartment' },
+        { value: 'Kemang Suites', label: 'Kemang Suites' },
+        { value: 'Sudirman Park', label: 'Sudirman Park' },
     ];
 
-    const conditionOptions = [
+    const statusOptions = [
         { value: 'all', label: 'All Conditions' },
-        { value: 'excellent', label: 'Excellent' },
-        { value: 'good', label: 'Good' },
-        { value: 'fair', label: 'Fair' },
-        { value: 'poor', label: 'Poor' },
-        { value: 'needs-repair', label: 'Needs Repair' },
+        { value: 'Excellent', label: 'Excellent' },
+        { value: 'Good', label: 'Good' },
+        { value: 'Fair', label: 'Fair' },
+        { value: 'Poor', label: 'Poor' },
+        { value: 'Needs Repair', label: 'Needs Repair' },
     ];
-
-    const handleFormSubmit = (data: AssetFormData) => {
-        const depreciation = ((data.purchasePrice - data.currentValue) / data.purchasePrice * 100).toFixed(1);
-        const newAsset = {
-            id: Date.now().toString(),
-            name: data.name,
-            category: data.category,
-            location: data.location,
-            purchaseDate: data.purchaseDate,
-            purchasePrice: data.purchasePrice,
-            currentValue: data.currentValue,
-            condition: data.condition,
-            serialNumber: data.serialNumber || '-',
-            depreciation,
-        };
-        setAssets([newAsset, ...assets]);
-    };
-
-    const formatCurrency = (amount: number) => {
-        return new Intl.NumberFormat('id-ID', {
-            style: 'currency',
-            currency: 'IDR',
-            minimumFractionDigits: 0,
-        }).format(amount);
-    };
-
-    const formatDate = (dateString: string) => {
-        return new Date(dateString).toLocaleDateString('id-ID', {
-            day: 'numeric',
-            month: 'short',
-            year: 'numeric',
-        });
-    };
 
     const getConditionBadge = (condition: string) => {
         const variants: Record<string, any> = {
@@ -140,75 +116,73 @@ export default function AssetPage() {
         return variants[condition] || 'default';
     };
 
-    const calculateDepreciation = (purchase: number, current: number) => {
-        return ((purchase - current) / purchase * 100).toFixed(1);
-    };
-
     const columns = [
         {
-            key: 'name',
-            label: 'Asset',
+            key: 'asset',
+            label: 'Asset Info',
             sortable: true,
             render: (item: any) => (
                 <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center">
-                        <Package className="w-5 h-5 text-white" />
-                    </div>
-                    <div>
-                        <p className="font-semibold text-slate-900 dark:text-white">{item.name}</p>
-                        <p className="text-sm text-slate-500 dark:text-slate-400">{item.category}</p>
+                    <div className="min-w-0">
+                        <p className="font-semibold text-slate-900 dark:text-white truncate">
+                            {item.name}
+                        </p>
+                        <p className="text-xs text-slate-600 dark:text-slate-400">
+                            {item.number}
+                        </p>
                     </div>
                 </div>
             ),
         },
         {
             key: 'location',
-            label: 'Location',
+            label: 'Property & Location',
             render: (item: any) => (
-                <div className="flex items-center gap-2">
-                    <MapPin className="w-4 h-4 text-slate-400" />
-                    <span className="text-sm text-slate-600 dark:text-slate-400">{item.location}</span>
+                <div className="min-w-0">
+                    <div className="flex items-center gap-1">
+                        <Building className="w-3 h-3 text-slate-400 flex-shrink-0" />
+                        <p className="text-sm text-slate-900 dark:text-white truncate">
+                            {item.property}
+                        </p>
+                    </div>
+                    <div className="flex items-center gap-1 mt-1">
+                        <Home className="w-3 h-3 text-slate-400 flex-shrink-0" />
+                        <p className="text-xs text-slate-600 dark:text-slate-400 truncate">
+                            {item.room_unit}
+                        </p>
+                    </div>
+                    <div className="flex items-center gap-1 mt-1">
+                        <MapPin className="w-3 h-3 text-slate-400 flex-shrink-0" />
+                        <p className="text-xs text-slate-600 dark:text-slate-400 truncate">
+                            Current: {item.current_location}
+                        </p>
+                    </div>
                 </div>
             ),
         },
         {
-            key: 'purchaseDate',
-            label: 'Purchase Date',
-            sortable: true,
+            key: 'category',
+            label: 'Category',
             render: (item: any) => (
-                <div className="flex items-center gap-2">
-                    <Calendar className="w-4 h-4 text-slate-400" />
-                    <span className="text-sm text-slate-600 dark:text-slate-400">{formatDate(item.purchaseDate)}</span>
-                </div>
+                <Badge variant="info" size="sm">
+                    {item.category}
+                </Badge>
             ),
         },
         {
             key: 'value',
-            label: 'Value',
-            render: (item: any) => (
-                <div>
-                    <p className="text-sm font-semibold text-slate-900 dark:text-white">
-                        {formatCurrency(item.currentValue)}
-                    </p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">
-                        Purchase: {formatCurrency(item.purchasePrice)}
-                    </p>
-                </div>
-            ),
-        },
-        {
-            key: 'depreciation',
-            label: 'Depreciation',
+            label: 'Purchase Price',
             sortable: true,
             render: (item: any) => (
-                <span className="text-sm font-medium text-red-600 dark:text-red-400">
-                    {calculateDepreciation(item.purchasePrice, item.currentValue)}%
-                </span>
+                <div className="text-sm font-semibold text-slate-900 dark:text-white">
+                    {formatCurrencyShort(item.purchase_price)}
+                </div>
             ),
         },
         {
             key: 'condition',
             label: 'Condition',
+            sortable: true,
             render: (item: any) => (
                 <Badge variant={getConditionBadge(item.condition)} dot>
                     {item.condition}
@@ -216,112 +190,200 @@ export default function AssetPage() {
             ),
         },
         {
-            key: 'serialNumber',
-            label: 'Serial #',
-            render: (item: any) => (
-                <span className="text-sm font-mono text-slate-600 dark:text-slate-400">{item.serialNumber}</span>
-            ),
-        },
-        {
             key: 'actions',
             label: 'Actions',
             render: (item: any) => (
                 <div className="flex items-center gap-2">
-                    <Button size="sm" variant="ghost"><Edit className="w-4 h-4" /></Button>
-                    <Button size="sm" variant="ghost"><Trash2 className="w-4 h-4 text-red-600" /></Button>
+                    <Button size="sm" variant="ghost" title="Move asset">
+                        <Move className="w-4 h-4" />
+                    </Button>
+                    <Button size="sm" variant="ghost" onClick={() => handleEdit(item)}>
+                        <Edit className="w-4 h-4" />
+                    </Button>
+                    <Button size="sm" variant="ghost" onClick={() => handleDelete(item.id)}>
+                        <Trash2 className="w-4 h-4 text-red-600" />
+                    </Button>
                 </div>
             ),
         },
     ];
 
-    const totalValue = assets.reduce((sum, a) => sum + a.currentValue, 0);
-    const totalPurchase = assets.reduce((sum, a) => sum + a.purchasePrice, 0);
+    // Handlers
+    const handleFormSubmit = (data: AssetFormData) => {
+        if (editingAsset) {
+            setAssets(assets.map(a =>
+                a.id === editingAsset.id
+                    ? {
+                        ...a,
+                        ...data,
+                        // Ensure all fields from data are included
+                        property: data.property,
+                        room_unit: data.room_unit,
+                        name: data.name,
+                        current_location: data.current_location,
+                        category: data.category,
+                        condition: data.condition,
+                        purchase_date: data.purchase_date,
+                        purchase_price: data.purchase_price,
+                        notes: data.notes,
+                    }
+                    : a
+            ));
+        } else {
+            const newAsset = {
+                id: Date.now().toString(),
+                number: `AST-${String(assets.length + 1).padStart(3, '0')}`,
+                property: data.property,
+                room_unit: data.room_unit,
+                name: data.name,
+                current_location: data.current_location,
+                category: data.category,
+                condition: data.condition,
+                purchase_date: data.purchase_date,
+                purchase_price: data.purchase_price,
+                notes: data.notes,
+            };
+            setAssets([newAsset, ...assets]);
+        }
+        setEditingAsset(null);
+    };
+
+    const handleEdit = (asset: any) => {
+        setEditingAsset(asset);
+        setIsFormOpen(true);
+    };
+
+    const handleDelete = (id: string) => {
+        if (confirm('Are you sure you want to delete this asset?')) {
+            setAssets(assets.filter(a => a.id !== id));
+        }
+    };
+
+    const handleAddNew = () => {
+        setEditingAsset(null);
+        setIsFormOpen(true);
+    };
+
+    const handleCloseForm = () => {
+        setIsFormOpen(false);
+        setEditingAsset(null);
+    };
+
+    // Filter assets
+    const filteredAssets = assets.filter(asset => {
+        const matchSearch = asset.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            asset.number.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            asset.current_location.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchProperty = filterProperty === 'all' || asset.property === filterProperty;
+        const matchStatus = filterStatus === 'all' || asset.condition === filterStatus;
+        return matchSearch && matchProperty && matchStatus;
+    });
+
+    // Stats
+    const totalAssets = assets.length;
+    const goodCondition = assets.filter(a => a.condition === 'Excellent' || a.condition === 'Good').length;
+    const needsAttention = assets.filter(a => a.condition === 'Poor' || a.condition === 'Needs Repair').length;
+    const totalValue = assets.reduce((sum, a) => sum + a.purchase_price, 0);
 
     return (
         <div className="p-4 md:p-6 space-y-4 md:space-y-6 pb-24 md:pb-6">
+            {/* Header */}
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                     <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white">
                         Assets
                     </h1>
                     <p className="text-sm md:text-base text-slate-600 dark:text-slate-400 mt-1">
-                        Manage property assets and equipment
+                        Track property assets and their locations
                     </p>
                 </div>
-                <Button className="w-full sm:w-auto" onClick={() => setIsFormOpen(true)}>
+                <Button className="w-full sm:w-auto" onClick={handleAddNew}>
                     <Plus className="w-5 h-5" />
                     Add Asset
                 </Button>
             </div>
 
+            {/* Stats Cards */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
                 <Card>
                     <CardContent className="p-3 md:p-4">
                         <div className="flex items-center justify-between">
                             <div className="min-w-0 flex-1">
-                                <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 truncate">Total Assets</p>
+                                <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 truncate">
+                                    Total Assets
+                                </p>
                                 <p className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white mt-1 truncate">
-                                    {assets.length}
+                                    {totalAssets}
                                 </p>
                             </div>
-                            <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center flex-shrink-0 ml-2">
-                                <Package className="w-5 h-5 md:w-6 md:h-6 text-amber-600 dark:text-amber-400" />
+                            <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center flex-shrink-0 ml-2">
+                                <Package className="w-5 h-5 md:w-6 md:h-6 text-slate-600 dark:text-slate-400" />
                             </div>
                         </div>
                     </CardContent>
                 </Card>
+
                 <Card>
                     <CardContent className="p-3 md:p-4">
                         <div className="flex items-center justify-between">
                             <div className="min-w-0 flex-1">
-                                <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 truncate">Current Value</p>
-                                <p className="text-base md:text-xl font-bold text-emerald-600 dark:text-emerald-400 mt-1 truncate">
-                                    {formatCurrency(totalValue).substring(0, 12)}
+                                <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 truncate">
+                                    Good Condition
+                                </p>
+                                <p className="text-xl md:text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1 truncate">
+                                    {goodCondition}
                                 </p>
                             </div>
                             <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center flex-shrink-0 ml-2">
-                                <DollarSign className="w-5 h-5 md:w-6 md:h-6 text-emerald-600 dark:text-emerald-400" />
+                                <CheckCircle className="w-5 h-5 md:w-6 md:h-6 text-emerald-600 dark:text-emerald-400" />
                             </div>
                         </div>
                     </CardContent>
                 </Card>
+
                 <Card>
                     <CardContent className="p-3 md:p-4">
                         <div className="flex items-center justify-between">
                             <div className="min-w-0 flex-1">
-                                <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 truncate">Good Condition</p>
-                                <p className="text-xl md:text-2xl font-bold text-blue-600 dark:text-blue-400 mt-1 truncate">
-                                    {assets.filter(a => a.condition === 'Good' || a.condition === 'Excellent').length}
+                                <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 truncate">
+                                    Needs Attention
+                                </p>
+                                <p className="text-xl md:text-2xl font-bold text-amber-600 dark:text-amber-400 mt-1 truncate">
+                                    {needsAttention}
                                 </p>
                             </div>
-                            <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0 ml-2">
-                                <CheckCircle className="w-5 h-5 md:w-6 md:h-6 text-blue-600 dark:text-blue-400" />
+                            <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center flex-shrink-0 ml-2">
+                                <AlertCircle className="w-5 h-5 md:w-6 md:h-6 text-amber-600 dark:text-amber-400" />
                             </div>
                         </div>
                     </CardContent>
                 </Card>
+
                 <Card>
                     <CardContent className="p-3 md:p-4">
                         <div className="flex items-center justify-between">
                             <div className="min-w-0 flex-1">
-                                <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 truncate">Needs Repair</p>
-                                <p className="text-xl md:text-2xl font-bold text-red-600 dark:text-red-400 mt-1 truncate">
-                                    {assets.filter(a => a.condition === 'Needs Repair' || a.condition === 'Poor').length}
+                                <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 truncate">
+                                    Total Value
+                                </p>
+                                <p className="text-base md:text-xl font-bold text-purple-600 dark:text-purple-400 mt-1 truncate">
+                                    {formatCurrencyShort(totalValue)}
                                 </p>
                             </div>
-                            <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-red-100 dark:bg-red-900/30 flex items-center justify-center flex-shrink-0 ml-2">
-                                <AlertCircle className="w-5 h-5 md:w-6 md:h-6 text-red-600 dark:text-red-400" />
+                            <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center flex-shrink-0 ml-2">
+                                <DollarSign className="w-5 h-5 md:w-6 md:h-6 text-purple-600 dark:text-purple-400" />
                             </div>
                         </div>
                     </CardContent>
                 </Card>
             </div>
 
+            {/* Search & Filters */}
             <Card>
                 <CardContent className="p-3 md:p-4">
                     <div className="space-y-3">
                         <Input
-                            placeholder="Search assets..."
+                            placeholder="Search by name, number, or location..."
                             leftIcon={<Search className="w-5 h-5" />}
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
@@ -335,67 +397,101 @@ export default function AssetPage() {
                             {showFilters ? 'Hide' : 'Show'} Filters
                         </Button>
                         <div className={`grid grid-cols-1 gap-3 md:grid-cols-2 ${showFilters ? 'block' : 'hidden md:grid'}`}>
-                            <Select options={categoryOptions} value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)} />
-                            <Select options={conditionOptions} value={filterCondition} onChange={(e) => setFilterCondition(e.target.value)} />
+                            <Select
+                                options={propertyOptions}
+                                value={filterProperty}
+                                onChange={(e) => setFilterProperty(e.target.value)}
+                            />
+                            <Select
+                                options={statusOptions}
+                                value={filterStatus}
+                                onChange={(e) => setFilterStatus(e.target.value)}
+                            />
                         </div>
                     </div>
                 </CardContent>
             </Card>
 
+            {/* Mobile Cards */}
             <div className="block md:hidden space-y-3">
-                {assets.map((asset) => (
+                {filteredAssets.map((asset) => (
                     <Card key={asset.id} hover>
                         <CardContent className="p-4">
-                            <div className="flex items-start justify-between mb-3">
-                                <div className="flex items-center gap-3 flex-1 min-w-0">
-                                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center flex-shrink-0">
-                                        <Package className="w-5 h-5 text-white" />
-                                    </div>
-                                    <div className="min-w-0 flex-1">
-                                        <p className="font-semibold text-slate-900 dark:text-white truncate">{asset.name}</p>
-                                        <p className="text-sm text-slate-500 dark:text-slate-400">{asset.category}</p>
+                            <div className="flex items-start gap-3 mb-3">
+                                <div className="flex-1 min-w-0">
+                                    <h3 className="font-semibold text-slate-900 dark:text-white truncate">
+                                        {asset.name}
+                                    </h3>
+                                    <p className="text-xs text-slate-600 dark:text-slate-400">
+                                        {asset.number}
+                                    </p>
+                                    <div className="flex gap-2 mt-1">
+                                        <Badge variant="info" size="sm">{asset.category}</Badge>
+                                        <Badge variant={getConditionBadge(asset.condition)} dot size="sm">
+                                            {asset.condition}
+                                        </Badge>
                                     </div>
                                 </div>
-                                <Badge variant={getConditionBadge(asset.condition)} dot size="sm">
-                                    {asset.condition}
-                                </Badge>
                             </div>
 
-                            <div className="space-y-2">
-                                <div className="flex items-center justify-between text-sm">
-                                    <span className="text-slate-600 dark:text-slate-400">Location:</span>
-                                    <span className="text-slate-900 dark:text-white">{asset.location}</span>
+                            <div className="space-y-2 mb-3 text-sm">
+                                <div className="flex items-start gap-2">
+                                    <Building className="w-4 h-4 text-slate-400 flex-shrink-0 mt-0.5" />
+                                    <div className="min-w-0 flex-1">
+                                        <p className="text-slate-900 dark:text-white font-medium truncate">
+                                            {asset.property}
+                                        </p>
+                                        <p className="text-xs text-slate-600 dark:text-slate-400 truncate">
+                                            {asset.room_unit}
+                                        </p>
+                                    </div>
                                 </div>
-                                <div className="flex items-center justify-between text-sm">
-                                    <span className="text-slate-600 dark:text-slate-400">Current Value:</span>
-                                    <span className="font-semibold text-emerald-600 dark:text-emerald-400">
-                                        {formatCurrency(asset.currentValue)}
-                                    </span>
+                                <div className="flex items-start gap-2">
+                                    <MapPin className="w-4 h-4 text-slate-400 flex-shrink-0 mt-0.5" />
+                                    <p className="text-slate-900 dark:text-white font-medium truncate">
+                                        {asset.current_location}
+                                    </p>
                                 </div>
-                                <div className="flex items-center justify-between text-sm">
-                                    <span className="text-slate-600 dark:text-slate-400">Depreciation:</span>
-                                    <span className="font-medium text-red-600 dark:text-red-400">
-                                        {calculateDepreciation(asset.purchasePrice, asset.currentValue)}%
-                                    </span>
-                                </div>
-                                <div className="flex items-center justify-between text-sm">
-                                    <span className="text-slate-600 dark:text-slate-400">Serial:</span>
-                                    <span className="font-mono text-xs text-slate-900 dark:text-white">{asset.serialNumber}</span>
-                                </div>
+                            </div>
+
+                            <div className="p-2 bg-purple-50 dark:bg-purple-900/20 rounded mb-3">
+                                <p className="text-xs text-slate-500 dark:text-slate-400">Purchase Price</p>
+                                <p className="font-bold text-purple-600 dark:text-purple-400">
+                                    {formatCurrency(asset.purchase_price)}
+                                </p>
+                            </div>
+
+                            {asset.notes && (
+                                <p className="text-xs text-slate-600 dark:text-slate-400 mb-3 italic">
+                                    {asset.notes}
+                                </p>
+                            )}
+
+                            <div className="flex gap-2">
+                                <Button size="sm" variant="outline" className="flex-1" onClick={() => handleEdit(asset)}>
+                                    <Edit className="w-4 h-4 mr-1" />
+                                    Edit
+                                </Button>
+                                <Button size="sm" variant="outline" onClick={() => handleDelete(asset.id)}>
+                                    <Trash2 className="w-4 h-4 text-red-600" />
+                                </Button>
                             </div>
                         </CardContent>
                     </Card>
                 ))}
             </div>
 
+            {/* Desktop Table */}
             <div className="hidden md:block">
-                <Table data={assets} columns={columns} />
+                <Table data={filteredAssets} columns={columns} />
             </div>
 
+            {/* Add/Edit Form */}
             <AddAssetForm
                 isOpen={isFormOpen}
-                onClose={() => setIsFormOpen(false)}
+                onClose={handleCloseForm}
                 onSubmit={handleFormSubmit}
+                editData={editingAsset}
             />
         </div>
     );

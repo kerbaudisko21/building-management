@@ -2,130 +2,251 @@
 
 import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
+import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
 import Table from '@/components/ui/Table';
 import AddContractForm, { ContractFormData } from '@/components/forms/AddContractForm';
-import { FileText, User, Home, Plus, Calendar, DollarSign, Search, Filter } from 'lucide-react';
+import { formatCurrency, formatCurrencyShort } from '@/utils/currency';
+import { formatDate, getDaysBetween, formatCountdown } from '@/utils/date';
+import {
+    FileText,
+    Plus,
+    Search,
+    Filter,
+    User,
+    Building,
+    Home,
+    Calendar,
+    DollarSign,
+    Clock,
+    CheckCircle,
+    AlertCircle,
+    Edit,
+    Trash2,
+    Download,
+} from 'lucide-react';
 
 export default function ContractsPage() {
-    const [isFormOpen, setIsFormOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [showFilters, setShowFilters] = useState(false);
     const [filterStatus, setFilterStatus] = useState('all');
-
-    const tenants = [
-        { id: '1', name: 'John Doe' },
-        { id: '2', name: 'Jane Smith' },
-    ];
-
-    const rooms = [
-        { id: '1', name: 'Room 201' },
-        { id: '2', name: 'Room 202' },
-    ];
+    const [filterRentType, setFilterRentType] = useState('all');
+    const [isFormOpen, setIsFormOpen] = useState(false);
+    const [editingContract, setEditingContract] = useState<any>(null);
 
     const [contracts, setContracts] = useState([
         {
             id: '1',
-            tenantName: 'John Doe',
-            roomName: 'Room 201',
-            startDate: '2024-01-01',
-            endDate: '2024-12-31',
-            monthlyRent: 5000000,
-            status: 'active',
-            daysRemaining: 180,
+            number: 'CTR-2024-001',
+            name_customer: 'John Doe',
+            name_owner: 'PT Properti Indah',
+            property: 'Menteng Residence',
+            room_unit: 'Unit 305-A',
+            date_check_in: '2024-01-15',
+            date_check_out: '2025-01-14',
+            rent_type: 'yearly',
+            days_remaining: 366,
+            amount_rent: 50000000,
+            status: 'Active',
         },
         {
             id: '2',
-            tenantName: 'Jane Smith',
-            roomName: 'Room 301',
-            startDate: '2024-06-01',
-            endDate: '2024-11-30',
-            monthlyRent: 4500000,
-            status: 'expiring',
-            daysRemaining: 14,
+            number: 'CTR-2024-002',
+            name_customer: 'Sarah Wilson',
+            name_owner: 'PT Properti Indah',
+            property: 'BSD City Apartment',
+            room_unit: 'Unit 201-B',
+            date_check_in: '2024-02-01',
+            date_check_out: '2024-08-01',
+            rent_type: 'monthly',
+            days_remaining: 183,
+            amount_rent: 7000000,
+            status: 'Active',
+        },
+        {
+            id: '3',
+            number: 'CTR-2024-003',
+            name_customer: 'Michael Chen',
+            name_owner: 'Budi Santoso',
+            property: 'Kemang Suites',
+            room_unit: 'Unit 502-C',
+            date_check_in: '2024-01-20',
+            date_check_out: '2024-01-25',
+            rent_type: 'daily',
+            days_remaining: 0,
+            amount_rent: 500000,
+            status: 'Completed',
+        },
+        {
+            id: '4',
+            number: 'CTR-2023-098',
+            name_customer: 'Lisa Wong',
+            name_owner: 'PT Properti Indah',
+            property: 'Sudirman Park',
+            room_unit: 'Unit 104-A',
+            date_check_in: '2023-06-01',
+            date_check_out: '2024-01-10',
+            rent_type: 'monthly',
+            days_remaining: -3,
+            amount_rent: 5500000,
+            status: 'Expired',
         },
     ]);
 
-    const handleSubmit = (data: ContractFormData) => {
-        const tenant = tenants.find(t => t.id === data.tenantId);
-        const room = rooms.find(r => r.id === data.roomId);
+    const statusOptions = [
+        { value: 'all', label: 'All Status' },
+        { value: 'Active', label: 'Active' },
+        { value: 'Completed', label: 'Completed' },
+        { value: 'Expired', label: 'Expired' },
+        { value: 'Cancelled', label: 'Cancelled' },
+    ];
 
-        const start = new Date(data.startDate);
-        const end = new Date(data.endDate);
-        const today = new Date();
-        const daysRemaining = Math.ceil((end.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-
-        const newContract = {
-            id: Date.now().toString(),
-            tenantName: tenant?.name || 'Unknown',
-            roomName: room?.name || 'Unknown',
-            startDate: data.startDate,
-            endDate: data.endDate,
-            monthlyRent: data.monthlyRent,
-            status: daysRemaining < 30 ? 'expiring' : 'active',
-            daysRemaining,
-        };
-
-        setContracts([...contracts, newContract]);
-    };
+    const rentTypeOptions = [
+        { value: 'all', label: 'All Rent Types' },
+        { value: 'flexible', label: 'Flexible' },
+        { value: 'daily', label: 'Daily' },
+        { value: 'monthly', label: 'Monthly' },
+        { value: 'yearly', label: 'Yearly' },
+    ];
 
     const getStatusBadge = (status: string) => {
-        const config: Record<string, any> = {
-            active: { variant: 'success', label: 'Active' },
-            expiring: { variant: 'warning', label: 'Expiring Soon' },
-            expired: { variant: 'danger', label: 'Expired' },
+        const variants: Record<string, any> = {
+            'Active': 'success',
+            'Completed': 'info',
+            'Expired': 'danger',
+            'Cancelled': 'default',
         };
-        const s = config[status] || config.active;
-        return <Badge variant={s.variant}>{s.label}</Badge>;
+        return variants[status] || 'default';
+    };
+
+    const getRentTypeBadge = (rentType: string) => {
+        const variants: Record<string, any> = {
+            'flexible': 'purple',
+            'daily': 'info',
+            'monthly': 'success',
+            'yearly': 'default',
+        };
+        return variants[rentType] || 'default';
+    };
+
+    const getRentTypeLabel = (rentType: string) => {
+        const labels: Record<string, string> = {
+            'flexible': 'Flexible',
+            'daily': 'Daily',
+            'monthly': 'Monthly',
+            'yearly': 'Yearly',
+        };
+        return labels[rentType] || rentType;
+    };
+
+    const getDaysRemainingColor = (days: number) => {
+        if (days < 0) return 'text-red-600 dark:text-red-400';
+        if (days <= 7) return 'text-amber-600 dark:text-amber-400';
+        if (days <= 30) return 'text-blue-600 dark:text-blue-400';
+        return 'text-emerald-600 dark:text-emerald-400';
     };
 
     const columns = [
         {
-            key: 'tenant',
-            label: 'Tenant & Room',
+            key: 'number',
+            label: 'Contract Info',
             sortable: true,
             render: (item: any) => (
                 <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center">
                         <FileText className="w-5 h-5 text-white" />
                     </div>
+                    <div className="min-w-0">
+                        <p className="font-semibold text-slate-900 dark:text-white truncate">
+                            {item.number}
+                        </p>
+                        <p className="text-xs text-slate-600 dark:text-slate-400">
+                            {formatDate(item.date_check_in)}
+                        </p>
+                    </div>
+                </div>
+            ),
+        },
+        {
+            key: 'parties',
+            label: 'Customer & Owner',
+            render: (item: any) => (
+                <div className="text-xs space-y-1">
                     <div>
-                        <p className="font-semibold text-slate-900 dark:text-white">{item.tenantName}</p>
-                        <p className="text-sm text-slate-500 dark:text-slate-400">{item.roomName}</p>
+                        <p className="text-slate-500 dark:text-slate-400">Customer:</p>
+                        <p className="text-slate-900 dark:text-white font-medium truncate">
+                            {item.name_customer}
+                        </p>
+                    </div>
+                    <div>
+                        <p className="text-slate-500 dark:text-slate-400">Owner:</p>
+                        <p className="text-slate-900 dark:text-white font-medium truncate">
+                            {item.name_owner}
+                        </p>
+                    </div>
+                </div>
+            ),
+        },
+        {
+            key: 'property',
+            label: 'Property & Unit',
+            render: (item: any) => (
+                <div className="min-w-0">
+                    <div className="flex items-center gap-1">
+                        <Building className="w-3 h-3 text-slate-400 flex-shrink-0" />
+                        <p className="text-sm text-slate-900 dark:text-white truncate">
+                            {item.property}
+                        </p>
+                    </div>
+                    <div className="flex items-center gap-1 mt-1">
+                        <Home className="w-3 h-3 text-slate-400 flex-shrink-0" />
+                        <p className="text-xs text-slate-600 dark:text-slate-400 truncate">
+                            {item.room_unit}
+                        </p>
                     </div>
                 </div>
             ),
         },
         {
             key: 'period',
-            label: 'Contract Period',
+            label: 'Period & Type',
             render: (item: any) => (
-                <div className="text-sm">
-                    <p className="text-slate-900 dark:text-white">{item.startDate}</p>
-                    <p className="text-slate-500 dark:text-slate-400">to {item.endDate}</p>
+                <div>
+                    <Badge variant={getRentTypeBadge(item.rent_type)} size="sm">
+                        {getRentTypeLabel(item.rent_type)}
+                    </Badge>
+                    <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
+                        {formatDate(item.date_check_in)} - {formatDate(item.date_check_out)}
+                    </p>
                 </div>
             ),
         },
         {
-            key: 'monthlyRent',
-            label: 'Monthly Rent',
+            key: 'amount',
+            label: 'Amount',
             sortable: true,
             render: (item: any) => (
-                <div className="font-semibold text-slate-900 dark:text-white">
-                    Rp {item.monthlyRent.toLocaleString('id-ID')}
+                <div className="text-sm font-semibold text-slate-900 dark:text-white">
+                    {formatCurrencyShort(item.amount_rent)}
                 </div>
             ),
         },
         {
-            key: 'daysRemaining',
+            key: 'remaining',
             label: 'Days Remaining',
             sortable: true,
             render: (item: any) => (
-                <div className={`font-semibold ${item.daysRemaining < 30 ? 'text-amber-600' : 'text-emerald-600'}`}>
-                    {item.daysRemaining} days
+                <div>
+                    <p className={`text-sm font-bold ${getDaysRemainingColor(item.days_remaining)}`}>
+                        {item.days_remaining < 0
+                            ? `${Math.abs(item.days_remaining)} days overdue`
+                            : item.days_remaining === 0
+                                ? 'Ending today'
+                                : `${item.days_remaining} days`
+                        }
+                    </p>
                 </div>
             ),
         },
@@ -133,86 +254,187 @@ export default function ContractsPage() {
             key: 'status',
             label: 'Status',
             sortable: true,
-            render: (item: any) => getStatusBadge(item.status),
+            render: (item: any) => (
+                <Badge variant={getStatusBadge(item.status)} dot>
+                    {item.status}
+                </Badge>
+            ),
+        },
+        {
+            key: 'actions',
+            label: 'Actions',
+            render: (item: any) => (
+                <div className="flex items-center gap-2">
+                    <Button size="sm" variant="ghost" title="Download contract">
+                        <Download className="w-4 h-4" />
+                    </Button>
+                    <Button size="sm" variant="ghost" onClick={() => handleEdit(item)}>
+                        <Edit className="w-4 h-4" />
+                    </Button>
+                    <Button size="sm" variant="ghost" onClick={() => handleDelete(item.id)}>
+                        <Trash2 className="w-4 h-4 text-red-600" />
+                    </Button>
+                </div>
+            ),
         },
     ];
 
+    // Handlers
+    const handleFormSubmit = (data: ContractFormData) => {
+        if (editingContract) {
+            setContracts(contracts.map(c =>
+                c.id === editingContract.id
+                    ? { ...c, ...data }
+                    : c
+            ));
+        } else {
+            const newContract = {
+                id: Date.now().toString(),
+                number: `CTR-${new Date().getFullYear()}-${String(contracts.length + 1).padStart(3, '0')}`,
+                ...data,
+                status: 'Active',
+            };
+            setContracts([newContract, ...contracts]);
+        }
+        setEditingContract(null);
+    };
+
+    const handleEdit = (contract: any) => {
+        setEditingContract(contract);
+        setIsFormOpen(true);
+    };
+
+    const handleDelete = (id: string) => {
+        if (confirm('Are you sure you want to delete this contract?')) {
+            setContracts(contracts.filter(c => c.id !== id));
+        }
+    };
+
+    const handleAddNew = () => {
+        setEditingContract(null);
+        setIsFormOpen(true);
+    };
+
+    const handleCloseForm = () => {
+        setIsFormOpen(false);
+        setEditingContract(null);
+    };
+
+    // Filter contracts
+    const filteredContracts = contracts.filter(contract => {
+        const matchSearch = contract.number.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            contract.name_customer.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            contract.property.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchStatus = filterStatus === 'all' || contract.status === filterStatus;
+        const matchRentType = filterRentType === 'all' || contract.rent_type === filterRentType;
+        return matchSearch && matchStatus && matchRentType;
+    });
+
+    // Stats
+    const totalContracts = contracts.length;
+    const activeContracts = contracts.filter(c => c.status === 'Active').length;
+    const expiringSoon = contracts.filter(c => c.status === 'Active' && c.days_remaining <= 30 && c.days_remaining > 0).length;
+    const totalRevenue = contracts.filter(c => c.status === 'Active').reduce((sum, c) => sum + c.amount_rent, 0);
+
     return (
-        <div className="p-4 md:p-6 space-y-6 pb-24 md:pb-6">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div className="p-4 md:p-6 space-y-4 md:space-y-6 pb-24 md:pb-6">
+            {/* Header */}
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                    <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white">Contracts</h1>
+                    <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white">
+                        Contracts
+                    </h1>
                     <p className="text-sm md:text-base text-slate-600 dark:text-slate-400 mt-1">
-                        Manage tenant contracts and agreements
+                        Manage rental contracts and agreements
                     </p>
                 </div>
-                <Button onClick={() => setIsFormOpen(true)}>
+                <Button className="w-full sm:w-auto" onClick={handleAddNew}>
                     <Plus className="w-5 h-5" />
                     New Contract
                 </Button>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {/* Stats Cards */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
                 <Card>
-                    <CardContent className="p-4">
+                    <CardContent className="p-3 md:p-4">
                         <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-sm text-slate-600 dark:text-slate-400">Total</p>
-                                <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1">{contracts.length}</p>
+                            <div className="min-w-0 flex-1">
+                                <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 truncate">
+                                    Total Contracts
+                                </p>
+                                <p className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white mt-1 truncate">
+                                    {totalContracts}
+                                </p>
                             </div>
-                            <FileText className="w-8 h-8 text-indigo-600" />
+                            <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center flex-shrink-0 ml-2">
+                                <FileText className="w-5 h-5 md:w-6 md:h-6 text-slate-600 dark:text-slate-400" />
+                            </div>
                         </div>
                     </CardContent>
                 </Card>
 
                 <Card>
-                    <CardContent className="p-4">
+                    <CardContent className="p-3 md:p-4">
                         <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-sm text-slate-600 dark:text-slate-400">Active</p>
-                                <p className="text-2xl font-bold text-emerald-600 mt-1">
-                                    {contracts.filter(c => c.status === 'active').length}
+                            <div className="min-w-0 flex-1">
+                                <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 truncate">
+                                    Active
+                                </p>
+                                <p className="text-xl md:text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1 truncate">
+                                    {activeContracts}
                                 </p>
                             </div>
-                            <FileText className="w-8 h-8 text-emerald-600" />
+                            <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center flex-shrink-0 ml-2">
+                                <CheckCircle className="w-5 h-5 md:w-6 md:h-6 text-emerald-600 dark:text-emerald-400" />
+                            </div>
                         </div>
                     </CardContent>
                 </Card>
 
                 <Card>
-                    <CardContent className="p-4">
+                    <CardContent className="p-3 md:p-4">
                         <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-sm text-slate-600 dark:text-slate-400">Expiring</p>
-                                <p className="text-2xl font-bold text-amber-600 mt-1">
-                                    {contracts.filter(c => c.status === 'expiring').length}
+                            <div className="min-w-0 flex-1">
+                                <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 truncate">
+                                    Expiring Soon
+                                </p>
+                                <p className="text-xl md:text-2xl font-bold text-amber-600 dark:text-amber-400 mt-1 truncate">
+                                    {expiringSoon}
                                 </p>
                             </div>
-                            <FileText className="w-8 h-8 text-amber-600" />
+                            <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center flex-shrink-0 ml-2">
+                                <AlertCircle className="w-5 h-5 md:w-6 md:h-6 text-amber-600 dark:text-amber-400" />
+                            </div>
                         </div>
                     </CardContent>
                 </Card>
 
                 <Card>
-                    <CardContent className="p-4">
+                    <CardContent className="p-3 md:p-4">
                         <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-sm text-slate-600 dark:text-slate-400">Revenue</p>
-                                <p className="text-lg font-bold text-blue-600 mt-1">
-                                    {(contracts.reduce((sum, c) => sum + c.monthlyRent, 0) / 1000000).toFixed(0)}M
+                            <div className="min-w-0 flex-1">
+                                <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 truncate">
+                                    Total Revenue
+                                </p>
+                                <p className="text-base md:text-xl font-bold text-purple-600 dark:text-purple-400 mt-1 truncate">
+                                    {formatCurrencyShort(totalRevenue)}
                                 </p>
                             </div>
-                            <DollarSign className="w-8 h-8 text-blue-600" />
+                            <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center flex-shrink-0 ml-2">
+                                <DollarSign className="w-5 h-5 md:w-6 md:h-6 text-purple-600 dark:text-purple-400" />
+                            </div>
                         </div>
                     </CardContent>
                 </Card>
             </div>
 
+            {/* Search & Filters */}
             <Card>
                 <CardContent className="p-3 md:p-4">
                     <div className="space-y-3">
                         <Input
-                            placeholder="Search contracts..."
+                            placeholder="Search by contract number, customer, or property..."
                             leftIcon={<Search className="w-5 h-5" />}
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
@@ -225,30 +447,114 @@ export default function ContractsPage() {
                             <Filter className="w-4 h-4" />
                             {showFilters ? 'Hide' : 'Show'} Filters
                         </Button>
-                        <div className={`grid grid-cols-1 gap-3 ${showFilters ? 'block' : 'hidden md:grid'}`}>
+                        <div className={`grid grid-cols-1 gap-3 md:grid-cols-2 ${showFilters ? 'block' : 'hidden md:grid'}`}>
                             <Select
-                                options={[
-                                    { value: 'all', label: 'All Status' },
-                                    { value: 'active', label: 'Active' },
-                                    { value: 'expiring', label: 'Expiring Soon' },
-                                    { value: 'expired', label: 'Expired' },
-                                ]}
+                                options={statusOptions}
                                 value={filterStatus}
                                 onChange={(e) => setFilterStatus(e.target.value)}
+                            />
+                            <Select
+                                options={rentTypeOptions}
+                                value={filterRentType}
+                                onChange={(e) => setFilterRentType(e.target.value)}
                             />
                         </div>
                     </div>
                 </CardContent>
             </Card>
 
-            <Table data={contracts} columns={columns} />
+            {/* Mobile Cards */}
+            <div className="block md:hidden space-y-3">
+                {filteredContracts.map((contract) => (
+                    <Card key={contract.id} hover>
+                        <CardContent className="p-4">
+                            <div className="flex items-start gap-3 mb-3">
+                                <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center flex-shrink-0">
+                                    <FileText className="w-6 h-6 text-white" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <h3 className="font-semibold text-slate-900 dark:text-white truncate">
+                                        {contract.number}
+                                    </h3>
+                                    <p className="text-xs text-slate-600 dark:text-slate-400">
+                                        {formatDate(contract.date_check_in)}
+                                    </p>
+                                    <div className="flex gap-2 mt-1">
+                                        <Badge variant={getRentTypeBadge(contract.rent_type)} size="sm">
+                                            {getRentTypeLabel(contract.rent_type)}
+                                        </Badge>
+                                        <Badge variant={getStatusBadge(contract.status)} dot size="sm">
+                                            {contract.status}
+                                        </Badge>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="space-y-2 mb-3 text-sm">
+                                <div>
+                                    <p className="text-xs text-slate-500 dark:text-slate-400">Customer:</p>
+                                    <p className="text-slate-900 dark:text-white font-medium">{contract.name_customer}</p>
+                                </div>
+                                <div>
+                                    <p className="text-xs text-slate-500 dark:text-slate-400">Owner:</p>
+                                    <p className="text-slate-900 dark:text-white font-medium">{contract.name_owner}</p>
+                                </div>
+                                <div className="flex items-start gap-2">
+                                    <Building className="w-4 h-4 text-slate-400 flex-shrink-0 mt-0.5" />
+                                    <div className="min-w-0 flex-1">
+                                        <p className="text-slate-900 dark:text-white font-medium truncate">
+                                            {contract.property}
+                                        </p>
+                                        <p className="text-xs text-slate-600 dark:text-slate-400 truncate">
+                                            {contract.room_unit}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-2 mb-3 text-xs">
+                                <div className="p-2 bg-purple-50 dark:bg-purple-900/20 rounded">
+                                    <p className="text-slate-500 dark:text-slate-400">Amount</p>
+                                    <p className="font-bold text-purple-600 dark:text-purple-400">
+                                        {formatCurrency(contract.amount_rent)}
+                                    </p>
+                                </div>
+                                <div className="p-2 bg-slate-50 dark:bg-slate-800/50 rounded">
+                                    <p className="text-slate-500 dark:text-slate-400">Days Left</p>
+                                    <p className={`font-bold ${getDaysRemainingColor(contract.days_remaining)}`}>
+                                        {contract.days_remaining < 0
+                                            ? `${Math.abs(contract.days_remaining)} overdue`
+                                            : contract.days_remaining === 0
+                                                ? 'Ending today'
+                                                : `${contract.days_remaining} days`
+                                        }
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="flex gap-2">
+                                <Button size="sm" variant="outline" className="flex-1" onClick={() => handleEdit(contract)}>
+                                    <Edit className="w-4 h-4 mr-1" />
+                                    Edit
+                                </Button>
+                                <Button size="sm" variant="outline" onClick={() => handleDelete(contract.id)}>
+                                    <Trash2 className="w-4 h-4 text-red-600" />
+                                </Button>
+                            </div>
+                        </CardContent>
+                    </Card>
+                ))}
+            </div>
+
+            <div className="hidden md:block">
+                <Table data={filteredContracts} columns={columns} />
+            </div>
 
             <AddContractForm
                 isOpen={isFormOpen}
-                onClose={() => setIsFormOpen(false)}
-                onSubmit={handleSubmit}
-                tenants={tenants}
-                rooms={rooms}
+                onClose={handleCloseForm}
+                onSubmit={handleFormSubmit}
+                editData={editingContract}
             />
         </div>
     );
