@@ -2,44 +2,65 @@
  * Application-wide constants
  */
 
-export const APP_NAME = "Gatau";
-export const APP_DESCRIPTION = "Building Management System";
+export const APP_NAME = 'Gatau'
+export const APP_DESCRIPTION = 'Building Management System'
 
 export const ROUTES = {
-  DASHBOARD: "/",
-  INVOICES: "/invoices",
-  PROPERTIES: "/properties",
-  ROOMS: "/rooms",
-  BEDS: "/beds",
-  TENANTS: "/tenants",
-  UTILITY_BILLS: "/utility-bills",
-  COMPLAINTS: "/complaints",
-  NOTICES: "/notices",
-  REPORTS: "/reports",
-  ACCOUNT: "/account",
-} as const;
+  HOME: '/',
+  LOGIN: '/login',
+  SIGNUP: '/signup',
+  DASHBOARD: '/dashboard',
+  PROPERTIES: '/dashboard/properties',
+  ROOMS: '/dashboard/rooms',
+  CONTACTS: '/dashboard/contacts',
+  WAITING_LIST: '/dashboard/waiting-list',
+  CONTRACTS: '/dashboard/contracts',
+  INVOICES: '/dashboard/invoices',
+  CASH_IN: '/dashboard/cash-in',
+  CASH_OUT: '/dashboard/cash-out',
+  ASSETS: '/dashboard/assets',
+  MAINTENANCE: '/dashboard/maintenance',
+  TODO: '/dashboard/todo',
+  CALENDAR: '/dashboard/calendar',
+  NOTIFICATIONS: '/dashboard/notifications',
+  SETTINGS: '/dashboard/settings',
+  USERS: '/dashboard/users',
+} as const
+
+export const PUBLIC_ROUTES = [
+  ROUTES.LOGIN,
+  ROUTES.SIGNUP,
+  '/auth',
+] as const
 
 export const THEME = {
-  LIGHT: "light",
-  DARK: "dark",
-} as const;
+  LIGHT: 'light',
+  DARK: 'dark',
+} as const
 
 export const STATUS = {
-  ACTIVE: "active",
-  INACTIVE: "inactive",
-  PENDING: "pending",
-  COMPLETED: "completed",
-} as const;
+  ACTIVE: 'active',
+  INACTIVE: 'inactive',
+  PENDING: 'pending',
+  COMPLETED: 'completed',
+} as const
 
-export const COMPLAINT_STATUS = {
-  OPEN: "open",
-  IN_PROGRESS: "in_progress",
-  RESOLVED: "resolved",
-  CLOSED: "closed",
-} as const;
+export const ROOM_STATUS = {
+  AVAILABLE: 'Available',
+  OCCUPIED: 'Occupied',
+  MAINTENANCE: 'Maintenance',
+  RESERVED: 'Reserved',
+} as const
+
+export const PAYMENT_STATUS = {
+  PAID: 'Paid',
+  PENDING: 'Pending',
+  OVERDUE: 'Overdue',
+} as const
 
 export const PRIORITY = {
-  LOW: "low",
-  MEDIUM: "medium",
-  HIGH: "high",
-} as const;
+  LOW: 'Low',
+  MEDIUM: 'Medium',
+  HIGH: 'High',
+  CRITICAL: 'Critical',
+} as const
