@@ -1,5 +1,18 @@
 import { createClient } from '@/lib/supabase/client'
 
+export interface QueryOptions {
+    orderBy?: string
+    ascending?: boolean
+    limit?: number
+    offset?: number
+    filters?: Record<string, unknown>
+}
+
+export interface ServiceResult<T> {
+    data: T | null
+    error: string | null
+}
+
 /**
  * Generic result type for all service operations
  */
