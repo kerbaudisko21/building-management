@@ -116,7 +116,7 @@ export interface AssetRow {
     current_location: string
     purchase_date?: string | null
     purchase_price: number
-    condition: 'Good' | 'Fair' | 'Poor' | 'New'
+    condition: 'Good' | 'Fair' | 'Poor' | 'New' | 'Excellent' | 'Needs Repair'
     notes?: string
     created_at: string
     updated_at?: string
