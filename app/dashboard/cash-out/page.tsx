@@ -1,6 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState } from 'react'
+import { cashFlowService } from '@/lib/services'
+import { useSupabaseQuery } from '@/lib/hooks/useSupabaseQuery'
+import { formatCurrency, formatDate } from '@/utils'
+import type { CashFlowRow, CashFlowInsert } from '@/types/database'
 import { Card, CardContent } from '@/components/ui/Card';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
@@ -19,78 +23,43 @@ import {
     Edit,
     Trash2,
 } from 'lucide-react';
+import { useToast } from '@/components/ui/Toast'
 
 export default function CashOutPage() {
+    const { toast } = useToast()
     const [searchQuery, setSearchQuery] = useState('');
     const [showFilters, setShowFilters] = useState(false);
     const [isFormOpen, setIsFormOpen] = useState(false);
 
-    const [expenses, setExpenses] = useState([
-        {
-            id: 1,
-            date: '2024-12-08',
-            category: 'Maintenance',
-            description: 'AC Repair - Room 305',
-            amount: 750000,
-            paymentMethod: 'Cash',
-            vendor: 'Cool Air Services',
-            status: 'Paid',
-        },
-        {
-            id: 2,
-            date: '2024-12-07',
-            category: 'Utilities',
-            description: 'Electricity Bill - Building A',
-            amount: 2500000,
-            paymentMethod: 'Bank Transfer',
-            vendor: 'PLN',
-            status: 'Paid',
-        },
-        {
-            id: 3,
-            date: '2024-12-05',
-            category: 'Cleaning',
-            description: 'Monthly Cleaning Service',
-            amount: 1200000,
-            paymentMethod: 'Bank Transfer',
-            vendor: 'Clean Pro',
-            status: 'Paid',
-        },
-        {
-            id: 4,
-            date: '2024-12-10',
-            category: 'Supplies',
-            description: 'Bathroom Supplies Restock',
-            amount: 450000,
-            paymentMethod: 'Cash',
-            vendor: 'SuperMart',
-            status: 'Pending',
-        },
-        {
-            id: 5,
-            date: '2024-12-03',
-            category: 'Salary',
-            description: 'Staff Salary - December',
-            amount: 5000000,
-            paymentMethod: 'Bank Transfer',
-            vendor: 'Staff Payment',
-            status: 'Paid',
-        },
-    ]);
+    const {
+        data: expenseData,
+        loading,
+        error,
+        refetch,
+    } = useSupabaseQuery(() => cashFlowService.getCashOut())
 
-    const handleFormSubmit = (data: CashOutFormData) => {
-        const newExpense = {
-            id: expenses.length + 1,
+    const expenses = expenseData ?? []
+
+
+    const handleFormSubmit = async (data: CashOutFormData) => {
+        const insert: CashFlowInsert = {
             date: data.date,
             category: data.category,
             description: data.description,
+            recipient: data.vendor,
             amount: data.amount,
-            paymentMethod: data.paymentMethod,
-            vendor: data.vendor,
-            status: 'Paid',
-        };
-        setExpenses([newExpense, ...expenses]);
-    };
+            payment_method: data.paymentMethod,
+            reference: '',
+            status: 'Completed',
+            type: 'out',
+            notes: data.notes || '',
+        }
+        await cashFlowService.create(insert)
+        toast.success('Berhasil', 'Pengeluaran berhasil ditambahkan')
+        refetch()
+        setIsFormOpen(false)
+    }
+
 
     const categoryOptions = [
         { value: 'all', label: 'All Categories' },
@@ -108,22 +77,6 @@ export default function CashOutPage() {
         { value: 'cash', label: 'Cash' },
         { value: 'ewallet', label: 'E-Wallet' },
     ];
-
-    const formatCurrency = (amount: number) => {
-        return new Intl.NumberFormat('id-ID', {
-            style: 'currency',
-            currency: 'IDR',
-            minimumFractionDigits: 0,
-        }).format(amount);
-    };
-
-    const formatDate = (dateString: string) => {
-        return new Date(dateString).toLocaleDateString('id-ID', {
-            day: 'numeric',
-            month: 'short',
-            year: 'numeric',
-        });
-    };
 
     const totalExpense = expenses
         .filter(e => e.status === 'Paid')
@@ -156,7 +109,7 @@ export default function CashOutPage() {
                     <p className="text-sm text-slate-900 dark:text-white font-medium">
                         {item.description}
                     </p>
-                    <p className="text-xs text-slate-600 dark:text-slate-400">{item.vendor}</p>
+                    <p className="text-xs text-slate-600 dark:text-slate-400">{item.recipient}</p>
                 </div>
             ),
         },
@@ -174,7 +127,7 @@ export default function CashOutPage() {
             key: 'paymentMethod',
             label: 'Method',
             render: (item: any) => (
-                <Badge variant="default" size="sm">{item.paymentMethod}</Badge>
+                <Badge variant="default" size="sm">{item.payment_method}</Badge>
             ),
         },
         {
@@ -198,6 +151,20 @@ export default function CashOutPage() {
             ),
         },
     ];
+
+    // ─── Loading State ─────────────────────────────────────
+    if (loading) {
+        return (
+            <div className="p-4 md:p-6 lg:p-8">
+                <div className="flex items-center justify-center min-h-[60vh]">
+                    <div className="text-center">
+                        <div className="w-10 h-10 border-3 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+                        <p className="text-sm text-slate-500 dark:text-slate-400">Memuat data...</p>
+                    </div>
+                </div>
+            </div>
+        )
+    }
 
     return (
         <div className="p-4 md:p-6 space-y-4 md:space-y-6 pb-24 md:pb-6">
@@ -287,7 +254,7 @@ export default function CashOutPage() {
                                     <p className="text-sm text-slate-900 dark:text-white font-medium mt-1">
                                         {expense.description}
                                     </p>
-                                    <p className="text-xs text-slate-600 dark:text-slate-400">{expense.vendor}</p>
+                                    <p className="text-xs text-slate-600 dark:text-slate-400">{expense.recipient}</p>
                                 </div>
                                 <Badge variant={expense.status === 'Paid' ? 'success' : 'warning'} dot size="sm">
                                     {expense.status}
@@ -305,7 +272,7 @@ export default function CashOutPage() {
                             </div>
                             <div className="flex items-center justify-between text-sm">
                                 <span className="text-slate-600 dark:text-slate-400">Method:</span>
-                                <Badge variant="default" size="sm">{expense.paymentMethod}</Badge>
+                                <Badge variant="default" size="sm">{expense.payment_method}</Badge>
                             </div>
                         </CardContent>
                     </Card>

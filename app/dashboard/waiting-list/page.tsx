@@ -1,6 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState } from 'react'
+import { waitingListService } from '@/lib/services'
+import { useCrud } from '@/lib/hooks/useSupabaseQuery'
+import type { WaitingListRow, WaitingListInsert, WaitingListUpdate } from '@/types/database'
+import { formatCurrency, formatCurrencyShort, formatDate } from '@/utils'
 import { Card, CardContent } from '@/components/ui/Card';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
@@ -23,73 +27,31 @@ import {
     Edit,
     Trash2,
     UserPlus,
-} from 'lucide-react';
+Loader2, } from 'lucide-react';
+import { useToast } from '@/components/ui/Toast'
 
 export default function WaitingListPage() {
+    const { toast, confirm } = useToast()
     const [searchQuery, setSearchQuery] = useState('');
     const [showFilters, setShowFilters] = useState(false);
     const [filterProperty, setFilterProperty] = useState('all');
     const [filterStatus, setFilterStatus] = useState('all');
     const [isFormOpen, setIsFormOpen] = useState(false);
-    const [editingProspect, setEditingProspect] = useState<any>(null);
+    const [editingProspect, setEditingProspect] = useState<WaitingListRow | null>(null)
 
-    const [prospects, setProspects] = useState([
-        {
-            id: '1',
-            name: 'Amanda Lee',
-            property: 'Menteng Residence',
-            room_unit: 'Studio (35m²)',
-            budget: 5000000,
-            date_entry_plan: '2024-02-15',
-            phone: '+62 817 8888 9999',
-            status: 'New',
-            created_at: '2024-01-10',
-        },
-        {
-            id: '2',
-            name: 'Robert Kim',
-            property: 'BSD City Apartment',
-            room_unit: 'Deluxe (45m²)',
-            budget: 7000000,
-            date_entry_plan: '2024-03-01',
-            phone: '+62 819 5555 4444',
-            status: 'Contacted',
-            created_at: '2024-01-12',
-        },
-        {
-            id: '3',
-            name: 'Lisa Chen',
-            property: 'Kemang Suites',
-            room_unit: 'Suite (60m²)',
-            budget: 10000000,
-            date_entry_plan: '2024-02-20',
-            phone: '+62 856 7777 8888',
-            status: 'Interested',
-            created_at: '2024-01-08',
-        },
-        {
-            id: '4',
-            name: 'David Wong',
-            property: 'Menteng Residence',
-            room_unit: 'Standard (30m²)',
-            budget: 4000000,
-            date_entry_plan: '2024-04-01',
-            phone: '+62 821 3333 4444',
-            status: 'Not Interested',
-            created_at: '2024-01-05',
-        },
-        {
-            id: '5',
-            name: 'Emily Zhang',
-            property: 'Sudirman Park',
-            room_unit: 'Studio (35m²)',
-            budget: 5500000,
-            date_entry_plan: '2024-02-25',
-            phone: '+62 813 6666 7777',
-            status: 'New',
-            created_at: '2024-01-13',
-        },
-    ]);
+    const {
+        items: prospects,
+        loading,
+        error,
+        addItem,
+        updateItem,
+        removeItem,
+        actionLoading,
+    } = useCrud<WaitingListRow, WaitingListInsert, WaitingListUpdate>({
+        service: waitingListService,
+        orderBy: 'created_at',
+    })
+
 
     const propertyOptions = [
         { value: 'all', label: 'All Properties' },
@@ -106,33 +68,6 @@ export default function WaitingListPage() {
         { value: 'Interested', label: 'Interested' },
         { value: 'Not Interested', label: 'Not Interested' },
     ];
-
-    const formatCurrency = (amount: number) => {
-        return new Intl.NumberFormat('id-ID', {
-            style: 'currency',
-            currency: 'IDR',
-            minimumFractionDigits: 0,
-            maximumFractionDigits: 0,
-        }).format(amount);
-    };
-
-    const formatCurrencyShort = (amount: number) => {
-        if (amount >= 1000000) {
-            return `Rp ${(amount / 1000000).toFixed(1)}M`;
-        }
-        if (amount >= 1000) {
-            return `Rp ${(amount / 1000).toFixed(0)}K`;
-        }
-        return `Rp ${amount.toLocaleString('id-ID')}`;
-    };
-
-    const formatDate = (dateString: string) => {
-        return new Date(dateString).toLocaleDateString('id-ID', {
-            day: 'numeric',
-            month: 'short',
-            year: 'numeric',
-        });
-    };
 
     const getDaysUntilEntry = (dateString: string) => {
         const today = new Date();
@@ -184,13 +119,13 @@ export default function WaitingListPage() {
                     <div className="flex items-center gap-1">
                         <Building className="w-3 h-3 text-slate-400 flex-shrink-0" />
                         <p className="text-sm text-slate-900 dark:text-white truncate">
-                            {item.property}
+                            {('—')}
                         </p>
                     </div>
                     <div className="flex items-center gap-1 mt-1">
                         <Home className="w-3 h-3 text-slate-400 flex-shrink-0" />
                         <p className="text-xs text-slate-600 dark:text-slate-400 truncate">
-                            {item.room_unit}
+                            {item.unit_type}
                         </p>
                     </div>
                 </div>
@@ -260,41 +195,33 @@ export default function WaitingListPage() {
         },
     ];
 
-    // Handlers
-    const handleFormSubmit = (data: WaitingListFormData) => {
+    const handleFormSubmit = async (data: WaitingListFormData) => {
         if (editingProspect) {
-            setProspects(prospects.map(p =>
-                p.id === editingProspect.id
-                    ? { ...p, ...data, phone: data.phone || p.phone }
-                    : p
-            ));
+            const updResult = await updateItem(editingProspect.id, data as unknown as WaitingListUpdate)
+            if (updResult.error) toast.error('Gagal mengupdate', updResult.error)
+            else toast.success('Berhasil', 'Data berhasil diupdate')
         } else {
-            const newProspect = {
-                id: Date.now().toString(),
-                name: data.name,
-                property: data.property,
-                room_unit: data.room_unit,
-                budget: data.budget,
-                date_entry_plan: data.date_entry_plan,
-                phone: data.phone,
-                status: 'New',
-                created_at: new Date().toISOString().split('T')[0],
-            };
-            setProspects([newProspect, ...prospects]);
+            const addResult = await addItem({ ...data, unit_type: data.room_unit, source: '', status: 'Waiting' } as unknown as WaitingListInsert)
+            if (addResult.error) toast.error('Gagal menyimpan', addResult.error)
+            else toast.success('Berhasil', 'Data berhasil ditambahkan')
         }
-        setEditingProspect(null);
-    };
+        setEditingProspect(null)
+    }
+
 
     const handleEdit = (prospect: any) => {
         setEditingProspect(prospect);
         setIsFormOpen(true);
     };
 
-    const handleDelete = (id: string) => {
-        if (confirm('Are you sure you want to remove this prospect?')) {
-            setProspects(prospects.filter(p => p.id !== id));
-        }
-    };
+    const handleDelete = async (id: string) => {
+        const yes = await confirm({ title: 'Konfirmasi Hapus', message: 'Apakah kamu yakin ingin menghapus data ini? Tindakan ini tidak bisa dibatalkan.', variant: 'danger' })
+        if (!yes) return
+        const delResult = await removeItem(id)
+        if (delResult.error) toast.error('Gagal menghapus', delResult.error)
+        else toast.success('Berhasil', 'Data berhasil dihapus')
+    }
+
 
     const handleAddNew = () => {
         setEditingProspect(null);
@@ -310,8 +237,8 @@ export default function WaitingListPage() {
     const filteredProspects = prospects.filter(prospect => {
         const matchSearch = prospect.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
             prospect.phone.includes(searchQuery) ||
-            prospect.property.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchProperty = filterProperty === 'all' || prospect.property === filterProperty;
+            ('—').toLowerCase().includes(searchQuery.toLowerCase());
+        const matchProperty = filterProperty === 'all' || ('—') === filterProperty;
         const matchStatus = filterStatus === 'all' || prospect.status === filterStatus;
         return matchSearch && matchProperty && matchStatus;
     });
@@ -324,8 +251,32 @@ export default function WaitingListPage() {
         prospects.reduce((sum, p) => sum + p.budget, 0) / prospects.length
     );
 
+    // ─── Loading State ─────────────────────────────────────
+    if (loading) {
+        return (
+            <div className="p-4 md:p-6 lg:p-8">
+                <div className="flex items-center justify-center min-h-[60vh]">
+                    <div className="text-center">
+                        <div className="w-10 h-10 border-3 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+                        <p className="text-sm text-slate-500 dark:text-slate-400">Memuat data...</p>
+                    </div>
+                </div>
+            </div>
+        )
+    }
+
     return (
         <div className="p-4 md:p-6 space-y-4 md:space-y-6 pb-24 md:pb-6">
+
+            {/* Action Loading Overlay */}
+            {actionLoading && (
+                <div className="fixed inset-0 z-[90] bg-black/20 backdrop-blur-[1px] flex items-center justify-center pointer-events-auto">
+                    <div className="bg-white dark:bg-slate-800 rounded-xl px-6 py-4 shadow-xl flex items-center gap-3">
+                        <div className="w-5 h-5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+                        <span className="text-sm font-medium text-slate-700 dark:text-slate-200">Menyimpan...</span>
+                    </div>
+                </div>
+            )}
             {/* Header */}
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
@@ -483,10 +434,10 @@ export default function WaitingListPage() {
                                         <Building className="w-4 h-4 text-slate-400 flex-shrink-0 mt-0.5" />
                                         <div className="min-w-0 flex-1">
                                             <p className="text-slate-900 dark:text-white font-medium truncate">
-                                                {prospect.property}
+                                                {('—')}
                                             </p>
                                             <p className="text-xs text-slate-600 dark:text-slate-400 truncate">
-                                                {prospect.room_unit}
+                                                {prospect.unit_type}
                                             </p>
                                         </div>
                                     </div>

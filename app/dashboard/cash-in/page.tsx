@@ -16,6 +16,7 @@ import {
     TrendingUp, Plus, Search, Filter, Calendar,
     Eye, Edit, Trash2,
 } from 'lucide-react'
+import { useToast } from '@/components/ui/Toast'
 
 // ─── Constants ───────────────────────────────────────────────
 
@@ -37,6 +38,7 @@ const METHOD_OPTIONS = [
 // ─── Component ───────────────────────────────────────────────
 
 export default function CashInPage() {
+    const { toast } = useToast()
     const [searchQuery, setSearchQuery] = useState('')
     const [showFilters, setShowFilters] = useState(false)
     const [isFormOpen, setIsFormOpen] = useState(false)
@@ -63,7 +65,9 @@ export default function CashInPage() {
         }
 
         await cashFlowService.create(insert)
+        toast.success('Berhasil', 'Transaksi masuk berhasil ditambahkan')
         await refetch()
+        setIsFormOpen(false)
     }
 
     // ─── Derived State ───────────────────────────────────────
@@ -170,6 +174,20 @@ export default function CashInPage() {
     }
 
     // ─── Render ──────────────────────────────────────────────
+
+    // ─── Loading State ─────────────────────────────────────
+    if (loading) {
+        return (
+            <div className="p-4 md:p-6 lg:p-8">
+                <div className="flex items-center justify-center min-h-[60vh]">
+                    <div className="text-center">
+                        <div className="w-10 h-10 border-3 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+                        <p className="text-sm text-slate-500 dark:text-slate-400">Memuat data...</p>
+                    </div>
+                </div>
+            </div>
+        )
+    }
 
     return (
         <div className="p-4 md:p-6 space-y-4 md:space-y-6 pb-24 md:pb-6">

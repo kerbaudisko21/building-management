@@ -1,6 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState } from 'react'
+import { notificationService } from '@/lib/services'
+import { useSupabaseQuery } from '@/lib/hooks/useSupabaseQuery'
+import type { NotificationRow } from '@/types/database'
 import { Card, CardContent } from '@/components/ui/Card';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
@@ -13,88 +16,50 @@ import {
     CheckCircle,
     Trash2,
 } from 'lucide-react';
+import { useToast } from '@/components/ui/Toast'
 
 export default function NotificationsPage() {
-    const [notifications, setNotifications] = useState([
-        {
-            id: 1,
-            type: 'payment',
-            title: 'Payment Received',
-            message: 'John Doe has paid rent for Room 305 - Rp 3,500,000',
-            time: '5 minutes ago',
-            read: false,
-            icon: DollarSign,
-            color: 'emerald',
-        },
-        {
-            id: 2,
-            type: 'maintenance',
-            title: 'Maintenance Request',
-            message: 'New maintenance request from Room 201 - AC not cooling',
-            time: '1 hour ago',
-            read: false,
-            icon: Wrench,
-            color: 'amber',
-        },
-        {
-            id: 3,
-            type: 'contract',
-            title: 'Contract Expiring Soon',
-            message: 'Jane Smith contract for Room 201 expires in 7 days',
-            time: '2 hours ago',
-            read: false,
-            icon: FileText,
-            color: 'red',
-        },
-        {
-            id: 4,
-            type: 'waiting',
-            title: 'New Waiting List Entry',
-            message: 'Alice Johnson added to waiting list for Building A',
-            time: '3 hours ago',
-            read: true,
-            icon: Users,
-            color: 'blue',
-        },
-        {
-            id: 5,
-            type: 'maintenance',
-            title: 'Maintenance Completed',
-            message: 'AC repair in Room 305 has been completed',
-            time: '5 hours ago',
-            read: true,
-            icon: CheckCircle,
-            color: 'emerald',
-        },
-        {
-            id: 6,
-            type: 'payment',
-            title: 'Payment Overdue',
-            message: 'Bob Johnson - Room 102 payment is 5 days overdue',
-            time: '1 day ago',
-            read: true,
-            icon: DollarSign,
-            color: 'red',
-        },
-    ]);
+    const { toast, confirm } = useToast()
+    const {
+        data: notifData,
+        loading,
+        error,
+        refetch,
+    } = useSupabaseQuery(() => notificationService.getAll({ orderBy: 'created_at' }))
 
-    const markAsRead = (id: number) => {
-        setNotifications(prev =>
-            prev.map(notif =>
-                notif.id === id ? { ...notif, read: true } : notif
-            )
-        );
-    };
+    const [localNotifs, setLocalNotifs] = useState<(NotificationRow & { icon?: any; color?: string })[]>([])
+    const notifications = (notifData ?? []).map(n => ({
+        ...n,
+        read: n.is_read,
+        time: new Date(n.created_at).toLocaleString(),
+        icon: n.type === 'success' ? CheckCircle : n.type === 'warning' ? Wrench : n.type === 'error' ? DollarSign : Bell,
+        color: n.type === 'success' ? 'emerald' : n.type === 'warning' ? 'amber' : n.type === 'error' ? 'red' : 'blue',
+    }))
 
-    const markAllAsRead = () => {
-        setNotifications(prev =>
-            prev.map(notif => ({ ...notif, read: true }))
-        );
-    };
 
-    const deleteNotification = (id: number) => {
-        setNotifications(prev => prev.filter(notif => notif.id !== id));
-    };
+    const markAsRead = async (id: string) => {
+        await notificationService.update(id, { is_read: true } as any)
+        toast.info('Ditandai sudah dibaca')
+        refetch()
+    }
+
+
+    const markAllAsRead = async () => {
+        for (const n of notifications.filter(x => !x.read)) {
+            await notificationService.update(n.id, { is_read: true } as any)
+        }
+        refetch()
+    }
+
+
+    const deleteNotification = async (id: string) => {
+            const yes = await confirm({ title: 'Hapus Notifikasi', message: 'Hapus notifikasi ini?', variant: 'danger' })
+            if (!yes) return
+            await notificationService.remove(id)
+            toast.success('Berhasil', 'Notifikasi dihapus')
+            refetch()
+    }
+
 
     const unreadCount = notifications.filter(n => !n.read).length;
 
@@ -107,6 +72,20 @@ export default function NotificationsPage() {
         };
         return colors[color] || colors.blue;
     };
+
+    // ─── Loading State ─────────────────────────────────────
+    if (loading) {
+        return (
+            <div className="p-4 md:p-6 lg:p-8">
+                <div className="flex items-center justify-center min-h-[60vh]">
+                    <div className="text-center">
+                        <div className="w-10 h-10 border-3 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+                        <p className="text-sm text-slate-500 dark:text-slate-400">Memuat data...</p>
+                    </div>
+                </div>
+            </div>
+        )
+    }
 
     return (
         <div className="p-4 md:p-6 space-y-4 md:space-y-6 pb-24 md:pb-6">

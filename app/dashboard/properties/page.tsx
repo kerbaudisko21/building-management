@@ -15,8 +15,9 @@ import {
   Building, Plus, Search, MapPin, Home, Users,
   CheckCircle, Edit, Trash2, Wifi, Car, Droplet,
   Zap, Wind, Shield,
-} from 'lucide-react'
+Loader2, } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
+import { useToast } from '@/components/ui/Toast'
 
 // ─── Constants ───────────────────────────────────────────────
 
@@ -61,6 +62,7 @@ function getOccupancyBarColor(percentage: number): string {
 // ─── Component ───────────────────────────────────────────────
 
 export default function PropertiesPage() {
+    const { toast, confirm } = useToast()
   const [searchQuery, setSearchQuery] = useState('')
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingProperty, setEditingProperty] = useState<PropertyRow | null>(null)
@@ -72,6 +74,7 @@ export default function PropertiesPage() {
     addItem,
     updateItem,
     removeItem,
+    actionLoading,
   } = useCrud<PropertyRow, PropertyInsert, PropertyUpdate>({
     service: propertyService,
     orderBy: 'created_at',
@@ -85,11 +88,11 @@ export default function PropertiesPage() {
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this property?')) return
-    const result = await removeItem(id)
-    if (result.error) {
-      alert('Failed to delete: ' + result.error)
-    }
+    const yes = await confirm({ title: 'Konfirmasi Hapus', message: 'Apakah kamu yakin ingin menghapus data ini? Tindakan ini tidak bisa dibatalkan.', variant: 'danger' })
+        if (!yes) return
+        const result = await removeItem(id)
+        if (result.error) toast.error('Gagal menghapus', result.error)
+        else toast.success('Berhasil', 'Data berhasil dihapus')
   }
 
   const handleAddNew = () => {
@@ -99,9 +102,13 @@ export default function PropertiesPage() {
 
   const handleFormSubmit = async (data: PropertyFormData) => {
     if (editingProperty) {
-      await updateItem(editingProperty.id, data as PropertyUpdate)
+      const updResult = await updateItem(editingProperty.id, data as PropertyUpdate)
+            if (updResult.error) toast.error('Gagal mengupdate', updResult.error)
+            else toast.success('Berhasil', 'Data berhasil diupdate')
     } else {
-      await addItem(data as PropertyInsert)
+      const addResult = await addItem(data as PropertyInsert)
+        if (addResult.error) toast.error('Gagal menyimpan', addResult.error)
+        else toast.success('Berhasil', 'Data berhasil ditambahkan')
     }
     setEditingProperty(null)
   }
@@ -261,6 +268,15 @@ export default function PropertiesPage() {
 
   return (
     <div className="p-4 md:p-6 space-y-4 md:space-y-6 pb-24 md:pb-6">
+      {/* Action Loading Overlay */}
+      {actionLoading && (
+        <div className="fixed inset-0 z-[90] bg-black/20 backdrop-blur-[1px] flex items-center justify-center">
+          <div className="bg-white dark:bg-slate-800 rounded-xl px-6 py-4 shadow-xl flex items-center gap-3">
+            <div className="w-5 h-5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+            <span className="text-sm font-medium text-slate-700 dark:text-slate-200">Menyimpan...</span>
+          </div>
+        </div>
+      )}
       {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>

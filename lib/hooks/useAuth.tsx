@@ -36,6 +36,15 @@ function getSupabase() {
     return _supabase
 }
 
+function makeBasicUser(authUser: User): AuthUser {
+    return {
+        id: authUser.id,
+        email: authUser.email || '',
+        role: 'admin',
+        fullName: authUser.user_metadata?.full_name || authUser.email?.split('@')[0] || 'User',
+    }
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [user, setUser] = useState<AuthUser | null>(null)
     const [loading, setLoading] = useState(true)
@@ -45,42 +54,47 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const initialized = useRef(false)
     const signingOut = useRef(false)
 
-    const loadUserProfile = useCallback(async (authUser: User) => {
-        if (signingOut.current) return
-
-        try {
-            const { data: profile } = await supabase
-                .from('user_profiles')
-                .select('*')
-                .eq('id', authUser.id)
-                .single()
-
-            if (signingOut.current) return
-
-            setUser({
-                id: authUser.id,
-                email: authUser.email || '',
-                role: profile?.role || 'admin',
-                fullName: profile?.full_name || authUser.email?.split('@')[0] || 'User',
+    // Load full profile in background (non-blocking)
+    const loadProfileInBackground = useCallback((authUser: User) => {
+        supabase
+            .from('user_profiles')
+            .select('*')
+            .eq('id', authUser.id)
+            .single()
+            .then(({ data: profile }) => {
+                if (signingOut.current) return
+                if (profile) {
+                    setUser(prev => prev ? {
+                        ...prev,
+                        role: profile.role || 'admin',
+                        fullName: profile.full_name || prev.fullName,
+                    } : prev)
+                }
             })
-        } catch {
-            if (signingOut.current) return
-
-            setUser({
-                id: authUser.id,
-                email: authUser.email || '',
-                role: 'admin',
-                fullName: authUser.email?.split('@')[0] || 'User',
+            .catch(() => {
+                // Profile fetch failed — that's OK, basic user data is enough
             })
-        } finally {
-            setLoading(false)
-        }
     }, [supabase])
 
+    // ═══ SIGN IN ═══
+    // Redirect IMMEDIATELY after Supabase auth succeeds
+    // Don't wait for profile fetch
     const handleSignIn = useCallback(async (email: string, password: string) => {
-        const { error } = await supabase.auth.signInWithPassword({ email, password })
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password })
         if (error) throw error
-    }, [supabase])
+
+        if (data.user) {
+            // Set basic user immediately from auth response
+            setUser(makeBasicUser(data.user))
+            setLoading(false)
+
+            // Redirect NOW — don't wait for anything else
+            router.push('/dashboard')
+
+            // Load full profile in background
+            loadProfileInBackground(data.user)
+        }
+    }, [supabase, router, loadProfileInBackground])
 
     const handleSignUp = useCallback(async (email: string, password: string, fullName: string) => {
         const { error } = await supabase.auth.signUp({
@@ -107,14 +121,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         window.location.href = '/login'
     }, [supabase])
 
-
     useEffect(() => {
         async function initialize() {
             try {
+                // getSession() = local cookie read = FAST
                 const { data: { session } } = await supabase.auth.getSession()
 
                 if (session?.user) {
-                    await loadUserProfile(session.user)
+                    setUser(makeBasicUser(session.user))
+                    setLoading(false)
+                    loadProfileInBackground(session.user)
                 } else {
                     setLoading(false)
                 }
@@ -133,11 +149,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 if (signingOut.current) return
 
                 if (event === 'SIGNED_IN' && session?.user) {
-                    await loadUserProfile(session.user)
-                    router.push('/dashboard')
+                    // Just update user state — handleSignIn already did the redirect
+                    setUser(makeBasicUser(session.user))
+                    setLoading(false)
                 } else if (event === 'SIGNED_OUT') {
                     setUser(null)
                     setLoading(false)
+                } else if (event === 'TOKEN_REFRESHED' && session?.user) {
+                    loadProfileInBackground(session.user)
                 }
             }
         )
@@ -145,7 +164,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return () => {
             subscription.unsubscribe()
         }
-    }, [supabase, loadUserProfile, router])
+    }, [supabase, loadProfileInBackground])
 
     return (
         <AuthContext.Provider value={{

@@ -1,6 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState } from 'react'
+import { maintenanceService, roomService } from '@/lib/services'
+import { useCrud, useSupabaseQuery } from '@/lib/hooks/useSupabaseQuery'
+import type { MaintenanceRow, MaintenanceInsert, MaintenanceUpdate } from '@/types/database'
+import { formatDate } from '@/utils'
 import { Card, CardContent } from '@/components/ui/Card';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
@@ -20,121 +24,50 @@ import {
     CheckCircle,
     Clock,
     AlertCircle,
-} from 'lucide-react';
+Loader2, } from 'lucide-react';
+import { useToast } from '@/components/ui/Toast'
 
 export default function MaintenancePage() {
+    const { toast, confirm } = useToast()
     const [searchQuery, setSearchQuery] = useState('');
     const [showFilters, setShowFilters] = useState(false);
     const [isFormOpen, setIsFormOpen] = useState(false);
 
-    // Mock rooms for form dropdown
-    const rooms = [
-        { id: '1', name: 'Room 305 - Building A' },
-        { id: '2', name: 'Room 201 - Building B' },
-        { id: '3', name: 'Room 102 - Building A' },
-        { id: '4', name: 'Room 405 - Building C' },
-        { id: '5', name: 'Common Area - Building A' },
-    ];
+    const {
+        items: requests,
+        loading,
+        error,
+        addItem,
+        updateItem,
+        removeItem,
+        actionLoading,
+    } = useCrud<MaintenanceRow, MaintenanceInsert, MaintenanceUpdate>({
+        service: maintenanceService,
+        orderBy: 'created_at',
+    })
 
-    type MaintenanceType = {
-        id: number;
-        ticketNumber: string;
-        room: string;
-        tenant: string;
-        issue: string;
-        category: string;
-        priority: string;
-        status: string;
-        reportedDate: string;
-        assignedTo: string | null;
-        estimatedCompletion: string | null;
-    };
+    const { data: roomsData } = useSupabaseQuery(() => roomService.getAll())
+    const rooms = (roomsData ?? []).map(r => ({ id: r.id, name: r.name }))
 
-    const [requests, setRequests] = useState<MaintenanceType[]>([
-        {
-            id: 1,
-            ticketNumber: 'MNT-2024-001',
-            room: 'Room 305 - Building A',
-            tenant: 'John Doe',
-            issue: 'AC not cooling',
-            category: 'AC/Cooling',
-            priority: 'High',
-            status: 'In Progress',
-            reportedDate: '2024-12-08',
-            assignedTo: 'Technician A',
-            estimatedCompletion: '2024-12-10',
-        },
-        {
-            id: 2,
-            ticketNumber: 'MNT-2024-002',
-            room: 'Room 201 - Building B',
-            tenant: 'Jane Smith',
-            issue: 'Leaking faucet',
-            category: 'Plumbing',
-            priority: 'Medium',
-            status: 'Pending',
-            reportedDate: '2024-12-09',
-            assignedTo: null,
-            estimatedCompletion: null,
-        },
-        {
-            id: 3,
-            ticketNumber: 'MNT-2024-003',
-            room: 'Room 102 - Building A',
-            tenant: 'Bob Johnson',
-            issue: 'Broken door lock',
-            category: 'Security',
-            priority: 'High',
-            status: 'Completed',
-            reportedDate: '2024-12-05',
-            assignedTo: 'Technician B',
-            estimatedCompletion: '2024-12-07',
-        },
-        {
-            id: 4,
-            ticketNumber: 'MNT-2024-004',
-            room: 'Room 405 - Building C',
-            tenant: 'Alice Williams',
-            issue: 'Electrical outlet not working',
-            category: 'Electrical',
-            priority: 'High',
-            status: 'In Progress',
-            reportedDate: '2024-12-10',
-            assignedTo: 'Technician C',
-            estimatedCompletion: '2024-12-11',
-        },
-        {
-            id: 5,
-            ticketNumber: 'MNT-2024-005',
-            room: 'Common Area - Building A',
-            tenant: 'Management',
-            issue: 'Elevator maintenance',
-            category: 'Elevator',
-            priority: 'Low',
-            status: 'Pending',
-            reportedDate: '2024-12-11',
-            assignedTo: null,
-            estimatedCompletion: null,
-        },
-    ]);
 
-    const handleFormSubmit = (data: MaintenanceFormData) => {
-        const room = rooms.find(r => r.id === data.roomId);
-        const newRequest: MaintenanceType = {
-            id: Date.now(),
-            ticketNumber: `MNT-2024-${String(requests.length + 1).padStart(3, '0')}`,
-            room: room?.name || 'Unknown',
-            tenant: data.reportedBy || 'Unknown',
-            issue: data.description.substring(0, 50),
-            category: data.issueType,
-            priority: data.priority.charAt(0).toUpperCase() + data.priority.slice(1),
-            status: data.status === 'pending' ? 'Pending' : data.status === 'in-progress' ? 'In Progress' : 'Completed',
-            reportedDate: new Date().toISOString().split('T')[0],
-            assignedTo: data.assignedTo || null,
-            estimatedCompletion: data.scheduledDate || null,
-        };
-        setRequests([newRequest, ...requests]);
-    };
+    const handleFormSubmit = async (data: MaintenanceFormData) => {
+        const room = rooms.find(r => r.id === data.roomId)
+        const insert: MaintenanceInsert = {
+            room_id: data.roomId || undefined,
+            room_name: room?.name || 'Unknown',
+            issue_type: data.issueType,
+            title: data.description.substring(0, 50),
+            description: data.description,
+            priority: (data.priority.charAt(0).toUpperCase() + data.priority.slice(1)) as any,
+            status: data.status === 'pending' ? 'Open' : data.status === 'in-progress' ? 'In Progress' : 'Completed',
+            assigned_to: data.assignedTo || '',
+            reported_date: new Date().toISOString().split('T')[0],
+        }
+        const addResult = await addItem(insert)
+        if (addResult.error) toast.error('Gagal menyimpan', addResult.error)
+        else toast.success('Berhasil', 'Data berhasil ditambahkan')
+    }
+
 
     const categoryOptions = [
         { value: 'all', label: 'All Categories' },
@@ -159,13 +92,6 @@ export default function MaintenancePage() {
         { value: 'completed', label: 'Completed' },
     ];
 
-    const formatDate = (dateString: string) => {
-        return new Date(dateString).toLocaleDateString('id-ID', {
-            day: 'numeric',
-            month: 'short',
-            year: 'numeric',
-        });
-    };
 
     const getPriorityBadge = (priority: string) => {
         const variants: Record<string, any> = {
@@ -197,9 +123,9 @@ export default function MaintenancePage() {
                     </div>
                     <div>
                         <p className="font-semibold text-slate-900 dark:text-white">
-                            {item.ticketNumber}
+                            {(`MNT-${item.id.slice(0,8)}`)}
                         </p>
-                        <p className="text-xs text-slate-600 dark:text-slate-400">{item.room}</p>
+                        <p className="text-xs text-slate-600 dark:text-slate-400">{item.room_name}</p>
                     </div>
                 </div>
             ),
@@ -209,8 +135,8 @@ export default function MaintenancePage() {
             label: 'Issue',
             render: (item: any) => (
                 <div>
-                    <p className="text-sm text-slate-900 dark:text-white font-medium">{item.issue}</p>
-                    <Badge variant="purple" size="sm">{item.category}</Badge>
+                    <p className="text-sm text-slate-900 dark:text-white font-medium">{item.title}</p>
+                    <Badge variant="purple" size="sm">{item.issue_type}</Badge>
                 </div>
             ),
         },
@@ -220,7 +146,7 @@ export default function MaintenancePage() {
             render: (item: any) => (
                 <div className="flex items-center gap-2">
                     <User className="w-4 h-4 text-slate-400" />
-                    <span className="text-sm text-slate-900 dark:text-white">{item.tenant}</span>
+                    <span className="text-sm text-slate-900 dark:text-white">{item.assigned_to}</span>
                 </div>
             ),
         },
@@ -255,8 +181,32 @@ export default function MaintenancePage() {
         },
     ];
 
+    // ─── Loading State ─────────────────────────────────────
+    if (loading) {
+        return (
+            <div className="p-4 md:p-6 lg:p-8">
+                <div className="flex items-center justify-center min-h-[60vh]">
+                    <div className="text-center">
+                        <div className="w-10 h-10 border-3 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+                        <p className="text-sm text-slate-500 dark:text-slate-400">Memuat data...</p>
+                    </div>
+                </div>
+            </div>
+        )
+    }
+
     return (
         <div className="p-4 md:p-6 space-y-4 md:space-y-6 pb-24 md:pb-6">
+
+            {/* Action Loading Overlay */}
+            {actionLoading && (
+                <div className="fixed inset-0 z-[90] bg-black/20 backdrop-blur-[1px] flex items-center justify-center pointer-events-auto">
+                    <div className="bg-white dark:bg-slate-800 rounded-xl px-6 py-4 shadow-xl flex items-center gap-3">
+                        <div className="w-5 h-5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+                        <span className="text-sm font-medium text-slate-700 dark:text-slate-200">Menyimpan...</span>
+                    </div>
+                </div>
+            )}
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                     <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white">
@@ -371,34 +321,34 @@ export default function MaintenancePage() {
                                 <div className="flex items-start justify-between mb-3">
                                     <div className="flex-1 min-w-0">
                                         <h3 className="font-bold text-slate-900 dark:text-white truncate">
-                                            {request.ticketNumber}
+                                            {(`MNT-${request.id.slice(0,8)}`)}
                                         </h3>
-                                        <p className="text-xs text-slate-600 dark:text-slate-400">{request.room}</p>
+                                        <p className="text-xs text-slate-600 dark:text-slate-400">{request.room_name}</p>
                                     </div>
                                     <Badge variant={statusInfo.variant} dot size="sm">
                                         {request.status}
                                     </Badge>
                                 </div>
                                 <div className="space-y-2 text-sm mb-3">
-                                    <p className="text-slate-900 dark:text-white font-medium">{request.issue}</p>
+                                    <p className="text-slate-900 dark:text-white font-medium">{request.title}</p>
                                     <div className="flex items-center justify-between">
-                                        <Badge variant="purple" size="sm">{request.category}</Badge>
+                                        <Badge variant="purple" size="sm">{request.issue_type}</Badge>
                                         <Badge variant={getPriorityBadge(request.priority)} size="sm">
                                             {request.priority}
                                         </Badge>
                                     </div>
                                     <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400 pt-2 border-t border-slate-200 dark:border-slate-800">
                                         <User className="w-4 h-4" />
-                                        <span>{request.tenant}</span>
+                                        <span>{request.assigned_to}</span>
                                     </div>
                                     <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
                                         <Calendar className="w-4 h-4" />
-                                        <span>Reported: {formatDate(request.reportedDate)}</span>
+                                        <span>Reported: {formatDate(request.reported_date)}</span>
                                     </div>
-                                    {request.assignedTo && (
+                                    {request.assigned_to && (
                                         <div className="flex items-center justify-between text-xs">
                                             <span className="text-slate-600 dark:text-slate-400">Assigned to:</span>
-                                            <span className="text-slate-900 dark:text-white font-medium">{request.assignedTo}</span>
+                                            <span className="text-slate-900 dark:text-white font-medium">{request.assigned_to}</span>
                                         </div>
                                     )}
                                 </div>

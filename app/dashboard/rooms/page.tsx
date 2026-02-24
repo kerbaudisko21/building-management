@@ -1,6 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState } from 'react'
+import { roomService } from '@/lib/services'
+import { useCrud } from '@/lib/hooks/useSupabaseQuery'
+import { formatCurrency as _formatCurrency, formatCurrencyShort as _formatCurrencyShort } from '@/utils'
+
+const formatCurrency = (amount: number) => amount === 0 ? '-' : _formatCurrency(amount)
+const formatCurrencyShort = (amount: number) => amount === 0 ? '-' : _formatCurrencyShort(amount)
+import type { RoomRow, RoomInsert, RoomUpdate } from '@/types/database'
 import { Card, CardContent } from '@/components/ui/Card';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
@@ -20,86 +27,31 @@ import {
     Eye,
     Edit,
     Trash2,
-} from 'lucide-react';
+Loader2, } from 'lucide-react';
+import { useToast } from '@/components/ui/Toast'
 
 export default function RoomsPage() {
+    const { toast, confirm } = useToast()
     const [searchQuery, setSearchQuery] = useState('');
     const [showFilters, setShowFilters] = useState(false);
     const [filterType, setFilterType] = useState('all');
     const [filterRentType, setFilterRentType] = useState('all');
     const [isFormOpen, setIsFormOpen] = useState(false);
-    const [editingRoom, setEditingRoom] = useState<any>(null);
+    const [editingRoom, setEditingRoom] = useState<RoomRow | null>(null)
 
-    const [rooms, setRooms] = useState([
-        {
-            id: '1',
-            name: 'Unit 305-A',
-            type: 'Studio',
-            tower: 'Tower A',
-            floor: 3,
-            capacity: 2,
-            view: 'City View',
-            luas: 35,
-            owner: 'kimak lang',
-            tenant: 'vw',
-            rent_type: 'monthly',
-            price_daily: 500000,
-            price_monthly: 5000000,
-            price_yearly: 50000000,
-            status: 'Occupied',
-        },
-        {
-            id: '2',
-            name: 'Unit 201-B',
-            type: 'Deluxe',
-            tower: 'Tower B',
-            floor: 2,
-            capacity: 3,
-            view: 'Garden View',
-            luas: 45,
-            owner: 'Wilbert',
-            tenant: null,
-            rent_type: 'flexible',
-            price_daily: 700000,
-            price_monthly: 7000000,
-            price_yearly: 70000000,
-            status: 'Available',
-        },
-        {
-            id: '3',
-            name: 'Unit 502-C',
-            type: 'Suite',
-            tower: 'Tower C',
-            floor: 5,
-            capacity: 4,
-            view: 'Ocean View',
-            luas: 60,
-            owner: 'tt',
-            tenant: 'vb',
-            rent_type: 'yearly',
-            price_daily: 0,
-            price_monthly: 0,
-            price_yearly: 120000000,
-            status: 'Occupied',
-        },
-        {
-            id: '4',
-            name: 'Unit 104-A',
-            type: 'Standard',
-            tower: 'Tower A',
-            floor: 1,
-            capacity: 2,
-            view: 'Pool View',
-            luas: 30,
-            owner: 'lanhut',
-            tenant: null,
-            rent_type: 'daily',
-            price_daily: 400000,
-            price_monthly: 0,
-            price_yearly: 0,
-            status: 'Maintenance',
-        },
-    ]);
+    const {
+        items: rooms,
+        loading,
+        error,
+        addItem,
+        updateItem,
+        removeItem,
+        actionLoading,
+    } = useCrud<RoomRow, RoomInsert, RoomUpdate>({
+        service: roomService,
+        orderBy: 'created_at',
+    })
+
 
     const typeOptions = [
         { value: 'all', label: 'All Types' },
@@ -117,26 +69,7 @@ export default function RoomsPage() {
         { value: 'yearly', label: 'Yearly' },
     ];
 
-    const formatCurrency = (amount: number) => {
-        if (amount === 0) return '-';
-        return new Intl.NumberFormat('id-ID', {
-            style: 'currency',
-            currency: 'IDR',
-            minimumFractionDigits: 0,
-            maximumFractionDigits: 0,
-        }).format(amount);
-    };
 
-    const formatCurrencyShort = (amount: number) => {
-        if (amount === 0) return '-';
-        if (amount >= 1000000) {
-            return `Rp ${(amount / 1000000).toFixed(1)}M`;
-        }
-        if (amount >= 1000) {
-            return `Rp ${(amount / 1000).toFixed(0)}K`;
-        }
-        return `Rp ${amount.toLocaleString('id-ID')}`;
-    };
 
     const getStatusBadge = (status: string) => {
         const variants: Record<string, any> = {
@@ -279,34 +212,33 @@ export default function RoomsPage() {
     ];
 
     // Handlers
-    const handleFormSubmit = (data: RoomFormData) => {
+    const handleFormSubmit = async (data: RoomFormData) => {
         if (editingRoom) {
-            setRooms(rooms.map(r =>
-                r.id === editingRoom.id
-                    ? { ...r, ...data }
-                    : r
-            ));
+            const updResult = await updateItem(editingRoom.id, data as unknown as RoomUpdate)
+            if (updResult.error) toast.error('Gagal mengupdate', updResult.error)
+            else toast.success('Berhasil', 'Data berhasil diupdate')
         } else {
-            const newRoom = {
-                id: Date.now().toString(),
-                ...data,
-                status: 'Available',
-            };
-            setRooms([newRoom, ...rooms]);
+            const addResult = await addItem({ ...data, status: 'Available' } as unknown as RoomInsert)
+            if (addResult.error) toast.error('Gagal menyimpan', addResult.error)
+            else toast.success('Berhasil', 'Data berhasil ditambahkan')
         }
-        setEditingRoom(null);
-    };
+        setEditingRoom(null)
+    }
+
 
     const handleEdit = (room: any) => {
         setEditingRoom(room);
         setIsFormOpen(true);
     };
 
-    const handleDelete = (id: string) => {
-        if (confirm('Are you sure you want to delete this unit?')) {
-            setRooms(rooms.filter(r => r.id !== id));
-        }
-    };
+    const handleDelete = async (id: string) => {
+        const yes = await confirm({ title: 'Konfirmasi Hapus', message: 'Apakah kamu yakin ingin menghapus data ini? Tindakan ini tidak bisa dibatalkan.', variant: 'danger' })
+        if (!yes) return
+        const delResult = await removeItem(id)
+        if (delResult.error) toast.error('Gagal menghapus', delResult.error)
+        else toast.success('Berhasil', 'Data berhasil dihapus')
+    }
+
 
     const handleAddNew = () => {
         setEditingRoom(null);
@@ -336,8 +268,32 @@ export default function RoomsPage() {
         rooms.reduce((sum, r) => sum + (r.price_monthly || r.price_daily * 30 || r.price_yearly / 12), 0) / rooms.length
     );
 
+    // ─── Loading State ─────────────────────────────────────
+    if (loading) {
+        return (
+            <div className="p-4 md:p-6 lg:p-8">
+                <div className="flex items-center justify-center min-h-[60vh]">
+                    <div className="text-center">
+                        <div className="w-10 h-10 border-3 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+                        <p className="text-sm text-slate-500 dark:text-slate-400">Memuat data...</p>
+                    </div>
+                </div>
+            </div>
+        )
+    }
+
     return (
         <div className="p-4 md:p-6 space-y-4 md:space-y-6 pb-24 md:pb-6">
+
+            {/* Action Loading Overlay */}
+            {actionLoading && (
+                <div className="fixed inset-0 z-[90] bg-black/20 backdrop-blur-[1px] flex items-center justify-center pointer-events-auto">
+                    <div className="bg-white dark:bg-slate-800 rounded-xl px-6 py-4 shadow-xl flex items-center gap-3">
+                        <div className="w-5 h-5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+                        <span className="text-sm font-medium text-slate-700 dark:text-slate-200">Menyimpan...</span>
+                    </div>
+                </div>
+            )}
             {/* Header */}
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>

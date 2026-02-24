@@ -4,6 +4,7 @@ import { Plus_Jakarta_Sans, JetBrains_Mono } from 'next/font/google';
 import '@/app/globals.css';
 import { ThemeProvider } from '@/components/providers/ThemeProvider';
 import { AuthProvider } from '@/lib/hooks/useAuth';
+import { ToastProvider } from '@/components/ui/Toast';
 import PWAInstallPrompt from '@/components/ui/pwa-install-prompt';
 import SplashScreen from '@/components/SplashScreen';
 
@@ -70,9 +71,11 @@ export default function RootLayout({
         <body className={`${jakarta.variable} ${mono.variable} font-sans antialiased`}>
         <ThemeProvider>
             <AuthProvider>
-                <SplashScreen />
-                {children}
-                <PWAInstallPrompt />
+                <ToastProvider>
+                    <SplashScreen />
+                    {children}
+                    <PWAInstallPrompt />
+                </ToastProvider>
             </AuthProvider>
         </ThemeProvider>
         </body>

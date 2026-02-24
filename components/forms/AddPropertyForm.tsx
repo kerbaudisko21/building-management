@@ -171,14 +171,15 @@ export default function AddPropertyForm({
 
                     <Input
                         label="Currently Occupied"
-                        type="number"
+                        type="text"
+                        inputMode="numeric"
                         placeholder="e.g., 42"
-                        value={formData.occupancy || ''}
-                        onChange={(e) => setFormData({ ...formData, occupancy: parseInt(e.target.value) || 0 })}
-                        error={errors.occupancy}
+                        value={formData.occupancy}
                         required
-                        leftIcon={<Home className="w-5 h-5" />}
-                        helperText="Number of occupied units"
+                        onChange={(e) => {
+                            const val = e.target.value.replace(/[^0-9]/g, '')
+                            setFormData({ ...formData, occupancy: Number(val) })
+                        }}
                     />
                 </div>
 

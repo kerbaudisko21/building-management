@@ -7,18 +7,19 @@
 
 import { createService } from './supabase-service'
 import type {
-  PropertyRow, PropertyInsert, PropertyUpdate,
-  RoomRow, RoomInsert, RoomUpdate,
-  ContactRow, ContactInsert, ContactUpdate,
-  ContractRow, ContractInsert, ContractUpdate,
-  InvoiceRow, InvoiceInsert, InvoiceUpdate,
-  CashFlowRow, CashFlowInsert,
-  AssetRow, AssetInsert, AssetUpdate,
-  MaintenanceRow, MaintenanceInsert, MaintenanceUpdate,
-  TodoRow, TodoInsert, TodoUpdate,
-  WaitingListRow, WaitingListInsert, WaitingListUpdate,
-  NotificationRow,
-  UserProfileRow,
+    PropertyRow, PropertyInsert, PropertyUpdate,
+    RoomRow, RoomInsert, RoomUpdate,
+    ContactRow, ContactInsert, ContactUpdate,
+    ContractRow, ContractInsert, ContractUpdate,
+    TemplateContractRow, TemplateContractInsert, TemplateContractUpdate,
+    InvoiceRow, InvoiceInsert, InvoiceUpdate,
+    CashFlowRow, CashFlowInsert,
+    AssetRow, AssetInsert, AssetUpdate,
+    MaintenanceRow, MaintenanceInsert, MaintenanceUpdate,
+    TodoRow, TodoInsert, TodoUpdate,
+    WaitingListRow, WaitingListInsert, WaitingListUpdate,
+    NotificationRow,
+    UserProfileRow,
 } from '@/types/database'
 
 // ─── Properties ──────────────────────────────────────────────
@@ -33,30 +34,33 @@ export const contactService = createService<ContactRow, ContactInsert, ContactUp
 // ─── Contracts ───────────────────────────────────────────────
 export const contractService = createService<ContractRow, ContractInsert, ContractUpdate>('contracts')
 
+// ─── Template Contracts ──────────────────────────────────────
+export const templateContractService = createService<TemplateContractRow, TemplateContractInsert, TemplateContractUpdate>('template_contracts')
+
 // ─── Invoices ────────────────────────────────────────────────
 export const invoiceService = createService<InvoiceRow, InvoiceInsert, InvoiceUpdate>('invoices')
 
 // ─── Cash Flow (In & Out combined) ──────────────────────────
 export const cashFlowService = {
-  ...createService<CashFlowRow, CashFlowInsert>('cash_flows'),
+    ...createService<CashFlowRow, CashFlowInsert>('cash_flows'),
 
-  /** Get only income (cash in) */
-  async getCashIn() {
-    return createService<CashFlowRow>('cash_flows').getAll({
-      filters: { type: 'in' },
-      orderBy: 'date',
-      ascending: false,
-    })
-  },
+    /** Get only income (cash in) */
+    async getCashIn() {
+        return createService<CashFlowRow>('cash_flows').getAll({
+            filters: { type: 'in' },
+            orderBy: 'date',
+            ascending: false,
+        })
+    },
 
-  /** Get only expenses (cash out) */
-  async getCashOut() {
-    return createService<CashFlowRow>('cash_flows').getAll({
-      filters: { type: 'out' },
-      orderBy: 'date',
-      ascending: false,
-    })
-  },
+    /** Get only expenses (cash out) */
+    async getCashOut() {
+        return createService<CashFlowRow>('cash_flows').getAll({
+            filters: { type: 'out' },
+            orderBy: 'date',
+            ascending: false,
+        })
+    },
 }
 
 // ─── Assets ──────────────────────────────────────────────────

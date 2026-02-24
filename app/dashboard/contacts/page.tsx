@@ -1,6 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState } from 'react'
+import { contactService } from '@/lib/services'
+import { useCrud } from '@/lib/hooks/useSupabaseQuery'
+import type { ContactRow, ContactInsert, ContactUpdate } from '@/types/database'
 import { Card, CardContent } from '@/components/ui/Card';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
@@ -21,106 +24,31 @@ import {
     Trash2,
     Building,
     Calendar,
-} from 'lucide-react';
+Loader2, } from 'lucide-react';
+import { useToast } from '@/components/ui/Toast'
 
 export default function ContactsPage() {
+    const { toast, confirm } = useToast()
     const [searchQuery, setSearchQuery] = useState('');
     const [showFilters, setShowFilters] = useState(false);
     const [filterType, setFilterType] = useState('all');
     const [filterStatus, setFilterStatus] = useState('all');
     const [isFormOpen, setIsFormOpen] = useState(false);
-    const [editingContact, setEditingContact] = useState<any>(null);
+    const [editingContact, setEditingContact] = useState<ContactRow | null>(null)
 
-    const [contacts, setContacts] = useState([
-        {
-            id: '1',
-            name: 'John Doe',
-            no_ktp: '3174012505850001',
-            no_wa: '+62 812 3456 7890',
-            address: 'Jl. Sudirman No. 123, Jakarta',
-            type: 'Customer',
-            room: 'Room 305',
-            status: 'Active',
-            date_check_in: '2024-01-15',
-        },
-        {
-            id: '2',
-            name: 'CV Bersih Selalu',
-            no_ktp: '0312345678901234',
-            no_wa: '+62 821 9876 5432',
-            address: 'Jl. Gatot Subroto No. 45, Jakarta',
-            type: 'Vendor',
-            room: null,
-            status: 'Active',
-            date_check_in: null,
-        },
-        {
-            id: '3',
-            name: 'Sarah Wilson',
-            no_ktp: '3173045612920002',
-            no_wa: '+62 813 2468 1357',
-            address: 'Jl. Thamrin No. 88, Jakarta',
-            type: 'Customer',
-            room: 'Room 201',
-            status: 'Active',
-            date_check_in: '2024-02-10',
-        },
-        {
-            id: '4',
-            name: 'PT Properti Indah',
-            no_ktp: '0298765432109876',
-            no_wa: '+62 811 5555 6666',
-            address: 'Jl. Rasuna Said Kav. C-22, Jakarta',
-            type: 'Owner',
-            room: null,
-            status: 'Active',
-            date_check_in: null,
-        },
-        {
-            id: '5',
-            name: 'Michael Chen',
-            no_ktp: '3175089012850003',
-            no_wa: '+62 856 7890 1234',
-            address: 'Jl. Asia Afrika No. 56, Bandung',
-            type: 'Customer',
-            room: 'Room 402',
-            status: 'Active',
-            date_check_in: '2024-03-05',
-        },
-        {
-            id: '6',
-            name: 'Toko Elektronik Jaya',
-            no_ktp: '0387654321098765',
-            no_wa: '+62 822 3333 4444',
-            address: 'Jl. Mangga Dua No. 78, Jakarta',
-            type: 'Vendor',
-            room: null,
-            status: 'Active',
-            date_check_in: null,
-        },
-        {
-            id: '7',
-            name: 'Amanda Lee',
-            no_ktp: '',
-            no_wa: '+62 817 8888 9999',
-            address: 'Jl. Kemang Raya No. 12, Jakarta',
-            type: 'Customer',
-            room: '',
-            status: 'Prospect',
-            date_check_in: null,
-        },
-        {
-            id: '8',
-            name: 'Robert Kim',
-            no_ktp: '',
-            no_wa: '+62 819 5555 4444',
-            address: 'Jl. Senopati No. 45, Jakarta',
-            type: 'Customer',
-            room: '',
-            status: 'Prospect',
-            date_check_in: null,
-        },
-    ]);
+    const {
+        items: contacts,
+        loading,
+        error,
+        addItem,
+        updateItem,
+        removeItem,
+        actionLoading,
+    } = useCrud<ContactRow, ContactInsert, ContactUpdate>({
+        service: contactService,
+        orderBy: 'created_at',
+    })
+
 
     const typeOptions = [
         { value: 'all', label: 'All Types' },
@@ -284,36 +212,33 @@ export default function ContactsPage() {
     const vendorCount = contacts.filter(c => c.type === 'Vendor').length;
     const ownerCount = contacts.filter(c => c.type === 'Owner').length;
 
-    // Form handlers
-    const handleFormSubmit = (data: ContactFormData) => {
+    const handleFormSubmit = async (data: ContactFormData) => {
         if (editingContact) {
-            // Update existing contact
-            setContacts(contacts.map(c =>
-                c.id === editingContact.id
-                    ? { ...c, ...data }
-                    : c
-            ));
+            const updResult = await updateItem(editingContact.id, data as unknown as ContactUpdate)
+            if (updResult.error) toast.error('Gagal mengupdate', updResult.error)
+            else toast.success('Berhasil', 'Data berhasil diupdate')
         } else {
-            // Add new contact
-            const newContact = {
-                id: Date.now().toString(),
-                ...data,
-            };
-            setContacts([newContact, ...contacts]);
+            const addResult = await addItem(data as unknown as ContactInsert)
+            if (addResult.error) toast.error('Gagal menyimpan', addResult.error)
+            else toast.success('Berhasil', 'Data berhasil ditambahkan')
         }
-        setEditingContact(null);
-    };
+        setEditingContact(null)
+    }
+
 
     const handleEdit = (contact: any) => {
         setEditingContact(contact);
         setIsFormOpen(true);
     };
 
-    const handleDelete = (id: string) => {
-        if (confirm('Are you sure you want to delete this contact?')) {
-            setContacts(contacts.filter(c => c.id !== id));
-        }
-    };
+    const handleDelete = async (id: string) => {
+        const yes = await confirm({ title: 'Konfirmasi Hapus', message: 'Apakah kamu yakin ingin menghapus data ini? Tindakan ini tidak bisa dibatalkan.', variant: 'danger' })
+        if (!yes) return
+        const delResult = await removeItem(id)
+        if (delResult.error) toast.error('Gagal menghapus', delResult.error)
+        else toast.success('Berhasil', 'Data berhasil dihapus')
+    }
+
 
     const handleCloseForm = () => {
         setIsFormOpen(false);
@@ -325,8 +250,32 @@ export default function ContactsPage() {
         setIsFormOpen(true);
     };
 
+    // ─── Loading State ─────────────────────────────────────
+    if (loading) {
+        return (
+            <div className="p-4 md:p-6 lg:p-8">
+                <div className="flex items-center justify-center min-h-[60vh]">
+                    <div className="text-center">
+                        <div className="w-10 h-10 border-3 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+                        <p className="text-sm text-slate-500 dark:text-slate-400">Memuat data...</p>
+                    </div>
+                </div>
+            </div>
+        )
+    }
+
     return (
         <div className="p-4 md:p-6 space-y-4 md:space-y-6 pb-24 md:pb-6">
+
+            {/* Action Loading Overlay */}
+            {actionLoading && (
+                <div className="fixed inset-0 z-[90] bg-black/20 backdrop-blur-[1px] flex items-center justify-center pointer-events-auto">
+                    <div className="bg-white dark:bg-slate-800 rounded-xl px-6 py-4 shadow-xl flex items-center gap-3">
+                        <div className="w-5 h-5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+                        <span className="text-sm font-medium text-slate-700 dark:text-slate-200">Menyimpan...</span>
+                    </div>
+                </div>
+            )}
             {/* Header */}
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>

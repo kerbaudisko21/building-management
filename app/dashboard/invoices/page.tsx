@@ -1,6 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState } from 'react'
+import { invoiceService } from '@/lib/services'
+import { useCrud } from '@/lib/hooks/useSupabaseQuery'
+import type { InvoiceRow, InvoiceInsert, InvoiceUpdate } from '@/types/database'
+import { formatCurrency, formatDate } from '@/utils'
 import { Card, CardContent } from '@/components/ui/Card';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
@@ -21,109 +25,31 @@ import {
     CheckCircle,
     Clock,
     AlertCircle, XCircle,
-} from 'lucide-react';
+Loader2, } from 'lucide-react';
+import { useToast } from '@/components/ui/Toast'
 
 export default function InvoicesPage() {
+    const { toast, confirm } = useToast()
     const [searchQuery, setSearchQuery] = useState('');
     const [showFilters, setShowFilters] = useState(false);
     const [filterStatus, setFilterStatus] = useState('all');
     const [filterType, setFilterType] = useState('all');
     const [isFormOpen, setIsFormOpen] = useState(false);
 
-    // Mock tenants for form
-    const tenants = [
-        { id: '1', name: 'John Doe' },
-        { id: '2', name: 'Jane Smith' },
-        { id: '3', name: 'Bob Johnson' },
-    ];
+    const {
+        items: invoices,
+        loading,
+        error,
+        addItem,
+        updateItem,
+        removeItem,
+        actionLoading,
+        refetch,
+    } = useCrud<InvoiceRow, InvoiceInsert, InvoiceUpdate>({
+        service: invoiceService,
+        orderBy: 'created_at',
+    })
 
-    type InvoiceType = {
-        id: number;
-        invoiceNumber: string;
-        tenant: string;
-        room: string;
-        issueDate: string;
-        dueDate: string;
-        amount: number;
-        status: string;
-        paidDate: string | null;
-        paymentMethod: string | null;
-    };
-
-    const [invoices, setInvoices] = useState<InvoiceType[]>([
-        {
-            id: 1,
-            invoiceNumber: 'INV-2024-001',
-            tenant: 'John Doe',
-            room: 'Room 305 - Building A',
-            issueDate: '2024-12-01',
-            dueDate: '2024-12-10',
-            amount: 3500000,
-            status: 'Paid',
-            paidDate: '2024-12-08',
-            paymentMethod: 'Bank Transfer',
-        },
-        {
-            id: 2,
-            invoiceNumber: 'INV-2024-002',
-            tenant: 'Jane Smith',
-            room: 'Room 201 - Building B',
-            issueDate: '2024-12-01',
-            dueDate: '2024-12-10',
-            amount: 2500000,
-            status: 'Pending',
-            paidDate: null,
-            paymentMethod: null,
-        },
-        {
-            id: 3,
-            invoiceNumber: 'INV-2024-003',
-            tenant: 'Bob Johnson',
-            room: 'Room 102 - Building A',
-            issueDate: '2024-11-25',
-            dueDate: '2024-12-05',
-            amount: 2500000,
-            status: 'Overdue',
-            paidDate: null,
-            paymentMethod: null,
-        },
-        {
-            id: 4,
-            invoiceNumber: 'INV-2024-004',
-            tenant: 'Alice Williams',
-            room: 'Room 405 - Building C',
-            issueDate: '2024-12-01',
-            dueDate: '2024-12-10',
-            amount: 3000000,
-            status: 'Paid',
-            paidDate: '2024-12-05',
-            paymentMethod: 'Cash',
-        },
-        {
-            id: 5,
-            invoiceNumber: 'INV-2024-005',
-            tenant: 'Charlie Brown',
-            room: 'Room 501 - Building B',
-            issueDate: '2024-12-01',
-            dueDate: '2024-12-10',
-            amount: 4500000,
-            status: 'Pending',
-            paidDate: null,
-            paymentMethod: null,
-        },
-        {
-            id: 6,
-            invoiceNumber: 'INV-2024-006',
-            tenant: 'Diana Prince',
-            room: 'Room 302 - Building A',
-            issueDate: '2024-11-20',
-            dueDate: '2024-11-30',
-            amount: 2800000,
-            status: 'Cancelled',
-            paidDate: null,
-            paymentMethod: null,
-        },
-    ]);
 
     const statusOptions = [
         { value: 'all', label: 'All Status' },
@@ -139,22 +65,6 @@ export default function InvoicesPage() {
         { value: 'building-b', label: 'Building B' },
         { value: 'building-c', label: 'Building C' },
     ];
-
-    const formatCurrency = (amount: number) => {
-        return new Intl.NumberFormat('id-ID', {
-            style: 'currency',
-            currency: 'IDR',
-            minimumFractionDigits: 0,
-        }).format(amount);
-    };
-
-    const formatDate = (dateString: string) => {
-        return new Date(dateString).toLocaleDateString('id-ID', {
-            day: 'numeric',
-            month: 'short',
-            year: 'numeric',
-        });
-    };
 
     const getStatusBadge = (status: string) => {
         const variants: Record<string, any> = {
@@ -178,10 +88,10 @@ export default function InvoicesPage() {
                     </div>
                     <div>
                         <p className="font-semibold text-slate-900 dark:text-white">
-                            {item.invoiceNumber}
+                            {(`INV-${item.id.slice(0,8)}`)}
                         </p>
                         <p className="text-xs text-slate-600 dark:text-slate-400">
-                            {item.room}
+                            {'—'}
                         </p>
                     </div>
                 </div>
@@ -193,7 +103,7 @@ export default function InvoicesPage() {
             render: (item: any) => (
                 <div className="flex items-center gap-2">
                     <User className="w-4 h-4 text-slate-400" />
-                    <span className="text-sm text-slate-900 dark:text-white">{item.tenant}</span>
+                    <span className="text-sm text-slate-900 dark:text-white">{item.tenant_name}</span>
                 </div>
             ),
         },
@@ -205,13 +115,13 @@ export default function InvoicesPage() {
                     <div className="flex items-center gap-2 text-sm">
                         <Calendar className="w-3.5 h-3.5 text-slate-400" />
                         <span className="text-slate-900 dark:text-white">
-              {formatDate(item.issueDate)}
+              {formatDate(item.issue_date)}
             </span>
                     </div>
                     <div className="flex items-center gap-2 text-sm">
                         <span className="text-slate-600 dark:text-slate-400">Due:</span>
                         <span className="text-slate-900 dark:text-white">
-              {formatDate(item.dueDate)}
+              {formatDate(item.due_date)}
             </span>
                     </div>
                 </div>
@@ -268,8 +178,31 @@ export default function InvoicesPage() {
         .filter(inv => inv.status === 'Pending' || inv.status === 'Overdue')
         .reduce((sum, inv) => sum + inv.amount, 0);
 
+    // ─── Loading State ─────────────────────────────────────
+    if (loading) {
+        return (
+            <div className="p-4 md:p-6 lg:p-8">
+                <div className="flex items-center justify-center min-h-[60vh]">
+                    <div className="text-center">
+                        <div className="w-10 h-10 border-3 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+                        <p className="text-sm text-slate-500 dark:text-slate-400">Memuat data...</p>
+                    </div>
+                </div>
+            </div>
+        )
+    }
+
     return (
         <div className="p-4 md:p-6 space-y-4 md:space-y-6 pb-24 md:pb-6">
+            {/* Action Loading Overlay */}
+            {actionLoading && (
+                <div className="fixed inset-0 z-[90] bg-black/20 backdrop-blur-[1px] flex items-center justify-center pointer-events-auto">
+                    <div className="bg-white dark:bg-slate-800 rounded-xl px-6 py-4 shadow-xl flex items-center gap-3">
+                        <div className="w-5 h-5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+                        <span className="text-sm font-medium text-slate-700 dark:text-slate-200">Menyimpan...</span>
+                    </div>
+                </div>
+            )}
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                     <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white">
@@ -386,10 +319,10 @@ export default function InvoicesPage() {
                                 <div className="flex items-start justify-between mb-3">
                                     <div className="flex-1 min-w-0">
                                         <h3 className="font-bold text-slate-900 dark:text-white truncate">
-                                            {invoice.invoiceNumber}
+                                            {`INV-${invoice.id.slice(0,8)}`}
                                         </h3>
                                         <p className="text-xs text-slate-600 dark:text-slate-400 truncate">
-                                            {invoice.room}
+                                            {'—'}
                                         </p>
                                     </div>
                                     <Badge variant={statusInfo.variant} dot size="sm">
@@ -399,7 +332,7 @@ export default function InvoicesPage() {
 
                                 <div className="flex items-center gap-2 mb-3">
                                     <User className="w-4 h-4 text-slate-400" />
-                                    <span className="text-sm text-slate-900 dark:text-white">{invoice.tenant}</span>
+                                    <span className="text-sm text-slate-900 dark:text-white">{invoice.tenant_name}</span>
                                 </div>
 
                                 <div className="flex items-center justify-between mb-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
@@ -413,20 +346,20 @@ export default function InvoicesPage() {
                                     <div className="flex items-center justify-between">
                                         <span className="text-slate-600 dark:text-slate-400">Issue Date:</span>
                                         <span className="text-slate-900 dark:text-white font-medium">
-                      {formatDate(invoice.issueDate)}
+                      {formatDate(invoice.issue_date)}
                     </span>
                                     </div>
                                     <div className="flex items-center justify-between">
                                         <span className="text-slate-600 dark:text-slate-400">Due Date:</span>
                                         <span className="text-slate-900 dark:text-white font-medium">
-                      {formatDate(invoice.dueDate)}
+                      {formatDate(invoice.due_date)}
                     </span>
                                     </div>
-                                    {invoice.paidDate && (
+                                    {invoice.paid_date && (
                                         <div className="flex items-center justify-between pt-2 border-t border-slate-200 dark:border-slate-800">
                                             <span className="text-slate-600 dark:text-slate-400">Paid:</span>
                                             <span className="text-emerald-600 dark:text-emerald-400 font-medium">
-                        {formatDate(invoice.paidDate)} • {invoice.paymentMethod}
+                        {formatDate(invoice.paid_date)} • {invoice.payment_method}
                       </span>
                                         </div>
                                     )}
@@ -466,25 +399,22 @@ export default function InvoicesPage() {
                 isOpen={isFormOpen}
                 onClose={() => setIsFormOpen(false)}
                 onSubmit={handleFormSubmit}
-                tenants={tenants}
-            />
+                            />
         </div>
     );
 
-    function handleFormSubmit(data: InvoiceFormData) {
-        const tenant = tenants.find(t => t.id === data.tenantId);
-        const newInvoice: InvoiceType = {
-            id: invoices.length + 1,
-            invoiceNumber: `INV-${new Date().getFullYear()}-${String(invoices.length + 1).padStart(3, '0')}`,
-            tenant: tenant?.name || 'Unknown',
-            room: 'TBD', // Can be added to form later
-            issueDate: data.issueDate,
-            dueDate: data.dueDate,
+    async function handleFormSubmit(data: InvoiceFormData) {
+        const insert: InvoiceInsert = {
+            tenant_name: data.tenantId,
+            invoice_type: data.invoiceType,
             amount: data.amount,
+            issue_date: data.issueDate,
+            due_date: data.dueDate,
+            description: data.description || '',
             status: data.status === 'paid' ? 'Paid' : data.status === 'pending' ? 'Pending' : 'Overdue',
-            paidDate: data.status === 'paid' ? new Date().toISOString().split('T')[0] : null,
-            paymentMethod: data.status === 'paid' ? 'Bank Transfer' : null,
-        };
-        setInvoices([newInvoice, ...invoices]);
+        }
+        const addResult = await addItem(insert)
+        if (addResult.error) toast.error('Gagal menyimpan', addResult.error)
+        else toast.success('Berhasil', 'Data berhasil ditambahkan')
     }
 }

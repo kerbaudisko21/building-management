@@ -1,6 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState } from 'react'
+import { contractService } from '@/lib/services'
+import { useCrud } from '@/lib/hooks/useSupabaseQuery'
+import type { ContractRow, ContractInsert, ContractUpdate } from '@/types/database'
 import { Card, CardContent } from '@/components/ui/Card';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
@@ -26,74 +29,31 @@ import {
     Edit,
     Trash2,
     Download,
-} from 'lucide-react';
+Loader2, } from 'lucide-react';
+import { useToast } from '@/components/ui/Toast'
 
 export default function ContractsPage() {
+    const { toast, confirm } = useToast()
     const [searchQuery, setSearchQuery] = useState('');
     const [showFilters, setShowFilters] = useState(false);
     const [filterStatus, setFilterStatus] = useState('all');
     const [filterRentType, setFilterRentType] = useState('all');
     const [isFormOpen, setIsFormOpen] = useState(false);
-    const [editingContract, setEditingContract] = useState<any>(null);
+    const [editingContract, setEditingContract] = useState<ContractRow | null>(null)
 
-    const [contracts, setContracts] = useState([
-        {
-            id: '1',
-            number: 'CTR-2024-001',
-            name_customer: 'John Doe',
-            name_owner: 'PT Properti Indah',
-            property: 'Menteng Residence',
-            room_unit: 'Unit 305-A',
-            date_check_in: '2024-01-15',
-            date_check_out: '2025-01-14',
-            rent_type: 'yearly',
-            days_remaining: 366,
-            amount_rent: 50000000,
-            status: 'Active',
-        },
-        {
-            id: '2',
-            number: 'CTR-2024-002',
-            name_customer: 'Sarah Wilson',
-            name_owner: 'PT Properti Indah',
-            property: 'BSD City Apartment',
-            room_unit: 'Unit 201-B',
-            date_check_in: '2024-02-01',
-            date_check_out: '2024-08-01',
-            rent_type: 'monthly',
-            days_remaining: 183,
-            amount_rent: 7000000,
-            status: 'Active',
-        },
-        {
-            id: '3',
-            number: 'CTR-2024-003',
-            name_customer: 'Michael Chen',
-            name_owner: 'Budi Santoso',
-            property: 'Kemang Suites',
-            room_unit: 'Unit 502-C',
-            date_check_in: '2024-01-20',
-            date_check_out: '2024-01-25',
-            rent_type: 'daily',
-            days_remaining: 0,
-            amount_rent: 500000,
-            status: 'Completed',
-        },
-        {
-            id: '4',
-            number: 'CTR-2023-098',
-            name_customer: 'Lisa Wong',
-            name_owner: 'PT Properti Indah',
-            property: 'Sudirman Park',
-            room_unit: 'Unit 104-A',
-            date_check_in: '2023-06-01',
-            date_check_out: '2024-01-10',
-            rent_type: 'monthly',
-            days_remaining: -3,
-            amount_rent: 5500000,
-            status: 'Expired',
-        },
-    ]);
+    const {
+        items: contracts,
+        loading,
+        error,
+        addItem,
+        updateItem,
+        removeItem,
+        actionLoading,
+    } = useCrud<ContractRow, ContractInsert, ContractUpdate>({
+        service: contractService,
+        orderBy: 'created_at',
+    })
+
 
     const statusOptions = [
         { value: 'all', label: 'All Status' },
@@ -279,36 +239,34 @@ export default function ContractsPage() {
         },
     ];
 
-    // Handlers
-    const handleFormSubmit = (data: ContractFormData) => {
+    const handleFormSubmit = async (data: ContractFormData) => {
         if (editingContract) {
-            setContracts(contracts.map(c =>
-                c.id === editingContract.id
-                    ? { ...c, ...data }
-                    : c
-            ));
+            const updResult = await updateItem(editingContract.id, data as unknown as ContractUpdate)
+            if (updResult.error) toast.error('Gagal mengupdate', updResult.error)
+            else toast.success('Berhasil', 'Data berhasil diupdate')
         } else {
-            const newContract = {
-                id: Date.now().toString(),
-                number: `CTR-${new Date().getFullYear()}-${String(contracts.length + 1).padStart(3, '0')}`,
-                ...data,
-                status: 'Active',
-            };
-            setContracts([newContract, ...contracts]);
+            const number = `CTR-${new Date().getFullYear()}-${String(contracts.length + 1).padStart(3, '0')}`
+            const addResult = await addItem({ ...data, number, status: 'Active', deposit: 0, payment_status: 'Pending' } as unknown as ContractInsert)
+            if (addResult.error) toast.error('Gagal menyimpan', addResult.error)
+            else toast.success('Berhasil', 'Data berhasil ditambahkan')
         }
-        setEditingContract(null);
-    };
+        setEditingContract(null)
+    }
+
 
     const handleEdit = (contract: any) => {
         setEditingContract(contract);
         setIsFormOpen(true);
     };
 
-    const handleDelete = (id: string) => {
-        if (confirm('Are you sure you want to delete this contract?')) {
-            setContracts(contracts.filter(c => c.id !== id));
-        }
-    };
+    const handleDelete = async (id: string) => {
+        const yes = await confirm({ title: 'Konfirmasi Hapus', message: 'Apakah kamu yakin ingin menghapus data ini? Tindakan ini tidak bisa dibatalkan.', variant: 'danger' })
+        if (!yes) return
+        const delResult = await removeItem(id)
+        if (delResult.error) toast.error('Gagal menghapus', delResult.error)
+        else toast.success('Berhasil', 'Data berhasil dihapus')
+    }
+
 
     const handleAddNew = () => {
         setEditingContract(null);
@@ -336,8 +294,32 @@ export default function ContractsPage() {
     const expiringSoon = contracts.filter(c => c.status === 'Active' && c.days_remaining <= 30 && c.days_remaining > 0).length;
     const totalRevenue = contracts.filter(c => c.status === 'Active').reduce((sum, c) => sum + c.amount_rent, 0);
 
+    // ─── Loading State ─────────────────────────────────────
+    if (loading) {
+        return (
+            <div className="p-4 md:p-6 lg:p-8">
+                <div className="flex items-center justify-center min-h-[60vh]">
+                    <div className="text-center">
+                        <div className="w-10 h-10 border-3 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+                        <p className="text-sm text-slate-500 dark:text-slate-400">Memuat data...</p>
+                    </div>
+                </div>
+            </div>
+        )
+    }
+
     return (
         <div className="p-4 md:p-6 space-y-4 md:space-y-6 pb-24 md:pb-6">
+
+            {/* Action Loading Overlay */}
+            {actionLoading && (
+                <div className="fixed inset-0 z-[90] bg-black/20 backdrop-blur-[1px] flex items-center justify-center pointer-events-auto">
+                    <div className="bg-white dark:bg-slate-800 rounded-xl px-6 py-4 shadow-xl flex items-center gap-3">
+                        <div className="w-5 h-5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+                        <span className="text-sm font-medium text-slate-700 dark:text-slate-200">Menyimpan...</span>
+                    </div>
+                </div>
+            )}
             {/* Header */}
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
