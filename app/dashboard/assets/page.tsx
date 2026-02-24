@@ -216,7 +216,7 @@ export default function AssetsPage() {
         const matchSearch = asset.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
             asset.number.toLowerCase().includes(searchQuery.toLowerCase()) ||
             asset.current_location.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchProperty = filterProperty === 'all' || asset.property === filterProperty;
+        const matchProperty = filterProperty === 'all' || asset.property_id === filterProperty;
         const matchStatus = filterStatus === 'all' || asset.condition === filterStatus;
         return matchSearch && matchProperty && matchStatus;
     });
