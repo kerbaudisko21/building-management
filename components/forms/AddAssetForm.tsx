@@ -8,6 +8,7 @@ import Textarea from '@/components/ui/Textarea';
 import Button from '@/components/ui/Button';
 import { formatCurrency } from '@/utils/currency';
 import { Package, Building, Home, MapPin, DollarSign, Calendar, FileText } from 'lucide-react';
+import { propertyService, roomService } from '@/lib/services/index';
 
 interface AddAssetFormProps {
     isOpen: boolean;
@@ -69,26 +70,18 @@ export default function AddAssetForm({
         setErrors({});
     }, [editData, isOpen]);
 
-    // Property options (FK from properties)
-    const propertyOptions = [
-        { value: '', label: 'Select property' },
-        { value: 'Menteng Residence', label: 'Menteng Residence' },
-        { value: 'BSD City Apartment', label: 'BSD City Apartment' },
-        { value: 'Kemang Suites', label: 'Kemang Suites' },
-        { value: 'Sudirman Park', label: 'Sudirman Park' },
-    ];
+    // Fetch real data from Supabase
+    const [propertyOptions, setPropertyOptions] = useState([{ value: '', label: 'Select property' }]);
+    const [roomOptions, setRoomOptions] = useState([{ value: '', label: 'Select room/unit' }]);
 
-    // Room/Unit options (FK from rooms)
-    const roomOptions = [
-        { value: '', label: 'Select room/unit' },
-        { value: 'Unit 305-A', label: 'Unit 305-A' },
-        { value: 'Unit 201-B', label: 'Unit 201-B' },
-        { value: 'Unit 502-C', label: 'Unit 502-C' },
-        { value: 'Unit 104-A', label: 'Unit 104-A' },
-        { value: 'Common Area', label: 'Common Area' },
-        { value: 'Warehouse', label: 'Warehouse' },
-        { value: 'Lobby', label: 'Lobby' },
-    ];
+    useEffect(() => {
+        propertyService.getAll().then(res => {
+            if (res.data) setPropertyOptions([{ value: '', label: 'Select property' }, ...res.data.map(p => ({ value: p.id, label: p.name }))]);
+        });
+        roomService.getAll().then(res => {
+            if (res.data) setRoomOptions([{ value: '', label: 'Select room/unit' }, ...res.data.map(r => ({ value: r.id, label: `${r.name} - ${r.type}` }))]);
+        });
+    }, [isOpen]);
 
     const categoryOptions = [
         { value: 'Electronics', label: 'Electronics (TV, AC, etc)' },
@@ -268,10 +261,11 @@ export default function AddAssetForm({
 
                     <Input
                         label="Purchase Price (Rp)"
-                        type="number"
+                        type="text"
+                        inputMode="numeric"
                         placeholder="e.g., 4500000"
-                        value={formData.purchase_price ?? ''}
-                        onChange={(e) => setFormData({ ...formData, purchase_price: parseFloat(e.target.value) || 0 })}
+                        value={formData.purchase_price}
+                        onChange={(e) => setFormData({ ...formData, purchase_price: Number(e.target.value.replace(/[^0-9]/g, '')) })}
                         leftIcon={<DollarSign className="w-5 h-5" />}
                         helperText="Optional"
                     />

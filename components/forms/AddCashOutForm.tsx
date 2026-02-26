@@ -169,10 +169,11 @@ export default function AddCashOutForm({ isOpen, onClose, onSubmit }: AddCashOut
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <Input
                         label="Amount (Rp)"
-                        type="number"
+                        type="text"
+                        inputMode="numeric"
                         placeholder="e.g., 750000"
-                        value={formData.amount ?? ''}
-                        onChange={(e) => setFormData({ ...formData, amount: parseFloat(e.target.value) || 0 })}
+                        value={formData.amount}
+                        onChange={(e) => setFormData({ ...formData, amount: Number(e.target.value.replace(/[^0-9]/g, '')) })}
                         error={errors.amount}
                         required
                         leftIcon={<DollarSign className="w-5 h-5" />}

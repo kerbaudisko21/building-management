@@ -6,6 +6,7 @@ import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
 import Button from '@/components/ui/Button';
 import { Home, Building, User, DollarSign, Eye, Maximize } from 'lucide-react';
+import { contactService } from '@/lib/services/index';
 
 interface AddRoomFormProps {
     isOpen: boolean;
@@ -105,21 +106,28 @@ export default function AddRoomForm({
         { value: 'No View', label: 'No View' },
     ];
 
-    // Mock owners from contacts (type = Owner)
-    const ownerOptions = [
-        { value: '', label: 'Select owner' },
-        { value: 'PT Properti Indah', label: 'PT Properti Indah' },
-        { value: 'Budi Santoso', label: 'Budi Santoso' },
-        { value: 'CV Investasi Jaya', label: 'CV Investasi Jaya' },
-    ];
+    // Fetch owners from contacts (type = Owner)
+    const [ownerOptions, setOwnerOptions] = useState([{ value: '', label: 'Select owner' }]);
+    const [tenantOptions, setTenantOptions] = useState([{ value: '', label: 'No tenant (Available)' }]);
 
-    // Mock tenants from contacts (type = Customer, status = Active)
-    const tenantOptions = [
-        { value: '', label: 'No tenant (Available)' },
-        { value: 'John Doe', label: 'John Doe' },
-        { value: 'Sarah Wilson', label: 'Sarah Wilson' },
-        { value: 'Michael Chen', label: 'Michael Chen' },
-    ];
+    useEffect(() => {
+        contactService.getAll({ filters: { type: 'Owner' } }).then(res => {
+            if (res.data) {
+                setOwnerOptions([
+                    { value: '', label: 'Select owner' },
+                    ...res.data.map(c => ({ value: c.name, label: c.name }))
+                ]);
+            }
+        });
+        contactService.getAll({ filters: { type: 'Customer', status: 'Active' } }).then(res => {
+            if (res.data) {
+                setTenantOptions([
+                    { value: '', label: 'No tenant (Available)' },
+                    ...res.data.map(c => ({ value: c.name, label: c.name }))
+                ]);
+            }
+        });
+    }, [isOpen]);
 
     const validate = (): boolean => {
         const newErrors: Partial<Record<keyof RoomFormData, string>> = {};
@@ -287,10 +295,11 @@ export default function AddRoomForm({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <Input
                         label="Floor"
-                        type="number"
+                        type="text"
+                        inputMode="numeric"
                         placeholder="e.g., 3"
-                        value={formData.floor ?? ''}
-                        onChange={(e) => setFormData({ ...formData, floor: parseInt(e.target.value) || 0 })}
+                        value={formData.floor}
+                        onChange={(e) => setFormData({ ...formData, floor: Number(e.target.value.replace(/[^0-9]/g, '')) })}
                         error={errors.floor}
                         required
                         helperText="Ground floor = 0"
@@ -298,10 +307,11 @@ export default function AddRoomForm({
 
                     <Input
                         label="Capacity (persons)"
-                        type="number"
+                        type="text"
+                        inputMode="numeric"
                         placeholder="e.g., 2"
-                        value={formData.capacity ?? ''}
-                        onChange={(e) => setFormData({ ...formData, capacity: parseInt(e.target.value) || 0 })}
+                        value={formData.capacity}
+                        onChange={(e) => setFormData({ ...formData, capacity: Number(e.target.value.replace(/[^0-9]/g, '')) })}
                         error={errors.capacity}
                         required
                         leftIcon={<User className="w-5 h-5" />}
@@ -321,10 +331,11 @@ export default function AddRoomForm({
 
                     <Input
                         label="Size (m²)"
-                        type="number"
+                        type="text"
+                        inputMode="numeric"
                         placeholder="e.g., 35"
-                        value={formData.luas ?? ''}
-                        onChange={(e) => setFormData({ ...formData, luas: parseFloat(e.target.value) || 0 })}
+                        value={formData.luas}
+                        onChange={(e) => setFormData({ ...formData, luas: Number(e.target.value.replace(/[^0-9]/g, '')) })}
                         error={errors.luas}
                         required
                         leftIcon={<Maximize className="w-5 h-5" />}
@@ -372,10 +383,11 @@ export default function AddRoomForm({
                     {shouldShowPrice('daily') && (
                         <Input
                             label="Daily Price (Rp)"
-                            type="number"
+                            type="text"
+                            inputMode="numeric"
                             placeholder="e.g., 500000"
-                            value={formData.price_daily ?? ''}
-                            onChange={(e) => setFormData({ ...formData, price_daily: parseFloat(e.target.value) || 0 })}
+                            value={formData.price_daily}
+                            onChange={(e) => setFormData({ ...formData, price_daily: Number(e.target.value.replace(/[^0-9]/g, '')) })}
                             error={errors.price_daily}
                             required={formData.rent_type === 'daily' || formData.rent_type === 'flexible'}
                             leftIcon={<DollarSign className="w-5 h-5" />}
@@ -385,10 +397,11 @@ export default function AddRoomForm({
                     {shouldShowPrice('monthly') && (
                         <Input
                             label="Monthly Price (Rp)"
-                            type="number"
+                            type="text"
+                            inputMode="numeric"
                             placeholder="e.g., 5000000"
-                            value={formData.price_monthly ?? ''}
-                            onChange={(e) => setFormData({ ...formData, price_monthly: parseFloat(e.target.value) || 0 })}
+                            value={formData.price_monthly}
+                            onChange={(e) => setFormData({ ...formData, price_monthly: Number(e.target.value.replace(/[^0-9]/g, '')) })}
                             error={errors.price_monthly}
                             required={formData.rent_type === 'monthly' || formData.rent_type === 'flexible'}
                             leftIcon={<DollarSign className="w-5 h-5" />}
@@ -398,10 +411,11 @@ export default function AddRoomForm({
                     {shouldShowPrice('yearly') && (
                         <Input
                             label="Yearly Price (Rp)"
-                            type="number"
+                            type="text"
+                            inputMode="numeric"
                             placeholder="e.g., 50000000"
-                            value={formData.price_yearly ?? ''}
-                            onChange={(e) => setFormData({ ...formData, price_yearly: parseFloat(e.target.value) || 0 })}
+                            value={formData.price_yearly}
+                            onChange={(e) => setFormData({ ...formData, price_yearly: Number(e.target.value.replace(/[^0-9]/g, '')) })}
                             error={errors.price_yearly}
                             required={formData.rent_type === 'yearly' || formData.rent_type === 'flexible'}
                             leftIcon={<DollarSign className="w-5 h-5" />}

@@ -8,6 +8,7 @@ import Button from '@/components/ui/Button';
 import { formatCurrency } from '@/utils/currency';
 import { formatDate, getDaysBetween } from '@/utils/date';
 import { FileText, User, Building, Home, Calendar, DollarSign, Clock } from 'lucide-react';
+import { contactService, propertyService, roomService } from '@/lib/services/index';
 
 interface AddContractFormProps {
     isOpen: boolean;
@@ -77,40 +78,26 @@ export default function AddContractForm({
         }
     }, [formData.date_check_out]);
 
-    // Customer options (FK from contacts: type=customer & status=active)
-    const customerOptions = [
-        { value: '', label: 'Select customer' },
-        { value: 'John Doe', label: 'John Doe' },
-        { value: 'Sarah Wilson', label: 'Sarah Wilson' },
-        { value: 'Michael Chen', label: 'Michael Chen' },
-        { value: 'Lisa Wong', label: 'Lisa Wong' },
-    ];
+    // Fetch real data from Supabase
+    const [customerOptions, setCustomerOptions] = useState([{ value: '', label: 'Select customer' }]);
+    const [ownerOptions, setOwnerOptions] = useState([{ value: '', label: 'Select owner' }]);
+    const [propertyOptions, setPropertyOptions] = useState([{ value: '', label: 'Select property' }]);
+    const [roomOptions, setRoomOptions] = useState([{ value: '', label: 'Select room/unit' }]);
 
-    // Owner options (FK from contacts: type=owner)
-    const ownerOptions = [
-        { value: '', label: 'Select owner' },
-        { value: 'PT Properti Indah', label: 'PT Properti Indah' },
-        { value: 'Budi Santoso', label: 'Budi Santoso' },
-        { value: 'CV Investasi Jaya', label: 'CV Investasi Jaya' },
-    ];
-
-    // Property options (FK from properties)
-    const propertyOptions = [
-        { value: '', label: 'Select property' },
-        { value: 'Menteng Residence', label: 'Menteng Residence' },
-        { value: 'BSD City Apartment', label: 'BSD City Apartment' },
-        { value: 'Kemang Suites', label: 'Kemang Suites' },
-        { value: 'Sudirman Park', label: 'Sudirman Park' },
-    ];
-
-    // Room/Unit options (FK from rooms)
-    const roomOptions = [
-        { value: '', label: 'Select room/unit' },
-        { value: 'Unit 305-A', label: 'Unit 305-A' },
-        { value: 'Unit 201-B', label: 'Unit 201-B' },
-        { value: 'Unit 502-C', label: 'Unit 502-C' },
-        { value: 'Unit 104-A', label: 'Unit 104-A' },
-    ];
+    useEffect(() => {
+        contactService.getAll({ filters: { type: 'Customer' } }).then(res => {
+            if (res.data) setCustomerOptions([{ value: '', label: 'Select customer' }, ...res.data.map(c => ({ value: c.name, label: c.name }))]);
+        });
+        contactService.getAll({ filters: { type: 'Owner' } }).then(res => {
+            if (res.data) setOwnerOptions([{ value: '', label: 'Select owner' }, ...res.data.map(c => ({ value: c.name, label: c.name }))]);
+        });
+        propertyService.getAll().then(res => {
+            if (res.data) setPropertyOptions([{ value: '', label: 'Select property' }, ...res.data.map(p => ({ value: p.id, label: p.name }))]);
+        });
+        roomService.getAll().then(res => {
+            if (res.data) setRoomOptions([{ value: '', label: 'Select room/unit' }, ...res.data.map(r => ({ value: r.id, label: `${r.name} - ${r.type}` }))]);
+        });
+    }, [isOpen]);
 
     const rentTypeOptions = [
         { value: 'flexible', label: 'Flexible (Any duration)' },
@@ -312,10 +299,11 @@ export default function AddContractForm({
                 {/* Rent Amount */}
                 <Input
                     label="Rent Amount (Rp)"
-                    type="number"
+                    type="text"
+                    inputMode="numeric"
                     placeholder="e.g., 5000000"
-                    value={formData.amount_rent ?? ''}
-                    onChange={(e) => setFormData({ ...formData, amount_rent: parseFloat(e.target.value) || 0 })}
+                    value={formData.amount_rent}
+                    onChange={(e) => setFormData({ ...formData, amount_rent: Number(e.target.value.replace(/[^0-9]/g, '')) })}
                     error={errors.amount_rent}
                     required
                     leftIcon={<DollarSign className="w-5 h-5" />}

@@ -63,9 +63,9 @@ export default function AddTodoForm({ isOpen, onClose, onSubmit }: AddTodoFormPr
     ];
 
     const statusOptions = [
-        { value: 'Todo', label: 'Todo' },
+        { value: 'Pending', label: 'Pending' },
         { value: 'In Progress', label: 'In Progress' },
-        { value: 'Done', label: 'Done' },
+        { value: 'Completed', label: 'Completed' },
     ];
 
     const validate = (): boolean => {

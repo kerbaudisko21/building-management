@@ -6,6 +6,7 @@ import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
 import Button from '@/components/ui/Button';
 import { User, Phone, Building, Home, DollarSign, Calendar } from 'lucide-react';
+import { propertyService, roomService } from '@/lib/services/index';
 
 interface AddWaitingListFormProps {
     isOpen: boolean;
@@ -58,23 +59,18 @@ export default function AddWaitingListForm({
         setErrors({});
     }, [editData, isOpen]);
 
-    // Property options (FK from properties)
-    const propertyOptions = [
-        { value: '', label: 'Select property' },
-        { value: 'Menteng Residence', label: 'Menteng Residence' },
-        { value: 'BSD City Apartment', label: 'BSD City Apartment' },
-        { value: 'Kemang Suites', label: 'Kemang Suites' },
-        { value: 'Sudirman Park', label: 'Sudirman Park' },
-    ];
+    // Fetch real data from Supabase
+    const [propertyOptions, setPropertyOptions] = useState([{ value: '', label: 'Select property' }]);
+    const [roomUnitOptions, setRoomUnitOptions] = useState([{ value: '', label: 'Select room/unit type' }]);
 
-    // Room/Unit options (FK from rooms)
-    const roomUnitOptions = [
-        { value: '', label: 'Select room/unit type' },
-        { value: 'Standard (30m²)', label: 'Standard (30m²)' },
-        { value: 'Studio (35m²)', label: 'Studio (35m²)' },
-        { value: 'Deluxe (45m²)', label: 'Deluxe (45m²)' },
-        { value: 'Suite (60m²)', label: 'Suite (60m²)' },
-    ];
+    useEffect(() => {
+        propertyService.getAll().then(res => {
+            if (res.data) setPropertyOptions([{ value: '', label: 'Select property' }, ...res.data.map(p => ({ value: p.id, label: p.name }))]);
+        });
+        roomService.getAll({ filters: { status: 'Available' } }).then(res => {
+            if (res.data) setRoomUnitOptions([{ value: '', label: 'Select room/unit type' }, ...res.data.map(r => ({ value: r.id, label: `${r.name} - ${r.type} (${r.luas}m²)` }))]);
+        });
+    }, [isOpen]);
 
     const validate = (): boolean => {
         const newErrors: Partial<Record<keyof WaitingListFormData, string>> = {};
@@ -204,10 +200,11 @@ export default function AddWaitingListForm({
                 {/* Budget */}
                 <Input
                     label="Budget (Rp/month)"
-                    type="number"
+                    type="text"
+                    inputMode="numeric"
                     placeholder="e.g., 5000000"
-                    value={formData.budget ?? ''}
-                    onChange={(e) => setFormData({ ...formData, budget: parseFloat(e.target.value) || 0 })}
+                    value={formData.budget}
+                    onChange={(e) => setFormData({ ...formData, budget: Number(e.target.value.replace(/[^0-9]/g, '')) })}
                     error={errors.budget}
                     required
                     leftIcon={<DollarSign className="w-5 h-5" />}

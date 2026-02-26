@@ -159,10 +159,11 @@ export default function AddPropertyForm({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <Input
                         label="Total Units"
-                        type="number"
+                        type="text"
+                        inputMode="numeric"
                         placeholder="e.g., 50"
-                        value={formData.total_unit ?? ''}
-                        onChange={(e) => setFormData({ ...formData, total_unit: parseInt(e.target.value) || 0 })}
+                        value={formData.total_unit}
+                        onChange={(e) => setFormData({ ...formData, total_unit: Number(e.target.value.replace(/[^0-9]/g, '')) })}
                         error={errors.total_unit}
                         required
                         leftIcon={<Home className="w-5 h-5" />}

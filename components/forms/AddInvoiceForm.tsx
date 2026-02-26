@@ -1,12 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Modal from '@/components/ui/Modal';
 import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
 import Textarea from '@/components/ui/Textarea';
 import Button from '@/components/ui/Button';
 import { FileText, User, DollarSign, Calendar } from 'lucide-react';
+import { contactService } from '@/lib/services/index';
 
 interface AddInvoiceFormProps {
     isOpen: boolean;
@@ -55,9 +56,21 @@ export default function AddInvoiceForm({
         { value: 'other', label: 'Other' },
     ];
 
+    const [fetchedTenants, setFetchedTenants] = useState<{ id: string; name: string }[]>([]);
+
+    useEffect(() => {
+        if (tenants.length === 0) {
+            contactService.getAll({ filters: { type: 'Customer', status: 'Active' } }).then(res => {
+                if (res.data) setFetchedTenants(res.data.map(c => ({ id: c.id, name: c.name })));
+            });
+        }
+    }, [isOpen, tenants.length]);
+
+    const tenantList = tenants.length > 0 ? tenants : fetchedTenants;
+
     const tenantOptions = [
         { value: '', label: 'Select tenant' },
-        ...tenants.map(t => ({ value: t.id, label: t.name })),
+        ...tenantList.map(t => ({ value: t.name, label: t.name })),
     ];
 
     const statusOptions = [
@@ -172,10 +185,11 @@ export default function AddInvoiceForm({
                 {/* Amount */}
                 <Input
                     label="Amount (Rp)"
-                    type="number"
+                    type="text"
+                    inputMode="numeric"
                     placeholder="e.g., 5000000"
-                    value={formData.amount ?? ''}
-                    onChange={(e) => setFormData({ ...formData, amount: parseFloat(e.target.value) || 0 })}
+                    value={formData.amount}
+                    onChange={(e) => setFormData({ ...formData, amount: Number(e.target.value.replace(/[^0-9]/g, '')) })}
                     error={errors.amount}
                     required
                     leftIcon={<DollarSign className="w-5 h-5" />}
