@@ -270,7 +270,7 @@ export default function AddAssetForm({
                         label="Purchase Price (Rp)"
                         type="number"
                         placeholder="e.g., 4500000"
-                        value={formData.purchase_price || ''}
+                        value={formData.purchase_price ?? ''}
                         onChange={(e) => setFormData({ ...formData, purchase_price: parseFloat(e.target.value) || 0 })}
                         leftIcon={<DollarSign className="w-5 h-5" />}
                         helperText="Optional"

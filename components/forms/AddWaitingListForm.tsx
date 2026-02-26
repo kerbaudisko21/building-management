@@ -206,7 +206,7 @@ export default function AddWaitingListForm({
                     label="Budget (Rp/month)"
                     type="number"
                     placeholder="e.g., 5000000"
-                    value={formData.budget || ''}
+                    value={formData.budget ?? ''}
                     onChange={(e) => setFormData({ ...formData, budget: parseFloat(e.target.value) || 0 })}
                     error={errors.budget}
                     required

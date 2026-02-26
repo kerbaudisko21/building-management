@@ -174,7 +174,7 @@ export default function AddInvoiceForm({
                     label="Amount (Rp)"
                     type="number"
                     placeholder="e.g., 5000000"
-                    value={formData.amount || ''}
+                    value={formData.amount ?? ''}
                     onChange={(e) => setFormData({ ...formData, amount: parseFloat(e.target.value) || 0 })}
                     error={errors.amount}
                     required

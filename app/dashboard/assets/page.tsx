@@ -399,7 +399,7 @@ export default function AssetsPage() {
                 isOpen={isFormOpen}
                 onClose={handleCloseForm}
                 onSubmit={handleFormSubmit}
-                editData={editingAsset}
+                editData={editingAsset as unknown as AssetFormData | null}
             />
         </div>
     )

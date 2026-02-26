@@ -140,7 +140,7 @@ export default function TodoListPage() {
                             <div className="min-w-0 flex-1">
                                 <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 truncate">Todo</p>
                                 <p className="text-xl md:text-2xl font-bold text-amber-600 dark:text-amber-400 mt-1 truncate">
-                                    {tasks.filter(t => t.status === 'Todo').length}
+                                    {tasks.filter(t => t.status === 'Pending').length}
                                 </p>
                             </div>
                             <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center flex-shrink-0 ml-2">
@@ -170,7 +170,7 @@ export default function TodoListPage() {
                             <div className="min-w-0 flex-1">
                                 <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 truncate">Done</p>
                                 <p className="text-xl md:text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1 truncate">
-                                    {tasks.filter(t => t.status === 'Done').length}
+                                    {tasks.filter(t => t.status === 'Completed').length}
                                 </p>
                             </div>
                             <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center flex-shrink-0 ml-2">
@@ -224,7 +224,7 @@ export default function TodoListPage() {
                                         </Badge>
                                         <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400">
                                             <Calendar className="w-4 h-4" />
-                                            <span className="text-xs md:text-sm">{formatDate(task.due_date)}</span>
+                                            <span className="text-xs md:text-sm">{formatDate(task.due_date || '')}</span>
                                         </div>
                                         <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400">
                                             <User className="w-4 h-4" />

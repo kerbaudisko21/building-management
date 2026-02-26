@@ -156,7 +156,7 @@ export default function AddCashInForm({ isOpen, onClose, onSubmit }: AddCashInFo
                         label="Amount (Rp)"
                         type="number"
                         placeholder="e.g., 3500000"
-                        value={formData.amount || ''}
+                        value={formData.amount ?? ''}
                         onChange={(e) => setFormData({ ...formData, amount: parseFloat(e.target.value) || 0 })}
                         error={errors.amount}
                         required

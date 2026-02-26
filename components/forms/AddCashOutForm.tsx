@@ -171,7 +171,7 @@ export default function AddCashOutForm({ isOpen, onClose, onSubmit }: AddCashOut
                         label="Amount (Rp)"
                         type="number"
                         placeholder="e.g., 750000"
-                        value={formData.amount || ''}
+                        value={formData.amount ?? ''}
                         onChange={(e) => setFormData({ ...formData, amount: parseFloat(e.target.value) || 0 })}
                         error={errors.amount}
                         required

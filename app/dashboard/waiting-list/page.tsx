@@ -245,8 +245,8 @@ export default function WaitingListPage() {
 
     // Stats
     const totalProspects = prospects.length;
-    const newProspects = prospects.filter(p => p.status === 'New').length;
-    const interestedProspects = prospects.filter(p => p.status === 'Interested').length;
+    const newProspects = prospects.filter(p => p.status === 'Waiting').length;
+    const interestedProspects = prospects.filter(p => p.status === 'Contacted').length;
     const avgBudget = Math.round(
         prospects.reduce((sum, p) => sum + p.budget, 0) / prospects.length
     );
@@ -405,7 +405,7 @@ export default function WaitingListPage() {
             {/* Mobile Cards */}
             <div className="block md:hidden space-y-3">
                 {filteredProspects.map((prospect) => {
-                    const daysUntil = getDaysUntilEntry(prospect.date_entry_plan);
+                    const daysUntil = getDaysUntilEntry(prospect.date_entry_plan || '');
                     return (
                         <Card key={prospect.id} hover>
                             <CardContent className="p-4">
@@ -453,7 +453,7 @@ export default function WaitingListPage() {
                                     <div className="p-2 bg-slate-50 dark:bg-slate-800/50 rounded">
                                         <p className="text-slate-500 dark:text-slate-400">Entry Plan</p>
                                         <p className="font-semibold text-slate-900 dark:text-white">
-                                            {formatDate(prospect.date_entry_plan)}
+                                            {formatDate(prospect.date_entry_plan || '')}
                                         </p>
                                         <p className={`text-xs mt-0.5 ${
                                             daysUntil < 0 ? 'text-red-600' :
@@ -493,7 +493,7 @@ export default function WaitingListPage() {
                 isOpen={isFormOpen}
                 onClose={handleCloseForm}
                 onSubmit={handleFormSubmit}
-                editData={editingProspect}
+                editData={editingProspect as unknown as WaitingListFormData | null}
             />
         </div>
     );

@@ -161,7 +161,7 @@ export default function AddPropertyForm({
                         label="Total Units"
                         type="number"
                         placeholder="e.g., 50"
-                        value={formData.total_unit || ''}
+                        value={formData.total_unit ?? ''}
                         onChange={(e) => setFormData({ ...formData, total_unit: parseInt(e.target.value) || 0 })}
                         error={errors.total_unit}
                         required

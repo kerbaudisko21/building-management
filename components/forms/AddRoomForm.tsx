@@ -289,7 +289,7 @@ export default function AddRoomForm({
                         label="Floor"
                         type="number"
                         placeholder="e.g., 3"
-                        value={formData.floor || ''}
+                        value={formData.floor ?? ''}
                         onChange={(e) => setFormData({ ...formData, floor: parseInt(e.target.value) || 0 })}
                         error={errors.floor}
                         required
@@ -300,7 +300,7 @@ export default function AddRoomForm({
                         label="Capacity (persons)"
                         type="number"
                         placeholder="e.g., 2"
-                        value={formData.capacity || ''}
+                        value={formData.capacity ?? ''}
                         onChange={(e) => setFormData({ ...formData, capacity: parseInt(e.target.value) || 0 })}
                         error={errors.capacity}
                         required
@@ -323,7 +323,7 @@ export default function AddRoomForm({
                         label="Size (m²)"
                         type="number"
                         placeholder="e.g., 35"
-                        value={formData.luas || ''}
+                        value={formData.luas ?? ''}
                         onChange={(e) => setFormData({ ...formData, luas: parseFloat(e.target.value) || 0 })}
                         error={errors.luas}
                         required
@@ -346,7 +346,7 @@ export default function AddRoomForm({
                     <Select
                         label="Tenant"
                         options={tenantOptions}
-                        value={formData.tenant || ''}
+                        value={formData.tenant ?? ''}
                         onChange={(e) => setFormData({ ...formData, tenant: e.target.value || null })}
                         helperText="Optional - From active customers"
                     />
@@ -374,7 +374,7 @@ export default function AddRoomForm({
                             label="Daily Price (Rp)"
                             type="number"
                             placeholder="e.g., 500000"
-                            value={formData.price_daily || ''}
+                            value={formData.price_daily ?? ''}
                             onChange={(e) => setFormData({ ...formData, price_daily: parseFloat(e.target.value) || 0 })}
                             error={errors.price_daily}
                             required={formData.rent_type === 'daily' || formData.rent_type === 'flexible'}
@@ -387,7 +387,7 @@ export default function AddRoomForm({
                             label="Monthly Price (Rp)"
                             type="number"
                             placeholder="e.g., 5000000"
-                            value={formData.price_monthly || ''}
+                            value={formData.price_monthly ?? ''}
                             onChange={(e) => setFormData({ ...formData, price_monthly: parseFloat(e.target.value) || 0 })}
                             error={errors.price_monthly}
                             required={formData.rent_type === 'monthly' || formData.rent_type === 'flexible'}
@@ -400,7 +400,7 @@ export default function AddRoomForm({
                             label="Yearly Price (Rp)"
                             type="number"
                             placeholder="e.g., 50000000"
-                            value={formData.price_yearly || ''}
+                            value={formData.price_yearly ?? ''}
                             onChange={(e) => setFormData({ ...formData, price_yearly: parseFloat(e.target.value) || 0 })}
                             error={errors.price_yearly}
                             required={formData.rent_type === 'yearly' || formData.rent_type === 'flexible'}

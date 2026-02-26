@@ -314,7 +314,7 @@ export default function AddContractForm({
                     label="Rent Amount (Rp)"
                     type="number"
                     placeholder="e.g., 5000000"
-                    value={formData.amount_rent || ''}
+                    value={formData.amount_rent ?? ''}
                     onChange={(e) => setFormData({ ...formData, amount_rent: parseFloat(e.target.value) || 0 })}
                     error={errors.amount_rent}
                     required

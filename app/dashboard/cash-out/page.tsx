@@ -79,7 +79,7 @@ export default function CashOutPage() {
     ];
 
     const totalExpense = expenses
-        .filter(e => e.status === 'Paid')
+        .filter(e => e.status === 'Completed')
         .reduce((sum, e) => sum + e.amount, 0);
 
     const columns = [
@@ -256,7 +256,7 @@ export default function CashOutPage() {
                                     </p>
                                     <p className="text-xs text-slate-600 dark:text-slate-400">{expense.recipient}</p>
                                 </div>
-                                <Badge variant={expense.status === 'Paid' ? 'success' : 'warning'} dot size="sm">
+                                <Badge variant={expense.status === 'Completed' ? 'success' : 'warning'} dot size="sm">
                                     {expense.status}
                                 </Badge>
                             </div>

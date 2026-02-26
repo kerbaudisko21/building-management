@@ -70,8 +70,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                         fullName: profile.full_name || prev.fullName,
                     } : prev)
                 }
-            })
-            .catch(() => {
+            }, () => {
                 // Profile fetch failed — that's OK, basic user data is enough
             })
     }, [supabase])

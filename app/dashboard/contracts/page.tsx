@@ -282,7 +282,7 @@ export default function ContractsPage() {
     const filteredContracts = contracts.filter(contract => {
         const matchSearch = contract.number.toLowerCase().includes(searchQuery.toLowerCase()) ||
             contract.name_customer.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            contract.property.toLowerCase().includes(searchQuery.toLowerCase());
+            (contract.property_id || '').toLowerCase().includes(searchQuery.toLowerCase());
         const matchStatus = filterStatus === 'all' || contract.status === filterStatus;
         const matchRentType = filterRentType === 'all' || contract.rent_type === filterRentType;
         return matchSearch && matchStatus && matchRentType;
@@ -459,7 +459,7 @@ export default function ContractsPage() {
                                         {contract.number}
                                     </h3>
                                     <p className="text-xs text-slate-600 dark:text-slate-400">
-                                        {formatDate(contract.date_check_in)}
+                                        {formatDate(contract.date_check_in || '')}
                                     </p>
                                     <div className="flex gap-2 mt-1">
                                         <Badge variant={getRentTypeBadge(contract.rent_type)} size="sm">
@@ -485,10 +485,10 @@ export default function ContractsPage() {
                                     <Building className="w-4 h-4 text-slate-400 flex-shrink-0 mt-0.5" />
                                     <div className="min-w-0 flex-1">
                                         <p className="text-slate-900 dark:text-white font-medium truncate">
-                                            {contract.property}
+                                            {contract.property_id || '-'}
                                         </p>
                                         <p className="text-xs text-slate-600 dark:text-slate-400 truncate">
-                                            {contract.room_unit}
+                                            {contract.room_id || '-'}
                                         </p>
                                     </div>
                                 </div>
@@ -536,7 +536,7 @@ export default function ContractsPage() {
                 isOpen={isFormOpen}
                 onClose={handleCloseForm}
                 onSubmit={handleFormSubmit}
-                editData={editingContract}
+                editData={editingContract as unknown as ContractFormData | null}
             />
         </div>
     );

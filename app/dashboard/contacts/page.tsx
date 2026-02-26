@@ -490,7 +490,7 @@ export default function ContactsPage() {
                 isOpen={isFormOpen}
                 onClose={handleCloseForm}
                 onSubmit={handleFormSubmit}
-                editData={editingContact}
+                editData={editingContact as unknown as ContactFormData | null}
             />
         </div>
     );

@@ -244,7 +244,7 @@ export default function MaintenancePage() {
                             <div className="min-w-0 flex-1">
                                 <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 truncate">Pending</p>
                                 <p className="text-xl md:text-2xl font-bold text-amber-600 dark:text-amber-400 mt-1 truncate">
-                                    {requests.filter(r => r.status === 'Pending').length}
+                                    {requests.filter(r => r.status === 'Open').length}
                                 </p>
                             </div>
                             <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center flex-shrink-0 ml-2">
