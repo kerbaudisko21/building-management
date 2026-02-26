@@ -9,6 +9,7 @@ import { formatCurrency } from '@/utils/currency';
 import { formatDate, getDaysBetween } from '@/utils/date';
 import { FileText, User, Building, Home, Calendar, DollarSign, Clock } from 'lucide-react';
 import { contactService, propertyService, roomService } from '@/lib/services/index';
+import type { RoomRow } from '@/types/database';
 
 interface AddContractFormProps {
     isOpen: boolean;
@@ -82,7 +83,7 @@ export default function AddContractForm({
     const [customerOptions, setCustomerOptions] = useState([{ value: '', label: 'Select customer' }]);
     const [ownerOptions, setOwnerOptions] = useState([{ value: '', label: 'Select owner' }]);
     const [propertyOptions, setPropertyOptions] = useState([{ value: '', label: 'Select property' }]);
-    const [roomOptions, setRoomOptions] = useState([{ value: '', label: 'Select room/unit' }]);
+    const [allRooms, setAllRooms] = useState<RoomRow[]>([]);
 
     useEffect(() => {
         contactService.getAll({ filters: { type: 'Customer' } }).then(res => {
@@ -95,9 +96,17 @@ export default function AddContractForm({
             if (res.data) setPropertyOptions([{ value: '', label: 'Select property' }, ...res.data.map(p => ({ value: p.id, label: p.name }))]);
         });
         roomService.getAll().then(res => {
-            if (res.data) setRoomOptions([{ value: '', label: 'Select room/unit' }, ...res.data.map(r => ({ value: r.id, label: `${r.name} - ${r.type}` }))]);
+            if (res.data) setAllRooms(res.data);
         });
     }, [isOpen]);
+
+    // Filter rooms by selected property
+    const roomOptions = [
+        { value: '', label: formData.property ? 'Select room/unit' : 'Select property first' },
+        ...allRooms
+            .filter(r => !formData.property || r.property_id === formData.property)
+            .map(r => ({ value: r.id, label: `${r.name} - ${r.type}` }))
+    ];
 
     const rentTypeOptions = [
         { value: 'flexible', label: 'Flexible (Any duration)' },

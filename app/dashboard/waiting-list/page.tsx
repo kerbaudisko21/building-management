@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react'
-import { waitingListService } from '@/lib/services'
+import { waitingListService, contactService } from '@/lib/services'
 import { useCrud } from '@/lib/hooks/useSupabaseQuery'
 import type { WaitingListRow, WaitingListInsert, WaitingListUpdate } from '@/types/database'
 import { formatCurrency, formatCurrencyShort, formatDate } from '@/utils'
@@ -181,7 +181,7 @@ export default function WaitingListPage() {
             label: 'Actions',
             render: (item: any) => (
                 <div className="flex items-center gap-2">
-                    <Button size="sm" variant="ghost" title="Convert to customer">
+                    <Button size="sm" variant="ghost" title="Convert to customer" onClick={() => handleConvert(item)}>
                         <CheckCircle className="w-4 h-4 text-green-600" />
                     </Button>
                     <Button size="sm" variant="ghost" onClick={() => handleEdit(item)}>
@@ -222,6 +222,27 @@ export default function WaitingListPage() {
         else toast.success('Berhasil', 'Data berhasil dihapus')
     }
 
+
+    const handleConvert = async (prospect: WaitingListRow) => {
+        const yes = await confirm({ title: 'Convert ke Customer', message: `Convert ${prospect.name} menjadi contact (Customer)?`, variant: 'info' })
+        if (!yes) return
+        const contactResult = await contactService.create({
+            name: prospect.name,
+            no_ktp: '-',
+            no_wa: prospect.phone,
+            address: '-',
+            type: 'Customer',
+            room: prospect.unit_type || '-',
+            status: 'Active',
+            date_check_in: null,
+        } as any)
+        if (contactResult.error) {
+            toast.error('Gagal convert', contactResult.error)
+            return
+        }
+        await updateItem(prospect.id, { status: 'Approved' } as any)
+        toast.success('Berhasil', `${prospect.name} berhasil di-convert ke Customer`)
+    }
 
     const handleAddNew = () => {
         setEditingProspect(null);

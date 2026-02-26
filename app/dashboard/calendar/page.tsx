@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/Card';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
@@ -20,6 +20,7 @@ import {
     User,
     FileText,
 } from 'lucide-react';
+import { contractService, maintenanceService, todoService } from '@/lib/services';
 import { Calendar, momentLocalizer, View } from 'react-big-calendar';
 import moment from 'moment';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
@@ -44,7 +45,7 @@ interface EventDetail {
 export default function CalendarPage() {
     const [viewMode, setViewMode] = useState<'calendar' | 'gantt' | 'grid'>('calendar');
     const [calendarView, setCalendarView] = useState<View>('month');
-    const [currentDate, setCurrentDate] = useState(new Date('2024-12-15'));
+    const [currentDate, setCurrentDate] = useState(new Date());
     const [selectedEvent, setSelectedEvent] = useState<EventDetail | null>(null);
     const [showDetailModal, setShowDetailModal] = useState(false);
 
@@ -53,120 +54,51 @@ export default function CalendarPage() {
     const [filterType, setFilterType] = useState('all');
     const [filterStatus, setFilterStatus] = useState('all');
 
-    const events: EventDetail[] = [
-        {
-            id: 1,
-            title: 'Monthly Cleaning - Building A',
-            start: new Date('2024-12-15T09:00:00'),
-            end: new Date('2024-12-15T12:00:00'),
-            startDate: '2024-12-15',
-            endDate: '2024-12-15',
-            time: '09:00',
-            type: 'Maintenance',
-            location: 'Building A',
-            status: 'Scheduled',
-            description: 'Complete cleaning service for all units',
-            assignedTo: 'Cleaning Team',
-        },
-        {
-            id: 2,
-            title: 'Contract Renewal - John Doe',
-            start: new Date('2024-12-18T14:00:00'),
-            end: new Date('2024-12-18T15:30:00'),
-            startDate: '2024-12-16',
-            endDate: '2024-12-20',
-            time: '14:00',
-            type: 'Meeting',
-            location: 'Office',
-            status: 'In Progress',
-            description: 'Discuss contract renewal terms',
-            assignedTo: 'Admin',
-        },
-        {
-            id: 3,
-            title: 'Property Inspection',
-            start: new Date('2024-12-20T10:00:00'),
-            end: new Date('2024-12-20T16:00:00'),
-            startDate: '2024-12-20',
-            endDate: '2024-12-22',
-            time: '10:00',
-            type: 'Inspection',
-            location: 'Building B',
-            status: 'Scheduled',
-            description: 'Quarterly property inspection',
-            assignedTo: 'Inspector A',
-        },
-        {
-            id: 4,
-            title: 'Rent Payment Deadline',
-            start: new Date('2024-12-25T00:00:00'),
-            end: new Date('2024-12-25T23:59:00'),
-            startDate: '2024-12-20',
-            endDate: '2024-12-25',
-            time: '23:59',
-            type: 'Payment',
-            location: 'All Properties',
-            status: 'In Progress',
-            description: 'Monthly rent collection deadline',
-            assignedTo: 'Finance',
-        },
-        {
-            id: 5,
-            title: 'Staff Meeting',
-            start: new Date('2024-12-16T15:00:00'),
-            end: new Date('2024-12-16T16:30:00'),
-            startDate: '2024-12-16',
-            endDate: '2024-12-16',
-            time: '15:00',
-            type: 'Meeting',
-            location: 'Office',
-            status: 'Scheduled',
-            description: 'Monthly staff coordination meeting',
-            assignedTo: 'Manager',
-        },
-        {
-            id: 6,
-            title: 'AC Maintenance - Building C',
-            start: new Date('2024-12-22T08:00:00'),
-            end: new Date('2024-12-22T17:00:00'),
-            startDate: '2024-12-22',
-            endDate: '2024-12-24',
-            time: '08:00',
-            type: 'Maintenance',
-            location: 'Building C',
-            status: 'Scheduled',
-            description: 'Routine AC servicing',
-            assignedTo: 'Technician B',
-        },
-        {
-            id: 7,
-            title: 'Fire Safety Check',
-            start: new Date('2024-12-12T10:00:00'),
-            end: new Date('2024-12-12T14:00:00'),
-            startDate: '2024-12-12',
-            endDate: '2024-12-12',
-            time: '10:00',
-            type: 'Inspection',
-            location: 'All Buildings',
-            status: 'Scheduled',
-            description: 'Annual fire safety inspection',
-            assignedTo: 'Fire Inspector',
-        },
-        {
-            id: 8,
-            title: 'Water Bill Payment',
-            start: new Date('2024-12-28T00:00:00'),
-            end: new Date('2024-12-28T23:59:00'),
-            startDate: '2024-12-28',
-            endDate: '2024-12-28',
-            time: 'All day',
-            type: 'Payment',
-            location: 'Finance',
-            status: 'Scheduled',
-            description: 'Monthly water bill payment',
-            assignedTo: 'Finance',
-        },
-    ];
+    const [events, setEvents] = useState<EventDetail[]>([]);
+    const [loadingEvents, setLoadingEvents] = useState(true);
+
+    useEffect(() => {
+        async function loadCalendarData() {
+            setLoadingEvents(true);
+            const evts: EventDetail[] = [];
+            let idx = 1;
+
+            const [ctrRes, mntRes, todoRes] = await Promise.all([
+                contractService.getAll(),
+                maintenanceService.getAll(),
+                todoService.getAll(),
+            ]);
+
+            if (ctrRes.data) {
+                ctrRes.data.forEach(ct => {
+                    if (ct.date_check_in) {
+                        evts.push({ id: idx++, title: 'Check-in: ' + ct.name_customer, start: new Date(ct.date_check_in), end: new Date(ct.date_check_in), startDate: ct.date_check_in, endDate: ct.date_check_in, time: '14:00', type: 'Meeting', location: '-', status: ct.status === 'Active' ? 'Completed' : 'Scheduled', description: 'Contract ' + (ct.number || ''), assignedTo: 'Admin' });
+                    }
+                    if (ct.date_check_out) {
+                        evts.push({ id: idx++, title: 'Check-out: ' + ct.name_customer, start: new Date(ct.date_check_out), end: new Date(ct.date_check_out), startDate: ct.date_check_out, endDate: ct.date_check_out, time: '12:00', type: 'Meeting', location: '-', status: new Date(ct.date_check_out) < new Date() ? 'Completed' : 'Scheduled', description: 'Contract ends', assignedTo: 'Admin' });
+                    }
+                });
+            }
+
+            if (mntRes.data) {
+                mntRes.data.forEach(m => {
+                    evts.push({ id: idx++, title: m.title, start: new Date(m.reported_date), end: new Date(m.completed_date || m.reported_date), startDate: m.reported_date, endDate: m.completed_date || m.reported_date, time: '09:00', type: 'Maintenance', location: m.room_name, status: m.status === 'Completed' ? 'Completed' : m.status === 'In Progress' ? 'In Progress' : 'Scheduled', description: m.description, assignedTo: m.assigned_to || '-' });
+                });
+            }
+
+            if (todoRes.data) {
+                todoRes.data.forEach(t => {
+                    if (t.due_date) {
+                        evts.push({ id: idx++, title: t.title, start: new Date(t.due_date), end: new Date(t.due_date), startDate: t.due_date, endDate: t.due_date, time: '23:59', type: 'Payment', location: '-', status: t.status === 'Completed' ? 'Completed' : t.status === 'In Progress' ? 'In Progress' : 'Scheduled', description: t.description, assignedTo: t.assigned_to || '-' });
+                    }
+                });
+            }
+
+            setEvents(evts);
+            setLoadingEvents(false);
+        }
+        loadCalendarData();
+    }, []);
 
     const typeOptions = [
         { value: 'all', label: 'All Types' },

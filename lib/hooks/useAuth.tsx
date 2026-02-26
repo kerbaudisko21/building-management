@@ -54,25 +54,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const initialized = useRef(false)
     const signingOut = useRef(false)
 
-    // Load full profile in background (non-blocking)
-    const loadProfileInBackground = useCallback((authUser: User) => {
-        supabase
-            .from('user_profiles')
-            .select('*')
-            .eq('id', authUser.id)
-            .single()
-            .then(({ data: profile }) => {
-                if (signingOut.current) return
-                if (profile) {
-                    setUser(prev => prev ? {
-                        ...prev,
-                        role: profile.role || 'admin',
-                        fullName: profile.full_name || prev.fullName,
-                    } : prev)
-                }
-            }, () => {
-                // Profile fetch failed — that's OK, basic user data is enough
-            })
+    // Load full profile (await for correct role)
+    const loadProfileInBackground = useCallback(async (authUser: User) => {
+        try {
+            const { data: profile } = await supabase
+                .from('user_profiles')
+                .select('*')
+                .eq('id', authUser.id)
+                .single()
+            if (signingOut.current) return
+            if (profile) {
+                setUser({
+                    id: authUser.id,
+                    email: authUser.email || '',
+                    role: profile.role || 'admin',
+                    fullName: profile.full_name || authUser.user_metadata?.full_name || authUser.email?.split('@')[0] || 'User',
+                })
+            }
+        } catch {
+            // Profile fetch failed - keep basic user
+        }
     }, [supabase])
 
     // ═══ SIGN IN ═══

@@ -50,11 +50,25 @@ export default function TodoListPage() {
             priority: (data.priority.charAt(0).toUpperCase() + data.priority.slice(1)) as any,
             due_date: data.dueDate || null,
             assigned_to: data.assignedTo || '',
-            status: data.status === 'todo' ? 'Pending' : data.status === 'in-progress' ? 'In Progress' : 'Completed',
+            status: data.status as any,
         }
         const addResult = await addItem(insert)
         if (addResult.error) toast.error('Gagal menyimpan', addResult.error)
-        else toast.success('Berhasil', 'Data berhasil ditambahkan')
+        else { toast.success('Berhasil', 'Task berhasil ditambahkan'); setIsFormOpen(false) }
+    }
+
+    const handleStatusChange = async (task: TodoRow, newStatus: string) => {
+        const result = await updateItem(task.id, { status: newStatus } as any)
+        if (result.error) toast.error('Gagal', result.error)
+        else toast.success('Berhasil', 'Status diubah ke ' + newStatus)
+    }
+
+    const handleDeleteTask = async (id: string) => {
+        const yes = await confirm({ title: 'Hapus Task', message: 'Yakin ingin menghapus task ini?', variant: 'danger' })
+        if (!yes) return
+        const result = await removeItem(id)
+        if (result.error) toast.error('Gagal menghapus', result.error)
+        else toast.success('Berhasil', 'Task berhasil dihapus')
     }
 
 
@@ -70,9 +84,9 @@ export default function TodoListPage() {
 
     const getStatusBadge = (status: string) => {
         const variants: Record<string, any> = {
-            Todo: 'warning',
+            Pending: 'warning',
             'In Progress': 'info',
-            Done: 'success',
+            Completed: 'success',
         };
         return variants[status] || 'default';
     };
@@ -230,6 +244,26 @@ export default function TodoListPage() {
                                             <User className="w-4 h-4" />
                                             <span className="text-xs md:text-sm">{task.assigned_to}</span>
                                         </div>
+                                    </div>
+                                    <div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+                                        {task.status !== 'Pending' && (
+                                            <Button size="sm" variant="outline" onClick={() => handleStatusChange(task, 'Pending')}>
+                                                <Clock className="w-3.5 h-3.5" /> Pending
+                                            </Button>
+                                        )}
+                                        {task.status !== 'In Progress' && (
+                                            <Button size="sm" variant="outline" onClick={() => handleStatusChange(task, 'In Progress')}>
+                                                <Loader className="w-3.5 h-3.5" /> In Progress
+                                            </Button>
+                                        )}
+                                        {task.status !== 'Completed' && (
+                                            <Button size="sm" variant="outline" onClick={() => handleStatusChange(task, 'Completed')}>
+                                                <CheckCircle className="w-3.5 h-3.5" /> Completed
+                                            </Button>
+                                        )}
+                                        <Button size="sm" variant="ghost" className="text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 ml-auto" onClick={() => handleDeleteTask(task.id)}>
+                                            Hapus
+                                        </Button>
                                     </div>
                                 </div>
                             </div>
