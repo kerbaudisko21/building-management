@@ -32,7 +32,7 @@ export default function AddTodoForm({ isOpen, onClose, onSubmit }: AddTodoFormPr
         priority: '',
         dueDate: '',
         assignedTo: '',
-        status: 'Pending',
+        status: 'Todo',
     });
 
     const [errors, setErrors] = useState<Partial<Record<keyof TodoFormData, string>>>({});
@@ -123,7 +123,7 @@ export default function AddTodoForm({ isOpen, onClose, onSubmit }: AddTodoFormPr
             priority: '',
             dueDate: '',
             assignedTo: '',
-            status: 'Pending',
+            status: 'Todo',
         });
         setErrors({});
         onClose();

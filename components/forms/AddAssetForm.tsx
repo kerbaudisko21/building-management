@@ -9,7 +9,6 @@ import Button from '@/components/ui/Button';
 import { formatCurrency } from '@/utils/currency';
 import { Package, Building, Home, MapPin, DollarSign, Calendar, FileText } from 'lucide-react';
 import { propertyService, roomService } from '@/lib/services/index';
-import type { RoomRow } from '@/types/database';
 
 interface AddAssetFormProps {
     isOpen: boolean;
@@ -73,23 +72,16 @@ export default function AddAssetForm({
 
     // Fetch real data from Supabase
     const [propertyOptions, setPropertyOptions] = useState([{ value: '', label: 'Select property' }]);
-    const [allRooms, setAllRooms] = useState<RoomRow[]>([]);
+    const [roomOptions, setRoomOptions] = useState([{ value: '', label: 'Select room/unit' }]);
 
     useEffect(() => {
         propertyService.getAll().then(res => {
             if (res.data) setPropertyOptions([{ value: '', label: 'Select property' }, ...res.data.map(p => ({ value: p.id, label: p.name }))]);
         });
         roomService.getAll().then(res => {
-            if (res.data) setAllRooms(res.data);
+            if (res.data) setRoomOptions([{ value: '', label: 'Select room/unit' }, ...res.data.map(r => ({ value: r.id, label: `${r.name} - ${r.type}` }))]);
         });
     }, [isOpen]);
-
-    const roomOptions = [
-        { value: '', label: formData.property ? 'Select room/unit' : 'Select property first' },
-        ...allRooms
-            .filter(r => !formData.property || r.property_id === formData.property)
-            .map(r => ({ value: r.id, label: `${r.name} - ${r.type}` }))
-    ];
 
     const categoryOptions = [
         { value: 'Electronics', label: 'Electronics (TV, AC, etc)' },

@@ -38,9 +38,11 @@ const METHOD_OPTIONS = [
 // ─── Component ───────────────────────────────────────────────
 
 export default function CashInPage() {
-    const { toast } = useToast()
+    const { toast, confirm } = useToast()
     const [searchQuery, setSearchQuery] = useState('')
     const [showFilters, setShowFilters] = useState(false)
+    const [filterCategory, setFilterCategory] = useState('all')
+    const [filterMethod, setFilterMethod] = useState('all')
     const [isFormOpen, setIsFormOpen] = useState(false)
 
     const {
@@ -50,7 +52,36 @@ export default function CashInPage() {
         refetch,
     } = useSupabaseQuery(() => cashFlowService.getCashIn())
 
+    const handleDelete = async (id: string) => {
+        if (!window.confirm('Yakin ingin menghapus transaksi ini?')) return
+        await cashFlowService.remove(id)
+        toast.success('Berhasil', 'Transaksi berhasil dihapus')
+        await refetch()
+    }
+
     const txList = transactions ?? []
+
+    const filteredTxList = txList.filter(tx => {
+        const q = searchQuery.toLowerCase()
+        const matchSearch = q === '' ||
+            (tx.source || '').toLowerCase().includes(q) ||
+            (tx.description || '').toLowerCase().includes(q) ||
+            (tx.category || '').toLowerCase().includes(q) ||
+            (tx.reference || '').toLowerCase().includes(q)
+        const matchCategory = filterCategory === 'all' || tx.category === filterCategory
+        const matchMethod = filterMethod === 'all' || tx.payment_method === filterMethod
+        return matchSearch && matchCategory && matchMethod
+    })
+
+    const filteredTx = txList.filter(tx => {
+        const matchSearch = searchQuery === '' ||
+            tx.source?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            tx.category?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            tx.reference?.toLowerCase().includes(searchQuery.toLowerCase())
+        const matchCategory = filterCategory === 'all' || tx.category === filterCategory
+        const matchMethod = filterMethod === 'all' || tx.payment_method === filterMethod
+        return matchSearch && matchCategory && matchMethod
+    })
 
     const handleFormSubmit = async (data: CashInFormData) => {
         const insert: CashFlowInsert = {
@@ -70,7 +101,7 @@ export default function CashInPage() {
         setIsFormOpen(false)
     }
 
-    // ─── Derived State ───────────────────────────────────────
+    
 
     const totalIncome = txList
         .filter(t => t.status === 'Completed')
@@ -150,11 +181,10 @@ export default function CashInPage() {
         {
             key: 'actions',
             label: 'Actions',
-            render: (_item: CashFlowRow) => (
+            render: (item: CashFlowRow) => (
                 <div className="flex items-center gap-2">
                     <Button size="sm" variant="ghost"><Eye className="w-4 h-4" /></Button>
-                    <Button size="sm" variant="ghost"><Edit className="w-4 h-4" /></Button>
-                    <Button size="sm" variant="ghost"><Trash2 className="w-4 h-4 text-red-600" /></Button>
+                    <Button size="sm" variant="ghost" onClick={() => handleDelete(item.id)}><Trash2 className="w-4 h-4 text-red-600" /></Button>
                 </div>
             ),
         },
@@ -173,21 +203,7 @@ export default function CashInPage() {
         )
     }
 
-    // ─── Render ──────────────────────────────────────────────
 
-    // ─── Loading State ─────────────────────────────────────
-    if (loading) {
-        return (
-            <div className="p-4 md:p-6 lg:p-8">
-                <div className="flex items-center justify-center min-h-[60vh]">
-                    <div className="text-center">
-                        <div className="w-10 h-10 border-3 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-                        <p className="text-sm text-slate-500 dark:text-slate-400">Memuat data...</p>
-                    </div>
-                </div>
-            </div>
-        )
-    }
 
     return (
         <div className="p-4 md:p-6 space-y-4 md:space-y-6 pb-24 md:pb-6">
@@ -261,8 +277,8 @@ export default function CashInPage() {
                             {showFilters ? 'Hide' : 'Show'} Filters
                         </Button>
                         <div className={`grid grid-cols-1 gap-3 md:grid-cols-3 ${showFilters ? 'block' : 'hidden md:grid'}`}>
-                            <Select options={CATEGORY_OPTIONS} />
-                            <Select options={METHOD_OPTIONS} />
+                            <Select options={CATEGORY_OPTIONS} value={filterCategory} onChange={e => setFilterCategory(e.target.value)} />
+                            <Select options={METHOD_OPTIONS} value={filterMethod} onChange={e => setFilterMethod(e.target.value)} />
                             <Input type="date" placeholder="Date" />
                         </div>
                     </div>
@@ -271,7 +287,7 @@ export default function CashInPage() {
 
             {/* Mobile Cards */}
             <div className="block md:hidden space-y-3">
-                {txList.map(tx => (
+                {filteredTx.map(tx => (
                     <Card key={tx.id} hover>
                         <CardContent className="p-4">
                             <div className="flex items-start justify-between mb-3">
@@ -307,7 +323,7 @@ export default function CashInPage() {
 
             {/* Desktop Table */}
             <div className="hidden md:block">
-                <Table data={txList} columns={columns} />
+                <Table data={filteredTx} columns={columns} />
             </div>
 
             <AddCashInForm

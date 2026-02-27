@@ -36,14 +36,8 @@ function getSupabase() {
     return _supabase
 }
 
-function makeBasicUser(authUser: User): AuthUser {
-    return {
-        id: authUser.id,
-        email: authUser.email || '',
-        role: 'admin',
-        fullName: authUser.user_metadata?.full_name || authUser.email?.split('@')[0] || 'User',
-    }
-}
+// Persistent role cache to survive re-renders
+let _roleCache: Record<string, UserRole> = {}
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [user, setUser] = useState<AuthUser | null>(null)
@@ -54,47 +48,51 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const initialized = useRef(false)
     const signingOut = useRef(false)
 
-    // Load full profile (await for correct role)
-    const loadProfileInBackground = useCallback(async (authUser: User) => {
+    // Fetch profile from DB — returns role
+    const fetchProfile = useCallback(async (authUser: User): Promise<AuthUser> => {
+        // Check cache first
+        const cached = _roleCache[authUser.id]
+        const fallbackName = authUser.user_metadata?.full_name || authUser.email?.split('@')[0] || 'User'
+
         try {
             const { data: profile } = await supabase
                 .from('user_profiles')
-                .select('*')
+                .select('role, full_name')
                 .eq('id', authUser.id)
                 .single()
-            if (signingOut.current) return
-            if (profile) {
-                setUser({
-                    id: authUser.id,
-                    email: authUser.email || '',
-                    role: profile.role || 'admin',
-                    fullName: profile.full_name || authUser.user_metadata?.full_name || authUser.email?.split('@')[0] || 'User',
-                })
+
+            const role = (profile?.role as UserRole) || cached || 'admin'
+            _roleCache[authUser.id] = role
+
+            return {
+                id: authUser.id,
+                email: authUser.email || '',
+                role,
+                fullName: profile?.full_name || fallbackName,
             }
         } catch {
-            // Profile fetch failed - keep basic user
+            return {
+                id: authUser.id,
+                email: authUser.email || '',
+                role: cached || 'admin',
+                fullName: fallbackName,
+            }
         }
     }, [supabase])
 
     // ═══ SIGN IN ═══
-    // Redirect IMMEDIATELY after Supabase auth succeeds
-    // Don't wait for profile fetch
     const handleSignIn = useCallback(async (email: string, password: string) => {
         const { data, error } = await supabase.auth.signInWithPassword({ email, password })
         if (error) throw error
 
         if (data.user) {
-            // Set basic user immediately from auth response
-            setUser(makeBasicUser(data.user))
+            // Load profile WITH role BEFORE redirect
+            const fullUser = await fetchProfile(data.user)
+            setUser(fullUser)
             setLoading(false)
-
-            // Redirect NOW — don't wait for anything else
             router.push('/dashboard')
-
-            // Load full profile in background
-            loadProfileInBackground(data.user)
         }
-    }, [supabase, router, loadProfileInBackground])
+    }, [supabase, router, fetchProfile])
 
     const handleSignUp = useCallback(async (email: string, password: string, fullName: string) => {
         const { error } = await supabase.auth.signUp({
@@ -108,37 +106,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const handleSignOut = useCallback(async () => {
         if (signingOut.current) return
         signingOut.current = true
-
+        _roleCache = {}
         setUser(null)
         setLoading(false)
-
-        try {
-            await supabase.auth.signOut()
-        } catch (err) {
-            console.error('Sign out error:', err)
-        }
-
+        try { await supabase.auth.signOut() } catch {}
         window.location.href = '/login'
     }, [supabase])
 
     useEffect(() => {
         async function initialize() {
             try {
-                // getSession() = local cookie read = FAST
                 const { data: { session } } = await supabase.auth.getSession()
-
                 if (session?.user) {
-                    setUser(makeBasicUser(session.user))
-                    setLoading(false)
-                    loadProfileInBackground(session.user)
-                } else {
-                    setLoading(false)
+                    const fullUser = await fetchProfile(session.user)
+                    setUser(fullUser)
                 }
-            } catch {
-                setLoading(false)
-            } finally {
-                initialized.current = true
-            }
+            } catch {}
+            setLoading(false)
+            initialized.current = true
         }
 
         initialize()
@@ -148,32 +133,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 if (!initialized.current) return
                 if (signingOut.current) return
 
-                if (event === 'SIGNED_IN' && session?.user) {
-                    // Just update user state — handleSignIn already did the redirect
-                    setUser(makeBasicUser(session.user))
-                    setLoading(false)
+                if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session?.user) {
+                    const fullUser = await fetchProfile(session.user)
+                    if (!signingOut.current) setUser(fullUser)
                 } else if (event === 'SIGNED_OUT') {
                     setUser(null)
                     setLoading(false)
-                } else if (event === 'TOKEN_REFRESHED' && session?.user) {
-                    loadProfileInBackground(session.user)
                 }
             }
         )
 
-        return () => {
-            subscription.unsubscribe()
-        }
-    }, [supabase, loadProfileInBackground])
+        return () => { subscription.unsubscribe() }
+    }, [supabase, fetchProfile])
 
     return (
-        <AuthContext.Provider value={{
-            user,
-            loading,
-            signIn: handleSignIn,
-            signUp: handleSignUp,
-            signOut: handleSignOut,
-        }}>
+        <AuthContext.Provider value={{ user, loading, signIn: handleSignIn, signUp: handleSignUp, signOut: handleSignOut }}>
             {children}
         </AuthContext.Provider>
     )

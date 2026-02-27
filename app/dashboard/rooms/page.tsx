@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react'
-import { roomService, propertyService } from '@/lib/services'
-import { useCrud, useSupabaseQuery } from '@/lib/hooks/useSupabaseQuery'
+import { roomService } from '@/lib/services'
+import { useCrud } from '@/lib/hooks/useSupabaseQuery'
 import { formatCurrency as _formatCurrency, formatCurrencyShort as _formatCurrencyShort } from '@/utils'
 
 const formatCurrency = (amount: number) => amount === 0 ? '-' : _formatCurrency(amount)
@@ -36,7 +36,6 @@ export default function RoomsPage() {
     const [showFilters, setShowFilters] = useState(false);
     const [filterType, setFilterType] = useState('all');
     const [filterRentType, setFilterRentType] = useState('all');
-    const [filterProperty, setFilterProperty] = useState('all');
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [editingRoom, setEditingRoom] = useState<RoomRow | null>(null)
 
@@ -53,12 +52,6 @@ export default function RoomsPage() {
         orderBy: 'created_at',
     })
 
-
-    const { data: propertiesData } = useSupabaseQuery(() => propertyService.getAll())
-    const propertyFilterOptions = [
-        { value: 'all', label: 'All Properties' },
-        ...(propertiesData ?? []).map(p => ({ value: p.id, label: p.name }))
-    ]
 
     const typeOptions = [
         { value: 'all', label: 'All Types' },
@@ -264,8 +257,7 @@ export default function RoomsPage() {
             room.owner.toLowerCase().includes(searchQuery.toLowerCase());
         const matchType = filterType === 'all' || room.type === filterType;
         const matchRentType = filterRentType === 'all' || room.rent_type === filterRentType;
-        const matchProperty = filterProperty === 'all' || room.property_id === filterProperty;
-        return matchSearch && matchType && matchRentType && matchProperty;
+        return matchSearch && matchType && matchRentType;
     });
 
     // Stats
@@ -411,12 +403,7 @@ export default function RoomsPage() {
                             <Filter className="w-4 h-4" />
                             {showFilters ? 'Hide' : 'Show'} Filters
                         </Button>
-                        <div className={`grid grid-cols-1 gap-3 md:grid-cols-3 ${showFilters ? 'block' : 'hidden md:grid'}`}>
-                            <Select
-                                options={propertyFilterOptions}
-                                value={filterProperty}
-                                onChange={(e) => setFilterProperty(e.target.value)}
-                            />
+                        <div className={`grid grid-cols-1 gap-3 md:grid-cols-2 ${showFilters ? 'block' : 'hidden md:grid'}`}>
                             <Select
                                 options={typeOptions}
                                 value={filterType}
@@ -535,7 +522,7 @@ export default function RoomsPage() {
                 isOpen={isFormOpen}
                 onClose={handleCloseForm}
                 onSubmit={handleFormSubmit}
-                editData={editingRoom as unknown as RoomFormData | null}
+                editData={editingRoom}
             />
         </div>
     );

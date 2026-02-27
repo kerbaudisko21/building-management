@@ -24,7 +24,7 @@ import {
     Send,
     CheckCircle,
     Clock,
-    AlertCircle, XCircle,
+    AlertCircle, XCircle, Trash2,
 Loader2, } from 'lucide-react';
 import { useToast } from '@/components/ui/Toast'
 
@@ -50,6 +50,32 @@ export default function InvoicesPage() {
         orderBy: 'created_at',
     })
 
+
+    const handleMarkPaid = async (id: string) => {
+        const yes = await confirm({ title: 'Mark as Paid', message: 'Tandai invoice ini sebagai Paid?', variant: 'info' })
+        if (!yes) return
+        const result = await updateItem(id, { status: 'Paid' } as any)
+        if (result.error) toast.error('Gagal', result.error)
+        else toast.success('Berhasil', 'Invoice ditandai Paid')
+    }
+
+    const handleDeleteInvoice = async (id: string) => {
+        const yes = await confirm({ title: 'Hapus Invoice', message: 'Yakin ingin menghapus invoice ini?', variant: 'danger' })
+        if (!yes) return
+        const result = await removeItem(id)
+        if (result.error) toast.error('Gagal menghapus', result.error)
+        else toast.success('Berhasil', 'Invoice berhasil dihapus')
+    }
+
+    const filteredInvoices = invoices.filter(inv => {
+        const matchSearch = searchQuery === '' ||
+            inv.tenant_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            inv.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            inv.invoice_type?.toLowerCase().includes(searchQuery.toLowerCase())
+        const matchStatus = filterStatus === 'all' || inv.status === filterStatus
+        const matchType = filterType === 'all' || inv.invoice_type === filterType
+        return matchSearch && matchStatus && matchType
+    })
 
     const statusOptions = [
         { value: 'all', label: 'All Status' },
@@ -154,17 +180,14 @@ export default function InvoicesPage() {
             label: 'Actions',
             render: (item: any) => (
                 <div className="flex items-center gap-2">
-                    <Button size="sm" variant="ghost">
-                        <Eye className="w-4 h-4" />
-                    </Button>
-                    <Button size="sm" variant="ghost">
-                        <Download className="w-4 h-4" />
-                    </Button>
-                    {item.status === 'Pending' && (
-                        <Button size="sm" variant="ghost">
-                            <Send className="w-4 h-4" />
+                    {(item.status === 'Pending' || item.status === 'Overdue') && (
+                        <Button size="sm" variant="ghost" title="Mark as Paid" onClick={() => handleMarkPaid(item.id)}>
+                            <CheckCircle className="w-4 h-4 text-green-600" />
                         </Button>
                     )}
+                    <Button size="sm" variant="ghost" onClick={() => handleDeleteInvoice(item.id)}>
+                        <Trash2 className="w-4 h-4 text-red-600" />
+                    </Button>
                 </div>
             ),
         },
@@ -310,7 +333,7 @@ export default function InvoicesPage() {
 
             {/* Mobile Cards */}
             <div className="block md:hidden space-y-3">
-                {invoices.map((invoice) => {
+                {filteredInvoices.map((invoice) => {
                     const statusInfo = getStatusBadge(invoice.status);
 
                     return (
@@ -388,7 +411,7 @@ export default function InvoicesPage() {
             {/* Desktop Table */}
             <div className="hidden md:block">
                 <Table
-                    data={invoices}
+                    data={filteredInvoices}
                     columns={columns}
                     emptyMessage="No invoices found"
                 />

@@ -7,7 +7,6 @@ import Select from '@/components/ui/Select';
 import Button from '@/components/ui/Button';
 import { User, Phone, Building, Home, DollarSign, Calendar } from 'lucide-react';
 import { propertyService, roomService } from '@/lib/services/index';
-import type { RoomRow } from '@/types/database';
 
 interface AddWaitingListFormProps {
     isOpen: boolean;
@@ -62,23 +61,16 @@ export default function AddWaitingListForm({
 
     // Fetch real data from Supabase
     const [propertyOptions, setPropertyOptions] = useState([{ value: '', label: 'Select property' }]);
-    const [allRooms, setAllRooms] = useState<RoomRow[]>([]);
+    const [roomUnitOptions, setRoomUnitOptions] = useState([{ value: '', label: 'Select room/unit type' }]);
 
     useEffect(() => {
         propertyService.getAll().then(res => {
             if (res.data) setPropertyOptions([{ value: '', label: 'Select property' }, ...res.data.map(p => ({ value: p.id, label: p.name }))]);
         });
-        roomService.getAll().then(res => {
-            if (res.data) setAllRooms(res.data);
+        roomService.getAll({ filters: { status: 'Available' } }).then(res => {
+            if (res.data) setRoomUnitOptions([{ value: '', label: 'Select room/unit type' }, ...res.data.map(r => ({ value: r.id, label: `${r.name} - ${r.type} (${r.luas}m²)` }))]);
         });
     }, [isOpen]);
-
-    const roomUnitOptions = [
-        { value: '', label: formData.property ? 'Select room/unit' : 'Select property first' },
-        ...allRooms
-            .filter(r => !formData.property || r.property_id === formData.property)
-            .map(r => ({ value: r.id, label: `${r.name} - ${r.type} (${r.luas}m²)` }))
-    ];
 
     const validate = (): boolean => {
         const newErrors: Partial<Record<keyof WaitingListFormData, string>> = {};

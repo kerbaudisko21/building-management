@@ -26,8 +26,10 @@ import {
 import { useToast } from '@/components/ui/Toast'
 
 export default function CashOutPage() {
-    const { toast } = useToast()
+    const { toast, confirm } = useToast()
     const [searchQuery, setSearchQuery] = useState('');
+    const [filterCategory, setFilterCategory] = useState('all');
+    const [filterMethod, setFilterMethod] = useState('all');
     const [showFilters, setShowFilters] = useState(false);
     const [isFormOpen, setIsFormOpen] = useState(false);
 
@@ -38,7 +40,25 @@ export default function CashOutPage() {
         refetch,
     } = useSupabaseQuery(() => cashFlowService.getCashOut())
 
+    const handleDelete = async (id: string) => {
+        if (!window.confirm('Yakin ingin menghapus pengeluaran ini?')) return
+        await cashFlowService.remove(id)
+        toast.success('Berhasil', 'Pengeluaran berhasil dihapus')
+        await refetch()
+    }
+
     const expenses = expenseData ?? []
+
+    const filteredExpenses = expenses.filter(e => {
+        const q = searchQuery.toLowerCase()
+        const matchSearch = q === '' ||
+            (e.recipient || '').toLowerCase().includes(q) ||
+            (e.description || '').toLowerCase().includes(q) ||
+            (e.category || '').toLowerCase().includes(q)
+        const matchCategory = filterCategory === 'all' || e.category === filterCategory
+        const matchMethod = filterMethod === 'all' || e.payment_method === filterMethod
+        return matchSearch && matchCategory && matchMethod
+    })
 
 
     const handleFormSubmit = async (data: CashOutFormData) => {
@@ -145,8 +165,7 @@ export default function CashOutPage() {
             render: (item: any) => (
                 <div className="flex items-center gap-2">
                     <Button size="sm" variant="ghost"><Eye className="w-4 h-4" /></Button>
-                    <Button size="sm" variant="ghost"><Edit className="w-4 h-4" /></Button>
-                    <Button size="sm" variant="ghost"><Trash2 className="w-4 h-4 text-red-600" /></Button>
+                    <Button size="sm" variant="ghost" onClick={() => handleDelete(item.id)}><Trash2 className="w-4 h-4 text-red-600" /></Button>
                 </div>
             ),
         },
@@ -235,8 +254,8 @@ export default function CashOutPage() {
                             {showFilters ? 'Hide' : 'Show'} Filters
                         </Button>
                         <div className={`grid grid-cols-1 gap-3 md:grid-cols-3 ${showFilters ? 'block' : 'hidden md:grid'}`}>
-                            <Select options={categoryOptions} />
-                            <Select options={methodOptions} />
+                            <Select options={categoryOptions} value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)} />
+                            <Select options={methodOptions} value={filterMethod} onChange={(e) => setFilterMethod(e.target.value)} />
                             <Input type="date" placeholder="Date" />
                         </div>
                     </div>
@@ -245,7 +264,7 @@ export default function CashOutPage() {
 
             {/* Mobile Cards */}
             <div className="block md:hidden space-y-3">
-                {expenses.map((expense) => (
+                {filteredExpenses.map((expense) => (
                     <Card key={expense.id} hover>
                         <CardContent className="p-4">
                             <div className="flex items-start justify-between mb-3">
@@ -281,7 +300,7 @@ export default function CashOutPage() {
 
             {/* Desktop Table */}
             <div className="hidden md:block">
-                <Table data={expenses} columns={columns} />
+                <Table data={filteredExpenses} columns={columns} />
             </div>
 
             <AddCashOutForm

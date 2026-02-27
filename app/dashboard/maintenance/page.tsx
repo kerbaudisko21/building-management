@@ -23,7 +23,7 @@ import {
     Edit,
     CheckCircle,
     Clock,
-    AlertCircle,
+    AlertCircle, Trash2,
 Loader2, } from 'lucide-react';
 import { useToast } from '@/components/ui/Toast'
 
@@ -31,6 +31,8 @@ export default function MaintenancePage() {
     const { toast, confirm } = useToast()
     const [searchQuery, setSearchQuery] = useState('');
     const [showFilters, setShowFilters] = useState(false);
+    const [filterStatus, setFilterStatus] = useState('all');
+    const [filterPriority, setFilterPriority] = useState('all');
     const [isFormOpen, setIsFormOpen] = useState(false);
 
     const {
@@ -49,6 +51,20 @@ export default function MaintenancePage() {
     const { data: roomsData } = useSupabaseQuery(() => roomService.getAll())
     const rooms = (roomsData ?? []).map(r => ({ id: r.id, name: r.name }))
 
+
+    const handleDelete = async (id: string) => {
+        const yes = await confirm({ title: 'Hapus Request', message: 'Yakin ingin menghapus request ini?', variant: 'danger' })
+        if (!yes) return
+        const result = await removeItem(id)
+        if (result.error) toast.error('Gagal menghapus', result.error)
+        else toast.success('Berhasil', 'Request berhasil dihapus')
+    }
+
+    const handleStatusChange = async (id: string, newStatus: string) => {
+        const result = await updateItem(id, { status: newStatus, completed_date: newStatus === 'Completed' ? new Date().toISOString().split('T')[0] : null } as any)
+        if (result.error) toast.error('Gagal', result.error)
+        else toast.success('Berhasil', 'Status diubah ke ' + newStatus)
+    }
 
     const handleFormSubmit = async (data: MaintenanceFormData) => {
         const room = rooms.find(r => r.id === data.roomId)
@@ -174,12 +190,34 @@ export default function MaintenancePage() {
             label: 'Actions',
             render: (item: any) => (
                 <div className="flex items-center gap-2">
-                    <Button size="sm" variant="ghost"><Eye className="w-4 h-4" /></Button>
-                    <Button size="sm" variant="ghost"><Edit className="w-4 h-4" /></Button>
+                    {item.status !== 'Completed' && (
+                        <Button size="sm" variant="ghost" title="Mark Complete" onClick={() => handleStatusChange(item.id, 'Completed')}>
+                            <CheckCircle className="w-4 h-4 text-green-600" />
+                        </Button>
+                    )}
+                    {item.status === 'Open' && (
+                        <Button size="sm" variant="ghost" title="In Progress" onClick={() => handleStatusChange(item.id, 'In Progress')}>
+                            <Clock className="w-4 h-4 text-blue-600" />
+                        </Button>
+                    )}
+                    <Button size="sm" variant="ghost" title="Delete" onClick={() => handleDelete(item.id)}>
+                        <Trash2 className="w-4 h-4 text-red-600" />
+                    </Button>
                 </div>
             ),
         },
     ];
+
+    const filteredRequests = requests.filter(r => {
+        const q = searchQuery.toLowerCase()
+        const matchSearch = q === '' ||
+            r.title.toLowerCase().includes(q) ||
+            (r.room_name || '').toLowerCase().includes(q) ||
+            (r.description || '').toLowerCase().includes(q)
+        const matchStatus = filterStatus === 'all' || r.status === filterStatus
+        const matchPriority = filterPriority === 'all' || r.priority === filterPriority
+        return matchSearch && matchStatus && matchPriority
+    })
 
     // ─── Loading State ─────────────────────────────────────
     if (loading) {
@@ -304,8 +342,8 @@ export default function MaintenancePage() {
                         </Button>
                         <div className={`grid grid-cols-1 gap-3 md:grid-cols-3 ${showFilters ? 'block' : 'hidden md:grid'}`}>
                             <Select options={categoryOptions} />
-                            <Select options={priorityOptions} />
-                            <Select options={statusOptions} />
+                            <Select options={priorityOptions} value={filterPriority} onChange={e => setFilterPriority(e.target.value)} />
+                            <Select options={statusOptions} value={filterStatus} onChange={e => setFilterStatus(e.target.value)} />
                         </div>
                     </div>
                 </CardContent>
@@ -313,7 +351,7 @@ export default function MaintenancePage() {
 
             {/* Mobile Cards */}
             <div className="block md:hidden space-y-3">
-                {requests.map((request) => {
+                {filteredRequests.map((request) => {
                     const statusInfo = getStatusBadge(request.status);
                     return (
                         <Card key={request.id} hover>
@@ -369,7 +407,7 @@ export default function MaintenancePage() {
 
             {/* Desktop Table */}
             <div className="hidden md:block">
-                <Table data={requests} columns={columns} />
+                <Table data={filteredRequests} columns={columns} />
             </div>
 
             {/* Add Maintenance Form */}
