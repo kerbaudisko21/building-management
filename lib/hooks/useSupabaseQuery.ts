@@ -5,11 +5,7 @@ import type { ServiceResult, QueryOptions } from '@/lib/services/supabase-servic
 
 /**
  * Generic hook for fetching data from Supabase services.
- *
- * Usage:
- *   const { data, loading, error, refetch } = useSupabaseQuery(
- *     () => propertyService.getAll()
- *   )
+ * Uses a fetchId counter to handle race conditions instead of mountedRef.
  */
 export function useSupabaseQuery<T>(
     queryFn: () => Promise<ServiceResult<T>>
@@ -19,12 +15,17 @@ export function useSupabaseQuery<T>(
     const [error, setError] = useState<string | null>(null)
     const queryFnRef = useRef(queryFn)
     queryFnRef.current = queryFn
+    // Counter to track the latest fetch — stale fetches are ignored
+    const fetchIdRef = useRef(0)
 
     const fetchData = useCallback(async () => {
+        const myFetchId = ++fetchIdRef.current
         setLoading(true)
         setError(null)
         try {
             const result = await queryFnRef.current()
+            // Only apply if this is still the latest fetch
+            if (myFetchId !== fetchIdRef.current) return
             if (result.error) {
                 setError(result.error)
                 setData(null)
@@ -32,15 +33,17 @@ export function useSupabaseQuery<T>(
                 setData(result.data)
             }
         } catch (err: unknown) {
+            if (myFetchId !== fetchIdRef.current) return
             const message = err instanceof Error ? err.message : 'Unknown error'
             setError(message)
             setData(null)
         }
-        setLoading(false)
+        if (myFetchId === fetchIdRef.current) setLoading(false)
     }, [])
 
     useEffect(() => {
         fetchData()
+        // No cleanup needed — fetchId handles staleness
     }, [fetchData])
 
     return { data, loading, error, refetch: fetchData }
@@ -48,11 +51,6 @@ export function useSupabaseQuery<T>(
 
 /**
  * Hook for CRUD operations with optimistic updates.
- *
- * Usage:
- *   const { items, loading, error, addItem, updateItem, removeItem } = useCrud({
- *     service: propertyService,
- *   })
  */
 interface CrudService<TRow extends { id: string }, TInsert, TUpdate> {
     getAll: (options?: QueryOptions) => Promise<ServiceResult<TRow[]>>
@@ -76,38 +74,47 @@ export function useCrud<
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
     const [actionLoading, setActionLoading] = useState(false)
+
+    const serviceRef = useRef(service)
+    const orderByRef = useRef(orderBy)
+    const ascendingRef = useRef(ascending)
     const itemsRef = useRef<TRow[]>([])
+    const fetchIdRef = useRef(0)
+    serviceRef.current = service
+    orderByRef.current = orderBy
+    ascendingRef.current = ascending
     itemsRef.current = items
 
-    // Initial fetch
     const fetchItems = useCallback(async () => {
+        const myFetchId = ++fetchIdRef.current
         setLoading(true)
         setError(null)
         try {
-            const result = await service.getAll(
-                orderBy ? { orderBy, ascending } : undefined
+            const result = await serviceRef.current.getAll(
+                orderByRef.current ? { orderBy: orderByRef.current, ascending: ascendingRef.current } : undefined
             )
+            if (myFetchId !== fetchIdRef.current) return
             if (result.error) {
                 setError(result.error)
             } else {
                 setItems(result.data ?? [])
             }
         } catch (err: unknown) {
+            if (myFetchId !== fetchIdRef.current) return
             const message = err instanceof Error ? err.message : 'Unknown error'
             setError(message)
         }
-        setLoading(false)
-    }, [service, orderBy, ascending])
+        if (myFetchId === fetchIdRef.current) setLoading(false)
+    }, [])
 
     useEffect(() => {
         fetchItems()
     }, [fetchItems])
 
-    // Create
     const addItem = useCallback(async (data: TInsert): Promise<ServiceResult<TRow>> => {
         setActionLoading(true)
         try {
-            const result = await service.create(data)
+            const result = await serviceRef.current.create(data)
             if (result.data) {
                 setItems(prev => [result.data!, ...prev])
             }
@@ -117,19 +124,17 @@ export function useCrud<
             setActionLoading(false)
             return { data: null, error: err instanceof Error ? err.message : 'Create failed' }
         }
-    }, [service])
+    }, [])
 
-    // Update
     const updateItem = useCallback(async (id: string, updates: TUpdate): Promise<ServiceResult<TRow>> => {
         setActionLoading(true)
-        // Optimistic update
         setItems(prev =>
             prev.map(item =>
                 item.id === id ? { ...item, ...(updates as Partial<TRow>) } : item
             )
         )
         try {
-            const result = await service.update(id, updates)
+            const result = await serviceRef.current.update(id, updates)
             if (result.error) {
                 await fetchItems()
             } else if (result.data) {
@@ -144,15 +149,14 @@ export function useCrud<
             setActionLoading(false)
             return { data: null, error: err instanceof Error ? err.message : 'Update failed' }
         }
-    }, [service, fetchItems])
+    }, [fetchItems])
 
-    // Delete
     const removeItem = useCallback(async (id: string): Promise<ServiceResult<null>> => {
         setActionLoading(true)
         const previousItems = itemsRef.current
         setItems(prev => prev.filter(item => item.id !== id))
         try {
-            const result = await service.remove(id)
+            const result = await serviceRef.current.remove(id)
             if (result.error) {
                 setItems(previousItems)
             }
@@ -163,7 +167,7 @@ export function useCrud<
             setActionLoading(false)
             return { data: null, error: err instanceof Error ? err.message : 'Delete failed' }
         }
-    }, [service])
+    }, [])
 
     return {
         items,

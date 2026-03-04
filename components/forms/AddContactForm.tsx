@@ -14,7 +14,7 @@ export interface ContactFormData {
     type: 'Customer' | 'Vendor' | 'Owner';
     room: string;
     status: 'Active' | 'Inactive' | 'Prospect';
-    date_check_in: string;
+    date_check_in: string | null;
 }
 
 interface AddContactFormProps {
@@ -367,7 +367,7 @@ export default function AddContactForm({
                                 </label>
                                 <Input
                                     type="date"
-                                    value={formData.date_check_in}
+                                    value={formData.date_check_in || '-'}
                                     onChange={(e) => handleChange('date_check_in', e.target.value)}
                                     error={errors.date_check_in}
                                 />
