@@ -6,7 +6,7 @@ import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
 import Button from '@/components/ui/Button';
 import { Home, Building, User, DollarSign, Eye, Maximize } from 'lucide-react';
-import { contactService } from '@/lib/services/index';
+import { contactService, propertyService } from '@/lib/services/index';
 
 interface AddRoomFormProps {
     isOpen: boolean;
@@ -16,6 +16,7 @@ interface AddRoomFormProps {
 }
 
 export interface RoomFormData {
+    property_id: string;
     name: string;
     type: string;
     tower: string;
@@ -38,6 +39,7 @@ export default function AddRoomForm({
                                         editData,
                                     }: AddRoomFormProps) {
     const [formData, setFormData] = useState<RoomFormData>({
+        property_id: '',
         name: '',
         type: '',
         tower: '',
@@ -62,6 +64,7 @@ export default function AddRoomForm({
             setFormData(editData);
         } else {
             setFormData({
+                property_id: '',
                 name: '',
                 type: '',
                 tower: '',
@@ -109,8 +112,18 @@ export default function AddRoomForm({
     // Fetch owners from contacts (type = Owner)
     const [ownerOptions, setOwnerOptions] = useState([{ value: '', label: 'Select owner' }]);
     const [tenantOptions, setTenantOptions] = useState([{ value: '', label: 'No tenant (Available)' }]);
+    const [propertyOptions, setPropertyOptions] = useState([{ value: '', label: 'Select property' }]);
 
     useEffect(() => {
+        if (!isOpen) return;
+        propertyService.getAll().then(res => {
+            if (res.data) {
+                setPropertyOptions([
+                    { value: '', label: 'Select property' },
+                    ...res.data.map(p => ({ value: p.id, label: p.name }))
+                ]);
+            }
+        });
         contactService.getAll({ filters: { type: 'Owner' } }).then(res => {
             if (res.data) {
                 setOwnerOptions([
@@ -131,6 +144,10 @@ export default function AddRoomForm({
 
     const validate = (): boolean => {
         const newErrors: Partial<Record<keyof RoomFormData, string>> = {};
+
+        if (!formData.property_id) {
+            newErrors.property_id = 'Property is required';
+        }
 
         if (!formData.name.trim()) {
             newErrors.name = 'Unit name is required';
@@ -224,6 +241,7 @@ export default function AddRoomForm({
 
     const handleClose = () => {
         setFormData({
+            property_id: '',
             name: '',
             type: '',
             tower: '',
@@ -256,6 +274,17 @@ export default function AddRoomForm({
             size="lg"
         >
             <form onSubmit={handleSubmit} className="space-y-4">
+                {/* Property */}
+                <Select
+                    label="Property"
+                    options={propertyOptions}
+                    value={formData.property_id}
+                    onChange={(e) => setFormData({ ...formData, property_id: e.target.value })}
+                    error={errors.property_id}
+                    required
+                    helperText="Pilih property untuk unit ini"
+                />
+
                 {/* Unit Name */}
                 <Input
                     label="Unit Name"

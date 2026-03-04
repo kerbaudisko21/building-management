@@ -27,7 +27,7 @@ import {
     Eye,
     Edit,
     Trash2,
-Loader2, } from 'lucide-react';
+    Loader2, } from 'lucide-react';
 import { useToast } from '@/components/ui/Toast'
 
 export default function RoomsPage() {
@@ -522,7 +522,7 @@ export default function RoomsPage() {
                 isOpen={isFormOpen}
                 onClose={handleCloseForm}
                 onSubmit={handleFormSubmit}
-                editData={editingRoom}
+                editData={editingRoom as unknown as RoomFormData | null}
             />
         </div>
     );

@@ -11,7 +11,7 @@ export interface ContactFormData {
     no_ktp: string;
     no_wa: string;
     address: string;
-    type: 'Customer' | 'Vendor' | 'Owner';
+    type: 'Customer' | 'Vendor';
     room: string;
     status: 'Active' | 'Inactive' | 'Prospect';
     date_check_in: string;
@@ -246,7 +246,6 @@ export default function AddContactForm({
                             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                                 {formData.type === 'Customer' && '👤 Tenant or guest staying in a room'}
                                 {formData.type === 'Vendor' && '🏢 Service provider or supplier'}
-                                {formData.type === 'Owner' && '👥 Property owner'}
                             </p>
                         </div>
 
