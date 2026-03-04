@@ -11,7 +11,7 @@ export interface ContactFormData {
     no_ktp: string;
     no_wa: string;
     address: string;
-    type: 'Customer' | 'Vendor';
+    type: 'Customer' | 'Vendor' | 'Owner';
     room: string;
     status: 'Active' | 'Inactive' | 'Prospect';
     date_check_in: string;
@@ -88,6 +88,7 @@ export default function AddContactForm({
     const typeOptions = [
         { value: 'Customer', label: 'Customer' },
         { value: 'Vendor', label: 'Vendor' },
+        { value: 'Owner', label: 'Owner' },
     ];
 
     const statusOptions = [
@@ -146,13 +147,12 @@ export default function AddContactForm({
             if (formData.no_ktp.trim() && formData.no_ktp.length !== 16) {
                 newErrors.no_ktp = 'KTP must be 16 digits if provided';
             }
+        } else if (formData.type === 'Owner') {
+            // Owner: KTP optional, Room/Check-in not needed
+            if (formData.no_ktp.trim() && formData.no_ktp.length !== 16) {
+                newErrors.no_ktp = 'KTP must be 16 digits if provided';
+            }
         }
-        // else if (formData.type === 'Owner') {
-        //     // Owner: KTP optional, Room/Check-in not needed
-        //     if (formData.no_ktp.trim() && formData.no_ktp.length !== 16) {
-        //         newErrors.no_ktp = 'KTP must be 16 digits if provided';
-        //     }
-        // }
 
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
@@ -246,6 +246,7 @@ export default function AddContactForm({
                             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                                 {formData.type === 'Customer' && '👤 Tenant or guest staying in a room'}
                                 {formData.type === 'Vendor' && '🏢 Service provider or supplier'}
+                                {formData.type === 'Owner' && '👥 Property owner'}
                             </p>
                         </div>
 
@@ -294,7 +295,7 @@ export default function AddContactForm({
                                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                                     {formData.type === 'Customer'
                                         ? 'For prospects, KTP can be collected later'
-                                        : 'For vendors, you can use NPWP or company registration number'}
+                                        : 'For vendors/owners, you can use NPWP or company registration number'}
                                 </p>
                             )}
                         </div>

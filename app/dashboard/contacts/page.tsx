@@ -54,7 +54,7 @@ export default function ContactsPage() {
         { value: 'all', label: 'All Types' },
         { value: 'Customer', label: 'Customer' },
         { value: 'Vendor', label: 'Vendor' },
-        // { value: 'Owner', label: 'Owner' },
+        { value: 'Owner', label: 'Owner' },
     ];
 
     const statusOptions = [
