@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react'
-import { contactService } from '@/lib/services'
+import { contactService, roomService } from '@/lib/services'
 import { useCrud } from '@/lib/hooks/useSupabaseQuery'
 import type { ContactRow, ContactInsert, ContactUpdate } from '@/types/database'
 import { Card, CardContent } from '@/components/ui/Card';
@@ -24,7 +24,7 @@ import {
     Trash2,
     Building,
     Calendar,
-Loader2, } from 'lucide-react';
+    Loader2, } from 'lucide-react';
 import { useToast } from '@/components/ui/Toast'
 
 export default function ContactsPage() {
@@ -213,15 +213,74 @@ export default function ContactsPage() {
     const ownerCount = contacts.filter(c => c.type === 'Owner').length;
 
     const handleFormSubmit = async (data: ContactFormData) => {
+        const room_id = (data as any).room_id
+
+        // If status is Inactive, clear room and release old room
+        if (data.status === 'Inactive') {
+            data.room = ''
+            data.date_check_in = null
+
+            // Release old room if editing existing contact
+            if (editingContact && editingContact.room) {
+                const roomsRes = await roomService.getAll()
+                if (roomsRes.data) {
+                    const oldRoom = roomsRes.data.find(r =>
+                        r.tenant === editingContact.name && r.status === 'Occupied'
+                    )
+                    if (oldRoom) {
+                        await roomService.update(oldRoom.id, { tenant: null, status: 'Available' } as any)
+                    }
+                }
+            }
+        }
+
+        // Build clean object WITHOUT room_id (not a column in contacts table)
+        const contactData: Record<string, any> = {
+            name: data.name,
+            no_ktp: data.no_ktp,
+            no_wa: data.no_wa,
+            address: data.address,
+            type: data.type,
+            room: data.room,
+            status: data.status,
+            date_check_in: data.date_check_in || null,
+        }
+
         if (editingContact) {
-            const updResult = await updateItem(editingContact.id, data as unknown as ContactUpdate)
+            const updResult = await updateItem(editingContact.id, contactData as unknown as ContactUpdate)
             if (updResult.error) toast.error('Gagal mengupdate', updResult.error)
             else toast.success('Berhasil', 'Data berhasil diupdate')
         } else {
-            const addResult = await addItem(data as unknown as ContactInsert)
+            const addResult = await addItem(contactData as unknown as ContactInsert)
             if (addResult.error) toast.error('Gagal menyimpan', addResult.error)
             else toast.success('Berhasil', 'Data berhasil ditambahkan')
         }
+
+        // Auto-update room based on status
+        if (data.type === 'Customer') {
+            if (data.status === 'Active' && room_id) {
+                // Active: set room as Occupied with tenant name
+                await roomService.update(room_id, {
+                    tenant: data.name,
+                    status: 'Occupied',
+                } as any)
+            } else if (data.status === 'Inactive' || data.status === 'Prospect') {
+                // Inactive/Prospect: find and release any room occupied by this contact
+                const roomsRes = await roomService.getAll()
+                if (roomsRes.data) {
+                    const occupiedRoom = roomsRes.data.find(r =>
+                        r.tenant === data.name && r.status === 'Occupied'
+                    )
+                    if (occupiedRoom) {
+                        await roomService.update(occupiedRoom.id, {
+                            tenant: null,
+                            status: 'Available',
+                        } as any)
+                    }
+                }
+            }
+        }
+
         setEditingContact(null)
     }
 
@@ -234,9 +293,29 @@ export default function ContactsPage() {
     const handleDelete = async (id: string) => {
         const yes = await confirm({ title: 'Konfirmasi Hapus', message: 'Apakah kamu yakin ingin menghapus data ini? Tindakan ini tidak bisa dibatalkan.', variant: 'danger' })
         if (!yes) return
+
+        // Find the contact being deleted
+        const contact = contacts.find(c => c.id === id)
+
+        // If Customer with a room, reset that room back to Available
+        if (contact && contact.type === 'Customer' && contact.room) {
+            const roomsRes = await roomService.getAll()
+            if (roomsRes.data) {
+                const occupiedRoom = roomsRes.data.find(r =>
+                    r.tenant === contact.name && r.status === 'Occupied'
+                )
+                if (occupiedRoom) {
+                    await roomService.update(occupiedRoom.id, {
+                        tenant: null,
+                        status: 'Available',
+                    } as any)
+                }
+            }
+        }
+
         const delResult = await removeItem(id)
         if (delResult.error) toast.error('Gagal menghapus', delResult.error)
-        else toast.success('Berhasil', 'Data berhasil dihapus')
+        else toast.success('Berhasil', 'Contact dihapus & room di-reset Available')
     }
 
 
